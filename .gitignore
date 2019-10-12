@@ -1,0 +1,9 @@
+*.vo
+*.glob
+*~
+.coqdeps.d
+*.aux
+.DS_Store
+*.conf
+*.log
+*.pdf
