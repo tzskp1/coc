@@ -1,0 +1,243 @@
+\documentclass{ltjsarticle}
+\usepackage{luatexja} 
+\usepackage{bcprules} 
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{tikz}
+\usetikzlibrary{matrix, positioning}
+\begin{document}
+
+\theoremstyle{definition}
+\newtheorem{defn}{定義}
+\newtheorem{thm}{定理}
+\newtheorem{lem}{補題}
+\newtheorem{ex}{例}
+
+\title{少人数クラス内容報告(中間まとめ)・講義内容要約}
+\author{
+アドバイザー名: Jacques Garrigue
+学生番号: 321701183
+氏名: 田中 一成
+}
+\maketitle
+
+\begin{abstract}
+本まとめにおいては, Calculus of Construction(CC)と呼ばれる計算体系の定義を述べる. また, Calculus of Constructionを論理体系としてみなすために必要な合流生と停止性について述べる.
+\end{abstract}
+
+\section{記号等}
+初めに簡約関係と呼ばれる一般の$2$項関係について論じる. 考えている集合$A$とその上の$2$項関係$\rightarrow \subset A \times A$を固定する.ここでそれぞれ,
+$\xrightarrow{n}$を$\rightarrow$を$n$回合成した関係,
+$\leftrightarrow$を$\rightarrow$の対称閉包,
+$\xrightarrow{+}$を$\rightarrow$の推移閉包,
+$\xrightarrow{=}$を$\rightarrow$の反射閉包,
+$\overset{*}{\rightarrow}$を$\rightarrow$の推移反射閉包,
+$\overset{+}{\leftrightarrow}$を$\rightarrow$の推移対称閉包,
+$\overset{*}{\leftrightarrow}$を$\rightarrow$の推移対称反射閉包とする.
+また$(a, b) \in \rightarrow$を$a \rightarrow b$と書く.
+
+\begin{defn}
+$\rightarrow$が合流性を持つとは,任意の$y_{1},y_{2},x \in A$について$y_1 \overset{*}{\leftarrow} x \overset{*}{\rightarrow} y_2$ならば, $y_1 \overset{*}{\rightarrow} z \overset{*}{\leftarrow} y_2$となる$z \in A$が存在することを言い, 停止するとは無限列$a_0 \rightarrow a_1 \rightarrow a_2 \rightarrow \cdots$が$A$に存在しないことを言う. さらに$x \in A$が正規形であるとは, $x \rightarrow y$となる$y \in A$が存在しないことを言う.
+\end{defn}
+
+また停止性の非自明な言い換えとしてwell foundnessとよばれるものがある.
+
+\begin{defn}
+$\rightarrow$がwell foundedであるとは, 以下の条件が同値であることをいう. ただし$P$は任意の述語を表している.
+ \begin{itemize}
+  \item 任意の$x \in A$について, $x \xrightarrow{+} y$となる全ての$y \in A$に対して$P(y)$ならば$P(x)$.
+  \item 任意の$z \in A$について$P(z)$.
+ \end{itemize}
+\end{defn}
+
+\begin{thm}
+ 停止性とwell foundnessは同値である.
+\end{thm}
+
+\begin{proof}
+ 必要性を示す. 任意の$w \in A$について$P(w):= \text{無限列} w \rightarrow w_1 \rightarrow \cdots \text{は存在しない}$と置く. 任意の$x \xrightarrow{+} y$について$P(y)$が成立するとすると, $x$から始まる無限列は起こり得ない. したがって$P(x)$が成立する. $\rightarrow$がwell foundedであることより, 任意の$z \in A$に対して$P(z)$, すなわち$\rightarrow$の停止性が従う.
+ 
+ 十分性を背理法により示す. 任意の$x \xrightarrow{+} y$について$P(y)$ならば$P(x)$かつ, ある$z \in A$が存在して$P(z)$が成立しないと仮定する. 前半の主張の対偶をとると, 任意の$x \in A$に対して$P(x)$が成立しないならば, ある$y \in A$で$x \xrightarrow{+} y$かつ$P(y)$が成立しないものが存在することになる. この主張を用いて$z$から始まる無限列を構成することができる.
+\end{proof}
+
+\section{型なしラムダ計算}
+Calculus of Constructionの原型となる型なしラムダ計算と呼ばれる計算体系を定義する. Calculus of Constructionにおいての合流性の証明は型なしラムダ計算に存在する類似の主張の証明のadhocな拡張として得られる.
+
+可算濃度の集合$V$を固定する. またここではデカルト積に相当するものとして特別な値$d$を追加している.
+
+\begin{defn}
+ ラムダ項の集合$\Lambda$とは, 以下の条件を満たす最小の集合のことをいう.
+ \begin{itemize}
+  \item $d \in \Lambda$
+  \item $V \subset \Lambda$
+  \item 任意の$v \in V$, $M \in \Lambda$について, $\lambda v. M \in \Lambda$
+  \item 任意の$M \in \Lambda$, $N \in \Lambda$について, $M N \in \Lambda$
+ \end{itemize}
+\end{defn}
+
+ラムダ計算のシステムは, 計算として機能するための作用を持つ. そのうちの最も本質的なものが$\beta$簡約と呼ばれている.
+
+\begin{defn}
+ $\beta$簡約$\rightarrow_{\beta}$とは$\Lambda$の上の$2$項関係であり, 以下の条件を満たす最小の関係のことをいう.
+ \begin{itemize}
+  \item 任意の$v \in V$, $M, N \in \Lambda$について, $(\lambda v. M) N \rightarrow_\beta M[N/v]$
+  \item 任意の$v \in V$, $N_1, N_2 \in \Lambda$について, $N_1 \rightarrow_\beta N_2$ならば$(\lambda v. N_1) \rightarrow_\beta (\lambda v. N_2)$
+  \item 任意の$M, N_1, N_2 \in \Lambda$について, $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
+ \end{itemize}
+ ただし, ここで$M[N/v]$とは代入と呼ばれる操作を表している. 代入とはラムダ項$M \in \Lambda$の中に表れる$v \in V$をすべてラムダ項$N \in \Lambda$に置きかえるということである.
+\end{defn}
+
+このまとめにおいて示す事実もCalculus of Constructionにおける$\beta$簡約の合流性と停止性である.
+
+\section{Calculus of Constructionの定義}
+Calculus of Constructionの定義を与える. 型なしラムダ計算における議論とは平行していることに注意されたい.
+型なしの場合におけるラムダ項に対応するものとしてpseudotermと呼ばれるものを定義する.
+
+可算濃度の集合$V$を固定する.
+
+\begin{defn}
+ pseudotermの集合$P$とは, 以下の条件を満たす最小の集合のことをいう.
+ \begin{itemize}
+  \item $V \subset P$
+  \item 任意の$v \in V$, $M, T \in P$について, $\lambda v \colon T. M \in P$
+  \item 任意の$v \in V$, $M, T \in P$について, $\Pi v \colon T. M \in P$
+  \item 任意の$M \in P$, $N \in P$について, $M N \in P$
+  \item $ \star, \square \in P$
+ \end{itemize}
+\end{defn}
+
+\begin{defn}
+ $\beta$簡約$\rightarrow_{\beta}$とは$P$の上の$2$項関係であり, 以下の条件を満たす最小の関係のことをいう.
+ \begin{itemize}
+  \item 任意の$v \in V$, $M, T, N \in P$について, $(\lambda v \colon T. M) N \rightarrow_\beta M[N/v]$
+  \item 任意の$v \in V$, $M, T, N \in P$について, $(\Pi v \colon T. M) N \rightarrow_\beta M[N/v]$
+  \item 任意の$v \in V$, $N_1, N_2, M \in P$について, $N_1 \rightarrow_\beta N_2$ならば$(\lambda v \colon M. N_1) \rightarrow_\beta (\lambda v \colon M. N_2)$かつ$(\lambda v \colon N_1 . M) \rightarrow_\beta (\lambda v \colon N_2 . M)$
+  \item 任意の$v \in V$, $N_1, N_2, M \in P$について, $N_1 \rightarrow_\beta N_2$ならば$(\Pi v \colon M. N_1) \rightarrow_\beta (\Pi v \colon M. N_2)$かつ$(\Pi v \colon N_1 . M) \rightarrow_\beta (\Pi v \colon N_2 . M)$
+  \item 任意の$M, N_1, N_2 \in P$について, $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
+  \item 任意の$M_1, M_2, N_1, N_2 \in P$について, $M_1 \rightarrow_\beta M_2$かつ$N_1 \rightarrow_\beta N_2$ならば$M_1 N_1 \rightarrow_\beta M_2 N_2$
+ \end{itemize}
+\end{defn}
+
+また, 計算規則として等価性の判定のために課せられている性質として合流性がある.
+
+\begin{thm}
+ $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
+\end{thm}
+\begin{proof}
+ 証明は\cite{高橋正子1991計算論}の71ページに従った.
+任意の$M \in P$に対して, ある$N_M \in P$が存在し, 任意の$L \in P$に対して, 
+$M \overset{*}{\rightarrow}_\beta L$ならば$L \overset{*}{\rightarrow}_\beta N_M$という主張を証明する.
+ここで, $\rightarrow_\beta$の推移反射閉包$\overset{*}{\rightarrow}_\beta$に関して議論しても一般性を失わないことに注意する.
+また, 証明は$P$に対する帰納法を用いる.
+
+$M \in P$を固定する.
+
+$M \in V$の場合, $N_M := M$とすれば, 定義より直ちに従う.
+ 
+$M = \lambda v \colon T_M . M_0$となる$v \in V$, $M_0, T_M \in P$が存在する場合は, $N_M := \lambda v \colon N_{T_M} . N_{M_0}$とするとよい.
+任意の$L \in P$に対して, $M \overset{*}{\rightarrow}_\beta L$と仮定する.
+このとき, ある$L_0, T_L \in P$が存在して, $L = \lambda v \colon T_L . L_0$, $M_0 \overset{*}{\rightarrow}_\beta L_0$かつ$T_M \overset{*}{\rightarrow}_\beta T_L$となる.
+なぜならば, $M \overset{*}{\rightarrow}_\beta L$となるときには, そのような場合しかありえないからである.
+すると, $\rightarrow_{\beta}$の定義より, $L \overset{*}{\rightarrow}_\beta N_M$となることがわかる.
+ 
+$M = \Pi v \colon T_M . M_0$となる$v \in V$, $M_0, T_M \in P$が存在する場合, 
+$M = M_0 M_1$となる$M_0, M_1 \in P$が存在するが, $M_0 = \lambda v \colon T_0 . M_3$あるいは$M_0 = \Pi v \colon T_0 . M_3$となるような$v \in V$, $T_0, M_3 \in P$が存在しない場合も先程と同様である.
+
+$M = (\lambda v : T_M . M_0) M_1$となる$v \in V$, $T_M, M_0, M_1 \in P$が存在する場合, $N_M := N_{M_1}[N_{M_0}/v]$とする.
+任意の$L \in P$に対して, $M \overset{*}{\rightarrow}_\beta L$と仮定する.
+このとき, ある$L_0, L_1, T_L \in P$が存在して, $L = (\lambda v \colon T_L . L_0) L_1$, $M_i \overset{*}{\rightarrow}_\beta L_i (i = 0, 1)$かつ$T_M \overset{*}{\rightarrow}_\beta T_L$となるか,
+ある$L_0, L_1 \in P$が存在して, $L = L_0[L_1/v]$かつ$M_i \overset{*}{\rightarrow}_\beta L_i (i = 0, 1)$となるかのいずれかである.
+前者の場合は$\rightarrow_{\beta}$の定義より$L \overset{*}{\rightarrow}_\beta N_M$となることがわかる.
+後者の場合は, 代入操作が$\rightarrow_{\beta}$を保つことに注意すればいえる.
+ 
+$M = (\Pi v : T_M . M_0) M_1$となる$v \in V$, $T_M, M_0, M_1 \in P$が存在する場合も同様である.
+\end{proof}
+
+型づけ規則とよばれる自然演繹のシステムが存在し, それも含めての計算体系としてCalculus of Constructionは定義される. 習慣に従って, ここでは文脈$\Gamma$を用いた記法を用いている.
+
+\begin{defn}
+ Calculus of Constructionsにおける型づけ規則は以下のものからなる.
+ % \item[Ax] \begin{prooftree}
+ %            \AxiomC{$\vdash \star \colon \square$}
+ %           \end{prooftree}
+ % \item[Var] \begin{prooftree}
+ %             \AxiomC{$\Gamma \vdash T \colon \star / \square$}
+ %             \RightLabel{$v$は$\Gamma$に出現しないもの}
+ %             \UnaryInfC{$\Gamma, v \colon T \vdash v \colon T$}
+ %            \end{prooftree}
+ % \item[weak] \begin{prooftree}
+ %             \AxiomC{$\Gamma \vdash T \colon \star / \square$}
+ %             \AxiomC{$\Gamma \vdash M \colon U$}
+ %             \RightLabel{$v$は$\Gamma$に出現しないもの}
+ %             \BinaryInfC{$\Gamma, v \colon T \vdash M \colon U$}
+ %            \end{prooftree}
+ % \item[$\Pi$] \begin{prooftree}
+ %               \AxiomC{$\Gamma \vdash T \colon \star / \square$}
+ %               \AxiomC{$\Gamma, v \colon T \vdash U \colon s$}
+ %               \RightLabel{$s = \star, \square$}
+ %               \BinaryInfC{$\Gamma \vdash \Pi v \colon T . U \colon s$}
+ %              \end{prooftree}
+\infrule[Ax]{
+}{
+ \vdash \star \colon \square
+}
+\infrule[var]{
+ \Gamma \vdash T \colon \star / \square
+ \andalso \Gamma, v \colon T \vdash v \colon T
+ \andalso $v$は$\Gamma$に出現しないもの
+}{
+ \Gamma, v \colon T \vdash v \colon T
+}
+\infrule[weak]{
+ \Gamma \vdash T \colon \star / \square
+ \andalso \Gamma \vdash M \colon U
+ \andalso $v$は$\Gamma$に出現しないもの
+ %             \RightLabel{$v$は$\Gamma$に出現しないもの}
+}{
+ \Gamma, v \colon T \vdash M \colon U
+}
+\infrule[$\Pi$]{
+ \Gamma \vdash T \colon \star / \square
+ \andalso \Gamma, v \colon T \vdash U \colon s
+ \andalso s = \star, \square
+}{
+ \Gamma \vdash \Pi v \colon T . U \colon s
+}
+\infrule[$\lambda$]{
+  \Gamma, v \colon T \vdash M \colon U
+  \andalso \Gamma \vdash \Pi v \colon T . U \colon \star / \square
+}{
+  \Gamma \vdash \lambda v \colon T . M \colon \Pi v \colon T . U
+}
+\infrule[app]{
+  \Gamma \vdash M \colon \Pi v \colon T . U
+  \andalso \Gamma \vdash N \colon T
+}{
+  \Gamma \vdash M N \colon U[N/v]
+}
+\infrule[conv]{
+  \Gamma \vdash N \colon T
+  \andalso \Gamma \vdash U \colon \star / \square
+  \andalso T \overset{*}{\leftrightarrow}_\beta U
+}{
+  \Gamma \vdash M \colon U
+}
+ % \item[conv] \begin{prooftree}
+ %              \AxiomC{$\Gamma \vdash N \colon T$}
+ %              \AxiomC{$\Gamma \vdash U \colon \star / \square$}
+ %              \RightLabel{$T \overset{*}{\leftrightarrow}_\beta U$}
+ %              \BinaryInfC{$\Gamma \vdash M \colon U$}
+ %             \end{prooftree}
+\end{defn}
+
+型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 実際, 型づけ可能な項については$\beta$簡約の上で停止性が成立する.
+
+\begin{thm}
+ 型づけ可能なpseudoterm上の$\beta$簡約$\rightarrow_{\beta}$は停止性を持つ.
+\end{thm}
+\begin{proof}
+ 証明は\cite{geuvers1994short}に従った.
+\end{proof}
+
+\bibliography{bib}
+\bibliographystyle{junsrt}
+\end{document}
