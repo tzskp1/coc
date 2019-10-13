@@ -661,7 +661,6 @@ Proof. by rewrite vars_app vars_abs undupD -catA; apply notin_widenlr. Qed.
 (* rewrite /= mem_seq1 eq_sym => ->. *)
 (* by rewrite subtermxx. *)
 (* move=> ? t IH t2 ? /=. *)
-(* (* rewrite vars_abs mem_undup mem_cat mem_seq1 /=. *) *)
 (* case: ifP => [/eqP ->|]. *)
 (*  by rewrite mem_filter mem_undup in_cons eqxx. *)
 (* rewrite mem_filter mem_undup in_cons eq_sym. *)
@@ -878,48 +877,48 @@ Proof. by rewrite vars_app vars_abs undupD -catA; apply notin_widenlr. Qed.
    
 (*    mem_seq1. *)
 
-Lemma fv_appl t s x :
-  x \notin fv (App t s) -> x \notin fv t.
-Proof.
-  rewrite !mem_filter varb_app vars_app !mem_undup !mem_cat !mem_undup !negb_and !negb_or !negb_and.
-  case/orP => [/orP [-> //|]|/andP [] ->].
+(* Lemma fv_appl t s x : *)
+(*   x \notin fv (App t s) -> x \notin fv t. *)
+(* Proof. *)
+(*   rewrite !mem_filter varb_app vars_app !mem_undup !mem_cat !mem_undup !negb_and !negb_or !negb_and. *)
+  (* case/orP => [/orP [-> //|]|/andP [] ->]. *)
 (*   case/orP => -> //. *)
 (*   rewrite  *)
 (*   rewrite orbT. *)
   
 (*   (_t3_ \in fv _t_ -> False) -> _t3_ \in fv (App _t_ _t1_) -> False *)
 
-Lemma subst_notin t t1 t2 :
-  t \in fv t1 -> t \notin vars t2 -> (t \notin vars (subst t1 t t2)).
-Proof.
-  elim: t1 t2 t => //=.
-  move=> ? ? ?.
-  by rewrite mem_seq1 eq_sym => ->.
-  move=> ? ? IH ? ? .
-  rewrite fv_abs eq_sym => /andP [] ? /negPf H ?.
-  by rewrite H vars_abs mem_undup mem_cat mem_seq1 eq_sym H /= IH.
-  move=> ? IH1 ? IH2 ? ? ? ?.
-  rewrite vars_app mem_undup mem_cat negb_or.
-  move=> Hc.
-  apply/implyP; case: ifP => [/negP /negP H /implyP|<- H].
-  + rewrite implybF => H0.
-    elim: t1 t2 t H H0 Hc => //=.
-    * move=> ? ? ?.
-      rewrite mem_seq1 eq_sym.
-      by case: ifP => // ? ->.
-    * move=> ? ? IH ? ?.
-      rewrite fv_abs eq_sym.
-      case: ifP; first by rewrite andbF.
-      rewrite andbT vars_abs mem_undup mem_cat mem_seq1 => -> /=.
-      apply IH.
-    * move=> ? IH1 ? IH2 ? ?.
-      rewrite vars_app mem_undup mem_cat.
+(* Lemma subst_notin t t1 t2 : *)
+(*   t \in fv t1 -> t \notin vars t2 -> (t \notin vars (subst t1 t t2)). *)
+(* Proof. *)
+(*   elim: t1 t2 t => //=. *)
+(*   move=> ? ? ?. *)
+(*   by rewrite mem_seq1 eq_sym => ->. *)
+(*   move=> ? ? IH ? ? . *)
+(*   rewrite fv_abs eq_sym => /andP [] ? /negPf H ?. *)
+(*   by rewrite H vars_abs mem_undup mem_cat mem_seq1 eq_sym H /= IH. *)
+(*   move=> ? IH1 ? IH2 ? ? ? ?. *)
+(*   rewrite vars_app mem_undup mem_cat negb_or. *)
+(*   move=> Hc. *)
+(*   apply/implyP; case: ifP => [/negP /negP H /implyP|<- H]. *)
+(*   + rewrite implybF => H0. *)
+(*     elim: t1 t2 t H H0 Hc => //=. *)
+(*     * move=> ? ? ?. *)
+(*       rewrite mem_seq1 eq_sym. *)
+(*       by case: ifP => // ? ->. *)
+(*     * move=> ? ? IH ? ?. *)
+(*       rewrite fv_abs eq_sym. *)
+(*       case: ifP; first by rewrite andbF. *)
+(*       rewrite andbT vars_abs mem_undup mem_cat mem_seq1 => -> /=. *)
+(*       apply IH. *)
+(*     * move=> ? IH1 ? IH2 ? ?. *)
+(*       rewrite vars_app mem_undup mem_cat. *)
       
-      case/orP.
-       move/IH1.
-       move=> IH' /IH'.
-       apply.
-       apply IH1.
+(*       case/orP. *)
+(*        move/IH1. *)
+(*        move=> IH' /IH'. *)
+(*        apply. *)
+(*        apply IH1. *)
        
 (*   * by move=> ? ? ?; rewrite mem_seq1 eq_sym => ? -> //. *)
 (*   * move=> ? ? IH ? ? ?; case: ifP => //. *)
@@ -940,219 +939,235 @@ Proof.
     by rewrite !vars_app !mem_undup !mem_cat => /orP [] ?; apply/orP; auto.
 Qed. 
 
-Lemma beta_pres_subst t1 t2 t s :
-   beta t1 t2 -> betat (subst t1 t s) (subst t2 t s).
-Proof.
-  suff H: forall n t1 t2 t s, sizeu t2 = n ->
-                         beta t1 t2 -> betat (subst t1 t s) (subst t2 t s).
-   move=> H1.
-   by apply: (H (sizeu t2)).
-  move=> {t1 t2 t s} n; elim: (ltn_wf n) => {n} n _ IH t1 t2 t s.
-  case: t1 t2 => // [? ? [] // ? t1 Hn|].
-  + repeat case/orP; case/andP.
-    - move/eqP=> <- H /=.
-      rewrite -/beta in H.
-      case: ifP => [/eqP ->|?].
-       apply: beta_betat.
-       by rewrite /= H eqxx.
-      rewrite -betatAC; apply (IH (sizeu t1)) => //; first by rewrite -Hn.
-    - move=> /eqP -> /eqP <- /=.
-      by case: ifP => [/eqP ->|?].
-    - move=> /eqP -> H /=.
-      rewrite -/beta in H.
-      case: ifP => [/eqP ->|?].
-       apply: beta_betat.
-       by rewrite /= H eqxx.
-      rewrite -betatAC; apply (IH (sizeu t1)) => //; first by rewrite -Hn.
-  + move=> t1 t2 t3 Hn.
-    case: t3 Hn.
-    + case: t1 IH => // ? t1 ? ? /= /eqP H.
-      case: ifP => [/eqP Hcc| Hcc].
-       case tt1: (t \notin vars t1).
-        apply beta_betat.
-        by rewrite /= Hcc substC // -Hcc H /=.
-       move/negPn: tt1 H.
-       rewrite Hcc.
-       move=> tt1 H.
-       case tt2: (t \notin vars t2).
-       apply/beta_betat/eqP.
-       rewrite /= -H.
-       congr subst.
-       rewrite subst0 //.
-       move/negPn: tt2 => tt2.
-       suff: t \in vars d => //.
-       rewrite -H.
-       elim: t1 t t2 tt1 tt2 H Hcc => //.
-        by move=> * /=; case: ifP.
-       by move=> /= ? ? ? ? ?; case: ifP => //.
-      apply beta_betat.
-      case tt1: (t \notin vars t1).
-       by rewrite /= substD // H.
-      move/negPn: tt1 => tt1.
-      suff: t \in vars d => //.
-      rewrite -H.
-      elim: t1 tt1 H => //.
-       move=> ? /=.
-       case: ifP => //.
-       rewrite /= mem_seq1 => /eqP ->.
-       by rewrite eq_sym Hcc.
-      by move=> ? ? ? ? /=; case: ifP.
-    + move=> v0.
-      case: t1 IH => //= v t1 IH Hn /eqP H.
-       case tt1: (t \notin vars t1).
-        apply beta_betat.
-        case: ifP => [/eqP Hc|].
-         rewrite /= substC // H /=.
-         case: ifP => //.
-         case: s=> // ? ? ?.
-         by rewrite eqxx.
-        rewrite /= substD // H /= eqxx.
-        by case: ifP => //; case: s.
-       move/negPn: tt1 => tt1.
-       case tt2: (t \notin vars t2).
-        apply beta_betat.
-        have->: (subst t2 t s = t2) by rewrite /= subst0.
-        case: ifP => [/eqP vt|].
-         case: ifP => [/eqP v0t|].
-          suff: v0 \notin vars (Var v0) by rewrite mem_seq1=> /negP.
-          rewrite -H v0t vt.
-          rewrite 
-          subst_notin //.
-        case v0t: (v0 == t).
-         case: ifP => //.
-         move/eqP.
-         rewrite /=.
-         move/eqP: v0t => v0t.
-         rewrite -v0t in tt1, tt2.
-         rewrite /=.
-        case: ifP => //.
-         case: ifP => [/eqP Hc|].
-         have: forall x, x \in vars t2 -> x = v0.
-           v0 \in vars t2.
-          rewrite 
+(* Lemma beta_pres_subst t1 t2 t s : *)
+(*    beta t1 t2 -> betat (subst t1 t s) (subst t2 t s). *)
+(* Proof. *)
+(*   suff H: forall n t1 t2 t s, sizeu t2 = n -> *)
+(*                          beta t1 t2 -> betat (subst t1 t s) (subst t2 t s). *)
+(*    move=> H1. *)
+(*    by apply: (H (sizeu t2)). *)
+(*   move=> {t1 t2 t s} n; elim: (ltn_wf n) => {n} n _ IH t1 t2 t s. *)
+(*   case: t1 t2 => // [? ? [] // ? t1 Hn|]. *)
+(*   + repeat case/orP; case/andP. *)
+(*     - move/eqP=> <- H /=. *)
+(*       rewrite -/beta in H. *)
+(*       case: ifP => [/eqP ->|?]. *)
+(*        apply: beta_betat. *)
+(*        by rewrite /= H eqxx. *)
+(*       rewrite -betatAC; apply (IH (sizeu t1)) => //; first by rewrite -Hn. *)
+(*     - move=> /eqP -> /eqP <- /=. *)
+(*       by case: ifP => [/eqP ->|?]. *)
+(*     - move=> /eqP -> H /=. *)
+(*       rewrite -/beta in H. *)
+(*       case: ifP => [/eqP ->|?]. *)
+(*        apply: beta_betat. *)
+(*        by rewrite /= H eqxx. *)
+(*       rewrite -betatAC; apply (IH (sizeu t1)) => //; first by rewrite -Hn. *)
+(*   + move=> t1 t2 t3 Hn. *)
+(*     case: t3 Hn. *)
+(*     + case: t1 IH => // ? t1 ? ? /= /eqP H. *)
+(*       case: ifP => [/eqP Hcc| Hcc]. *)
+(*        case tt1: (t \notin vars t1). *)
+(*         apply beta_betat. *)
+(*         by rewrite /= Hcc substC // -Hcc H /=. *)
+(*        move/negPn: tt1 H. *)
+(*        rewrite Hcc. *)
+(*        move=> tt1 H. *)
+(*        case tt2: (t \notin vars t2). *)
+(*        apply/beta_betat/eqP. *)
+(*        rewrite /= -H. *)
+(*        congr subst. *)
+(*        rewrite subst0 //. *)
+(*        move/negPn: tt2 => tt2. *)
+(*        suff: t \in vars d => //. *)
+(*        rewrite -H. *)
+(*        elim: t1 t t2 tt1 tt2 H Hcc => //. *)
+(*         by move=> * /=; case: ifP. *)
+(*        by move=> /= ? ? ? ? ?; case: ifP => //. *)
+(*       apply beta_betat. *)
+(*       case tt1: (t \notin vars t1). *)
+(*        by rewrite /= substD // H. *)
+(*       move/negPn: tt1 => tt1. *)
+(*       suff: t \in vars d => //. *)
+(*       rewrite -H. *)
+(*       elim: t1 tt1 H => //. *)
+(*        move=> ? /=. *)
+(*        case: ifP => //. *)
+(*        rewrite /= mem_seq1 => /eqP ->. *)
+(*        by rewrite eq_sym Hcc. *)
+(*       by move=> ? ? ? ? /=; case: ifP. *)
+(*     + move=> v0. *)
+(*       case: t1 IH => //= v t1 IH Hn /eqP H. *)
+(*       case tt1: (t \notin vars t1). *)
+(*        apply beta_betat. *)
+(*        case: ifP => [/eqP Hc|]. *)
+(*         rewrite /= substC // H /=. *)
+(*         case: ifP => //. *)
+(*         case: s=> // ? ? ?. *)
+(*         by rewrite eqxx. *)
+(*        rewrite /= substD // H /= eqxx. *)
+(*        by case: ifP => //; case: s. *)
+(*       move/negPn: tt1 => tt1. *)
+(*       case: ifP => [/eqP vt|]. *)
+(*        case: ifP => [/eqP v0t|]. *)
+(*         apply beta_betat. *)
+(*         rewrite /=. *)
+       
+(*         have: t \in subst  *)
+(*        rewrite /= vt. *)
+(*        rewrite /= substC // H /=. *)
+        
+         
+(*        case tt2: (t \notin vars t2). *)
+(*           rewrite subst0 //. *)
+         
+(*         apply beta_betat. *)
+(*         have->: (subst t2 t s = t2) by rewrite /= subst0. *)
+(*         case: ifP => [/eqP vt|]. *)
+(*          case: ifP => [/eqP v0t|]. *)
+(*          rewrite /=. *)
+(*          have: v \in vars t2. *)
           
-          rewrite /=.
-        rewrite /=.
-        case: ifP => //.
-         case: ifP => //.
-       case: ifP => //.
-        rewrite /=.
-       suff: t \in vars d => //.
+(*          (* apply: subterm_vars. *) *)
+(*          (* subst t1 v t2 *) *)
+(*           rewrite vt /=. *)
+(*           suff: v0 \notin vars (Var v0) by rewrite mem_seq1=> /negP. *)
+(*           rewrite -H v0t vt. *)
+(*         case v0t: (v0 == t). *)
+(*          case: ifP => //. *)
+(*          move/eqP. *)
+(*          rewrite /=. *)
+(*          move/eqP: v0t => v0t. *)
+(*          rewrite -v0t in tt1, tt2. *)
+(*          rewrite /=. *)
+(*         case: ifP => //. *)
+(*          case: ifP => [/eqP Hc|]. *)
+(*          have: forall x, x \in vars t2 -> x = v0. *)
+(*            v0 \in vars t2. *)
+(*           rewrite  *)
+          
+(*           rewrite /=. *)
+(*         rewrite /=. *)
+(*         case: ifP => //. *)
+(*          case: ifP => //. *)
+(*        case: ifP => //. *)
+(*         rewrite /=. *)
+(*        suff: t \in vars d => //. *)
         
-       case tt2: (t \notin vars t2).
+(*        case tt2: (t \notin vars t2). *)
          
-         rewrite -Hc in tt1.
-         rewrite /= subst0 //.
-         case: ifP => //.
-         rewrite subst0 // in H.
-         rewrite /= H /= -Hc.
+(*          rewrite -Hc in tt1. *)
+(*          rewrite /= subst0 //. *)
+(*          case: ifP => //. *)
+(*          rewrite subst0 // in H. *)
+(*          rewrite /= H /= -Hc. *)
          
-         rewrite /=.
+(*          rewrite /=. *)
          
-        rewrite H.
-        rewrite /=.
+(*         rewrite H. *)
+(*         rewrite /=. *)
         
-        case v0t: (v0 == t).
-         have: (t \notin vars t1).
-         rewrite /=.
-        rewrite /=.
-        by rewrite /= Hcc substC // -Hcc H /=.
+(*         case v0t: (v0 == t). *)
+(*          have: (t \notin vars t1). *)
+(*          rewrite /=. *)
+(*         rewrite /=. *)
+(*         by rewrite /= Hcc substC // -Hcc H /=. *)
       
-      case: ifP => [/eqP Hcc| Hcc].
-       case: ifP => [/eqP Hcc'|].
-       rewrite Hcc' Hcc in H.
-       rewrite Hcc.
-       apply beta_betat.
-       rewrite /= substC.
-       rewrite /=.
-       by rewrite Hcc /= vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc.
-      case: ifP => [/eqP Hccc| Hccc].
-       have: v0 \in vars (subst t1 v t2) by rewrite H mem_undup mem_seq1.
-       move/subst_vars.
-       rewrite Hccc => Hcc'.
-       by rewrite Hcc' in Hc.
-      apply beta_betat.
-      rewrite /= substD //.
-      by rewrite H /= Hccc.
-      by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx.
-    + move=> v0.
-      case: t1 IH Hc => //= v t1 IH Hc ? Hn /eqP H.
-      case: ifP => [/eqP Hcc| Hcc].
-       by rewrite Hcc /= vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc.
-      case: ifP => [/eqP Hccc| Hccc].
-       have: v0 \in vars (subst t1 v t2) by rewrite H mem_undup /= in_cons eqxx.
-       move/subst_vars.
-       rewrite Hccc => Hcc'.
-       by rewrite Hcc' in Hc.
-      apply beta_betat.
-      rewrite /= substD .
-      by rewrite H /= Hccc.
-      by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx.
-    + move=> q1 q2 Hn H.
-      case t1q1: (t1 == q1); case t2q2: (t2 == q2).
-      * move/eqP: t1q1 => ->; by move/eqP: t2q2 => ->.
-      * case t2q2b : (beta t2 q2).
-         apply betatApC => //.
-         by move/eqP: t1q1 => ->.
-         apply: (IH (sizeu q2)) => //.
-         by rewrite -Hn /= -addnS ltn_addl.
-         by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-        move: H.
-        rewrite /= t2q2 t1q1 /= !andbF !orbF t2q2b /= !andbF !orbF.
-        case: t1 Hc t1q1 => //= v t1 Hc ?.
-        rewrite /= !orbF => /eqP H.
-        case: ifP => [/eqP Hcc|Hcc].
-         by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc.
-        apply: beta_betat.
-        rewrite /= substD //.
-        by rewrite H /= eqxx.
-        by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-      * case t1q1b : (beta t1 q1).
-         apply betatApC => //.
-         apply: (IH (sizeu q1)) => //.
-         by rewrite -Hn /= -addSn ltn_addr.
-         by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-         by move/eqP: t2q2 => <-.
-        move: H.
-        rewrite /= t2q2 t1q1 t1q1b /=.
-        case: t1 Hc t1q1 t1q1b => //= v t1 Hc ? ?.
-        rewrite /= !orbF => /eqP H.
-        case: ifP => [/eqP Hcc|Hcc].
-         by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc.
-        apply: beta_betat.
-        rewrite /= substD //.
-        by rewrite H /= eqxx.
-        by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-      * case t1q1b : (beta t1 q1).
-        + case t2q2b : (beta t2 q2).
-           apply betatApC => //.
-           apply: (IH (sizeu q1)) => //.
-           by rewrite -Hn /= -addSn ltn_addr.
-           by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-           apply: (IH (sizeu q2)) => //.
-           by rewrite -Hn /= -addnS ltn_addl.
-           by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-        move: H; rewrite /= t2q2 t1q1 t1q1b t2q2b /=.
-        case: t1 Hc t1q1 t1q1b => // v t1 Hc ? ?.
-        rewrite !orbF /= => /eqP H.
-        case: ifP => [/eqP Hcc|Hcc].
-         by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc.
-        apply: beta_betat.
-        rewrite /= substD //.
-        by rewrite H /= eqxx.
-        by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-       move: H; rewrite /= t2q2 t1q1 t1q1b /=.
-       case: t1 Hc t1q1 t1q1b => // v t1 Hc ? ?.
-       rewrite !orbF /= => /eqP H.
-       case: ifP => [/eqP Hcc|Hcc].
-        by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc.
-       apply: beta_betat.
-       rewrite /= substD //.
-       by rewrite H /= eqxx.
-       by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
-Qed.
+(*       case: ifP => [/eqP Hcc| Hcc]. *)
+(*        case: ifP => [/eqP Hcc'|]. *)
+(*        rewrite Hcc' Hcc in H. *)
+(*        rewrite Hcc. *)
+(*        apply beta_betat. *)
+(*        rewrite /= substC. *)
+(*        rewrite /=. *)
+(*        by rewrite Hcc /= vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc. *)
+(*       case: ifP => [/eqP Hccc| Hccc]. *)
+(*        have: v0 \in vars (subst t1 v t2) by rewrite H mem_undup mem_seq1. *)
+(*        move/subst_vars. *)
+(*        rewrite Hccc => Hcc'. *)
+(*        by rewrite Hcc' in Hc. *)
+(*       apply beta_betat. *)
+(*       rewrite /= substD //. *)
+(*       by rewrite H /= Hccc. *)
+(*       by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx. *)
+(*     + move=> v0. *)
+(*       case: t1 IH Hc => //= v t1 IH Hc ? Hn /eqP H. *)
+(*       case: ifP => [/eqP Hcc| Hcc]. *)
+(*        by rewrite Hcc /= vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc. *)
+(*       case: ifP => [/eqP Hccc| Hccc]. *)
+(*        have: v0 \in vars (subst t1 v t2) by rewrite H mem_undup /= in_cons eqxx. *)
+(*        move/subst_vars. *)
+(*        rewrite Hccc => Hcc'. *)
+(*        by rewrite Hcc' in Hc. *)
+(*       apply beta_betat. *)
+(*       rewrite /= substD . *)
+(*       by rewrite H /= Hccc. *)
+(*       by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx. *)
+(*     + move=> q1 q2 Hn H. *)
+(*       case t1q1: (t1 == q1); case t2q2: (t2 == q2). *)
+(*       * move/eqP: t1q1 => ->; by move/eqP: t2q2 => ->. *)
+(*       * case t2q2b : (beta t2 q2). *)
+(*          apply betatApC => //. *)
+(*          by move/eqP: t1q1 => ->. *)
+(*          apply: (IH (sizeu q2)) => //. *)
+(*          by rewrite -Hn /= -addnS ltn_addl. *)
+(*          by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(*         move: H. *)
+(*         rewrite /= t2q2 t1q1 /= !andbF !orbF t2q2b /= !andbF !orbF. *)
+(*         case: t1 Hc t1q1 => //= v t1 Hc ?. *)
+(*         rewrite /= !orbF => /eqP H. *)
+(*         case: ifP => [/eqP Hcc|Hcc]. *)
+(*          by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc. *)
+(*         apply: beta_betat. *)
+(*         rewrite /= substD //. *)
+(*         by rewrite H /= eqxx. *)
+(*         by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(*       * case t1q1b : (beta t1 q1). *)
+(*          apply betatApC => //. *)
+(*          apply: (IH (sizeu q1)) => //. *)
+(*          by rewrite -Hn /= -addSn ltn_addr. *)
+(*          by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(*          by move/eqP: t2q2 => <-. *)
+(*         move: H. *)
+(*         rewrite /= t2q2 t1q1 t1q1b /=. *)
+(*         case: t1 Hc t1q1 t1q1b => //= v t1 Hc ? ?. *)
+(*         rewrite /= !orbF => /eqP H. *)
+(*         case: ifP => [/eqP Hcc|Hcc]. *)
+(*          by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc. *)
+(*         apply: beta_betat. *)
+(*         rewrite /= substD //. *)
+(*         by rewrite H /= eqxx. *)
+(*         by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(*       * case t1q1b : (beta t1 q1). *)
+(*         + case t2q2b : (beta t2 q2). *)
+(*            apply betatApC => //. *)
+(*            apply: (IH (sizeu q1)) => //. *)
+(*            by rewrite -Hn /= -addSn ltn_addr. *)
+(*            by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(*            apply: (IH (sizeu q2)) => //. *)
+(*            by rewrite -Hn /= -addnS ltn_addl. *)
+(*            by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(*         move: H; rewrite /= t2q2 t1q1 t1q1b t2q2b /=. *)
+(*         case: t1 Hc t1q1 t1q1b => // v t1 Hc ? ?. *)
+(*         rewrite !orbF /= => /eqP H. *)
+(*         case: ifP => [/eqP Hcc|Hcc]. *)
+(*          by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc. *)
+(*         apply: beta_betat. *)
+(*         rewrite /= substD //. *)
+(*         by rewrite H /= eqxx. *)
+(*         by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(*        move: H; rewrite /= t2q2 t1q1 t1q1b /=. *)
+(*        case: t1 Hc t1q1 t1q1b => // v t1 Hc ? ?. *)
+(*        rewrite !orbF /= => /eqP H. *)
+(*        case: ifP => [/eqP Hcc|Hcc]. *)
+(*         by rewrite Hcc vars_app vars_abs ?(mem_undup, mem_cat, mem_seq1) eqxx in Hc. *)
+(*        apply: beta_betat. *)
+(*        rewrite /= substD //. *)
+(*        by rewrite H /= eqxx. *)
+(*        by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT. *)
+(* Qed. *)
 
-Lemma beta_pres_subst t1 t2 t s :
+Lemma beta_pres_subst_notin t1 t2 t s :
   t \notin vars t1 -> beta t1 t2 -> betat (subst t1 t s) (subst t2 t s).
 Proof.
   suff H: forall n t1 t2 t s, sizeu t2 = n -> t \notin vars t1 ->
@@ -1276,6 +1291,388 @@ Proof.
        by rewrite H /= eqxx.
        by move: Hc; apply contra; apply subterm_vars; rewrite /= !subtermxx ?orbT.
 Qed.
+
+Lemma in_vars_subst v v0 t0 t2 :
+  v != v0 -> v0 \in vars t0 -> v0 \in vars (subst t0 v t2).
+Proof.
+  elim: t0 v0 v t2 => //.
+  move=> ? ? ? ? /negPf.
+  rewrite /= mem_seq1 => H /eqP <-.
+  by rewrite eq_sym H mem_seq1.
+  move=> v2 ? IH v1 ? ? /=.
+  case: ifP => [/eqP <- //| ].
+  case v21 : (v1 == v2);
+  rewrite vars_abs mem_undup mem_cat mem_seq1 v21;
+  move=> /= *; rewrite vars_abs mem_undup mem_cat mem_seq1 v21 //=;
+  by apply IH.
+  move=> ? IH1 ? IH2 ? ? ? ?.
+  rewrite /= !vars_app !mem_undup !mem_cat => /orP [/IH1|/IH2] -> //.
+  by rewrite orbT.
+Qed.
+
+(* Lemma subst_var t0 v0 v s : *)
+(*   v0 \in vars t0 -> v \notin vars t0 -> *)
+(*   subst (subst t0 v0 (Var v)) v s = subst t0 v0 s. *)
+(* Proof. *)
+(*   elim: t0 s v => //. *)
+(*   move=> ? ? ?. *)
+(*   rewrite mem_seq1 => /eqP <-. *)
+(*   by rewrite /= !eqxx /= eqxx. *)
+(*   move=> ? t /= IH ? v. *)
+(*   case vv0: (v == v0). *)
+(*    move/eqP: vv0 => ->. *)
+(*    rewrite vars_abs mem_undup mem_cat mem_seq1 eq_sym => /orP [/eqP ->|]. *)
+(*    by rewrite eqxx /= eqxx //. *)
+(*    move=> ?; case: ifP => //= [/eqP ->|]. *)
+(*     by rewrite eqxx. *)
+(*    rewrite eq_sym => ->. *)
+(*    by rewrite IH //. *)
+(*   case vt: (v \notin vars t). *)
+(*    rewrite vars_abs mem_undup mem_cat mem_seq1 eq_sym => /orP [/eqP ->|]. *)
+(*    rewrite eqxx /= eq_sym vv0 subst0 //. *)
+(*    case: ifP => // [/eqP ->|]. *)
+(*     rewrite /= eq_sym vv0 /= subst0 //. *)
+(*    rewrite /=. *)
+(*    case: ifP. *)
+(*    rewrite /= vars_abs mem_undup mem_cat mem_seq1 eq_sym => -> /= ?. *)
+(*    case: ifP => // [/eqP ->|]. *)
+(*     rewrite /=. *)
+(*    rewrite /=. *)
+  
+(*   rewrite subst0 // eqxx //. *)
+
+Lemma beta_pres_subst_in t1 t2 t s :
+  t \in vars t1 -> beta t1 t2 -> betat (subst t1 t s) (subst t2 t s).
+Proof.
+  elim: t1 t2 t s => //.
+  move=> ? ? IH [] // v ? v0 ?.
+  rewrite vars_abs mem_undup mem_cat mem_seq1.
+  case/orP => [/eqP ->|?] H; move: (beta_av H) => aH; rewrite aH in H.
+  apply beta_betat; by rewrite /= aH eqxx.
+  case vv0: (v == v0); first by rewrite /= aH vv0 //; apply beta_betat.
+  rewrite /= aH vv0 /=.
+  apply betatAC.
+  move: H; repeat case/orP; repeat case/andP.
+  + move=> ? ?; by apply IH.
+  + by move=> ? /eqP ->.
+  + move=> ? ?; by apply IH.
+  move=> t1 IH1 t2 IH2.
+  have: forall (t2 : term) (t : nat_eqType) (s : term), beta t1 t2 -> betat (subst t1 t s) (subst t2 t s).
+  move=> t1' t s. case tt'1: (t \in vars t1); first by apply IH1.
+  apply beta_pres_subst_notin. by rewrite tt'1.
+  move=> {IH1} IH1.
+  have: forall (t3 : term) (t : nat_eqType) (s : term), beta t2 t3 -> betat (subst t2 t s) (subst t3 t s).
+  move=> t2' t s. case tt'2: (t \in vars t2); first by apply IH2.
+  apply beta_pres_subst_notin. by rewrite tt'2.
+  move=> {IH2} IH2.
+  case.
+    case: t1 IH1 => //.
+    move=> v t0 IH1 v0 ? /=.
+    case: ifP => [/eqP <-|].
+    case vt2: (v \notin vars t2).
+     move=> ? /eqP <-.
+     apply beta_betat.
+     rewrite /= [subst t2 _ _]subst0 // eqxx.
+     by case: (subst _ _ _).
+    case: t0 IH1 => //.
+     move=> ? ? ?.
+     by apply beta_betat.
+     move=> ? ? ? /=.
+     case: ifP => // ? /eqP Hc.
+     move/negP/negP: vt2.
+     by rewrite Hc.
+    by move=> ? ? ? /=; case: ifP => ? ? /eqP.
+    move=> H2 H1 /eqP H.
+    case v0t0: (v0 \notin vars t0).
+     apply beta_betat.
+     by rewrite /= substD // H.
+    suff: v0 \in vars d by [].
+    rewrite -H in_vars_subst //.
+     by move/negPf: H2 => ->.
+    by move/negPn: v0t0 => ->.
+    
+    case: t1 IH1 => //.
+    move=> v t0 IH1 v0 t1 s /=.
+    case: ifP => [/eqP <-|].
+     case: ifP => [/eqP ->|].
+      case vt0: (v \notin vars t0).
+       move=> ? /eqP H; apply beta_betat.
+       rewrite /= substC // H /= !eqxx.
+       by case s.
+      move=> {IH1} _ /eqP.
+      case: t0 vt0 => //=.
+      move=> ? /negP/negP.
+      rewrite mem_seq1 => /eqP <-.
+      rewrite eqxx => ->.
+      rewrite /= !eqxx.
+      apply beta_betat.
+      rewrite /= !eqxx.
+      by case s => //.
+      by move=> ? ? ?; case: ifP => //.
+     case vt0: (v \notin vars t0).
+      move=> v0v ? /eqP H.
+      apply beta_betat.
+      by rewrite /= substC // H /= v0v.
+     move=> /negP/negP v0v _ /eqP t0vt2.
+     have: v \in vars (subst t0 v0 t2).
+     apply in_vars_subst => //.
+     by move/negPn: vt0.
+     move=> {IH1}.
+     case: t0 vt0 t0vt2 => //.
+      move=> ? /negP/negP.
+      rewrite mem_seq1 => /eqP <-.
+      rewrite /= eqxx => -> ?.
+      apply beta_betat.
+      move/negPf: v0v => /= ->.
+      by rewrite /= eqxx.
+     move=> ? ? ? /=; case: ifP => //.
+    case t1t0 : (t1 \notin vars t0).
+     move=> ? ? /eqP H.
+     apply beta_betat.
+     rewrite /= substD // H /= eqxx.
+     by case: (if _ then _ else _) => //.
+    move=> /negP/negP vt1.
+    move: t1t0 => /negP/negP t1t0 _ /eqP H.
+    move: (in_vars_subst t2 vt1 t1t0).
+    rewrite H mem_seq1 => /eqP H0.
+    rewrite H0 in t1t0, vt1.
+    rewrite H0 eqxx.
+    have: vars t0 = [:: v0].
+     case: t0 t1t0 H IH1 => //.
+      move=> ?.
+      rewrite mem_seq1 => /eqP <- //.
+     move=> ? ? ? /=; by case: ifP => //=.
+    case vs : (v \notin vars s).
+    case: t0 H H0 t1t0 vt1 IH1 => //.
+     move=> ? /=; case: ifP => [/eqP -> ? ? ? H ? [] Hc| H [] ->].
+      by rewrite Hc eqxx in H.
+      rewrite eqxx /=.
+      move=>? ? ? ? ?.
+      apply beta_betat.
+      by rewrite /= subst0 // eqxx; case s => //.
+     move=> ? ? //=; case: ifP => //.
+    move/negP/negP: vs => vs t0v0.
+    have vt0: (v \notin vars t0).
+     by rewrite t0v0 mem_seq1.
+    rewrite subst0 // in H.
+    rewrite H /= eqxx.
+    
+    case v0t2: (v0 \notin vars t2).
+     
+     rewrite subst0 //.
+     apply beta_betat.
+     rewrite /=.
+    t2 v0
+    elim: s vs => //.
+     move=> ?.
+     rewrite mem_seq1 => /eqP <-.
+     apply beta_betat.
+     rewrite /= eqxx.
+    rewrite /= substC.
+    
+    
+    case: t0 H t1t0 IH1 => //.
+     move=> ? /=.
+     case: ifP => [/eqP -> ->|].
+     rewrite mem_seq1 => /eqP <- ? vs ?.
+     rewrite /= eqxx.
+     elim: s vs => //.
+      move=> ? /=.
+      rewrite mem_seq1 => /eqP <-.
+      apply beta_betat.
+      by rewrite /= eqxx.
+      move=> v1 t IH.
+      rewrite vars_abs mem_undup mem_cat mem_seq1 => /orP [/eqP <-|b].
+       apply beta_betat.
+       by rewrite /= eqxx.
+      case v1v0 : (v1 == v0).
+       apply beta_betat.
+       by rewrite /= v1v0 //.
+      apply: betat_trans.
+      apply: (_ : betat _ (Abs v1 (subst t v0 (Abs v1 t)))).
+       apply beta_betat.
+       by rewrite /= v1v0.
+      apply betatAC.
+      apply: betat_trans; last apply IH => //.
+      move: (IH b) => {IH}.
+      
+      case: t b => //.
+       move=> ?.
+       rewrite mem_seq1 => /eqP <-.
+       case; case => // n.
+       rewrite tcSn => [] [] c [].
+       
+       case: c => //=.
+        rewrite eqxx => /eqP //.
+        move=> ?; rewrite eqxx => /eqP <-.
+        move=> ?.
+       apply beta_betat.
+       rewrite /=.
+       
+       rewrite /= eqxx.
+       move=> ?.
+       
+       move=> ? /= IH /IH.
+       
+      apply betatAC.
+       rewrite /=.
+      move=> ?.
+      
+     move=> ? .
+     rewrite /=.
+    case: s => //.
+    move=> ?; rewrite mem_seq1 => /eqP <- ?.
+    apply beta_betat.
+    rewrite /=.
+      
+     rewrite /=.
+    
+    apply beta_betat.
+    rewrite /=.
+    
+    move: (in_vars_subst t2 vt1 t1t0).
+     rewrite /=.
+     rewrite substD.
+    [subst t2 _ _]subst0 //.
+     rewrite substD.
+    rewrite /=.
+    
+    case: ifP => [/eqP ->|].
+     case t1t2 : (t1 \notin vars t2).
+     move=> ? /eqP H.
+    apply beta_betat.
+     rewrite /=.
+     rewrite 
+    rewrite /= substC.
+     rewrite [subst t2 _ _]subst0 //= -substC.
+    
+    case: t0 t1 vt1 t1t0 IH1 => //=.
+    move=> ? ? /negPf H1 /negP/negP.
+    rewrite mem_seq1 => /eqP <- _ _ _.
+    rewrite eqxx.
+    rewrite [X in if X then _ else _]eq_sym H1.
+     
+    
+  v != v0 -> v0 \in vars t0 -> v0 \in vars (subst t0 v t2).
+     move=> _ /eqP H.
+     apply beta_betat.
+     rewrite /= substD /=.
+    
+    move: t1t0 => {IH1}.
+    
+    case: t0 => //.
+    move=> ? /negP/negP.
+    rewrite mem_seq1 /= => /eqP <- _.
+    move/negPf: vt1.
+    rewrite eq_sym => -> /eqP [] t1v0.
+    apply beta_betat.
+    rewrite /=.
+    rewrite t1v0 eqxx.
+    rewrite substD.
+    
+    rewrite /= mem_seq1 => /eqP <-.
+    
+    rewrite eq_sym => -> _ /eqP [] ->.
+    
+    rewrite eqxx.
+     apply beta_betat.
+     rewrite /=.
+    
+    
+    
+      
+    rewrite vars_app vars_abs mem_undup mem_cat mem_undup mem_cat mem_seq1.
+    move=> ?.
+    rewrite /=.
+     
+     
+       
+    case vt2: (v \notin vars t2).
+     move=> ? /eqP <-.
+     apply beta_betat.
+     rewrite /= [subst t2 _ _]subst0 //. eqxx.
+     by case: (subst _ _ _).
+    case: t0 IH1 => //.
+     move=> ? ? ?.
+     by apply beta_betat.
+     move=> ? ? ? /=.
+     case: ifP => // ? /eqP Hc.
+     move/negP/negP: vt2.
+     by rewrite Hc.
+    by move=> ? ? ? /=; case: ifP => ? ? /eqP.
+    move=> H2 H1 /eqP H.
+    case v0t0: (v0 \notin vars t0).
+     apply beta_betat.
+     by rewrite /= substD // H.
+    suff: v0 \in vars d by [].
+    rewrite -H in_vars_subst //.
+     by move/negPf: H2 => ->.
+    by move/negPn: v0t0 => ->.
+    
+     apply/negP.
+     move/negPn: H2.
+     elim: t0 v0 v0t0 H2 => //.
+      move=> ? ?.
+      rewrite mem_seq1 => /negP/negP /eqP <- /=.
+      rewrite eq_sym => ->.
+      by rewrite mem_seq1 eqxx.
+     move=> /= v1 ? IH v2.
+     case: ifP => [? /negPn -> // | ].
+     rewrite vars_abs mem_undup mem_cat mem_seq1.
+     case v21 : (v2 == v1).
+      move=> *; by rewrite vars_abs mem_undup mem_cat mem_seq1 v21.
+     move=> /= *; rewrite vars_abs mem_undup mem_cat mem_seq1 v21 /=.
+     by apply IH.
+     move=> ? IH1 ? IH2' ? /negP/negP.
+     rewrite vars_app mem_undup mem_cat.
+     case/orP.
+     ? ? ? /=.
+     rewrite vars_app mem_undup mem_cat IH1 //.
+             
+     
+     move=> ? ? ?.
+     apply IH.
+     
+     rewrite vars_abs mem_undup mem_cat.
+     
+     rewrite vars_abs mem_undup mem_ca.
+     move=> ? ? ? ?.
+     rewrite 
+     
+    rewrite /=.
+    
+    apply: betat_trans; last first.
+    rewrite -H.
+    apply IH1.
+    
+    rewrite /=.
+    apply beta_betat.
+    rewrite /=.
+    rewrite /=.
+    
+    case vt2: (v0 \notin vars t2).
+     apply beta_betat.
+     rewrite /= [subst t2 _ _]subst0 //.
+     rewrite 
+     rewrite -substC.
+     move=> ? /eqP <-.
+     by case: (subst _ _ _).
+    rewrite /=.
+    
+     rewrite /= substC //.
+     
+     rewrite /=.
+    rewrite /=.
+    rewrite /=
+    
+    
+  rewrite /=.
+  case=> //.
+  rewrite /=.
+  move=> ? ? ?.
+  rewrite vars_app mem_undup mem_cat.
+  rewrite /=.
+  
 
 Lemma beta_pres_vars u u' :
   beta u u' -> forall x, x \in vars u' -> x \in vars u.
@@ -1465,21 +1862,53 @@ Proof.
        by elim: (sizeu t2) => //.
       move=> t2' t2H.
       exists (subst t1' v t2').
-      case=> //=.
-       (* case vt1': (v \in vars t1'). *)
-       (*  case: t1 vt1' H t1H => //=. *)
+      move=> M.
+      case => [] [<-|] /=.
+      have: betat (subst t1 v t2) (subst t1' v t2').
+       apply: betat_trans; last by apply: subst_pres_betat; apply t2H; apply betat_refl.
+       apply betat_pres_subst.
+       apply: subst_pres_betat.
+
+      
+      case vt: (v \in vars t1).
+      apply beta_betat.
+      rewrite /=.
+      subst_pres_beta.
+       case.
+       case; case => // x.
+       rewrite tcSn => [] [] c [].
+       case: c => //.
+       rewrite /=.
+       case
+       move=> x [].
+      move=> M.
+      case: M vt => //.
+      case: 
+      
+      have: betat (subst t1 v t2) (subst t1' v t2').
+       apply: betat_trans; last by apply: subst_pres_betat; apply t2H; apply betat_refl.
+       apply: betat_pres_subst.
+       apply subst_pres_betat.
+       
+       apply: betat_trans; last by  apply t2H; apply betat_refl.
+       
+       apply: betat_trans; last by apply: subst_pres_betat; apply t2H; apply betat_refl.
+      
+      case.
        case; case => // x.
        rewrite tcnS.
        case => y [].
-       case: y => // ? ? ?.
-       
-       move/beta_betat.
-       
-       Check betat_d.
-       case=> // ? ? ? H0 /eqP H1.
-       rewrite -H1.
+       case: y => // [].
+       case=> // ? ? ? ? /eqP Hc.
        apply: betat_trans; last by apply: subst_pres_betat; apply t2H; apply betat_refl.
+       rewrite -Hc.
+       apply: betat_trans; last by apply: subst_pres_betat; apply t1H; apply betat_refl.
+       
        apply: betat_trans; last apply: betat_pres_subst; last apply t1H; last apply betat_refl.
+       
+       rewrite /= in H0.
+       
+       rewrite 
        
        apply: betat_trans; first apply: subst_pres_betat; first apply t2H.
        apply: betat_trans; last apply: betat_pres_subst; last apply t1H; last apply betat_refl.
