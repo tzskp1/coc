@@ -194,75 +194,25 @@ move=> ? /= IH1  ? IH2 ? ?.
 by rewrite /= eqxx orbT.
 Qed.
 
-Lemma fv_vars t : forall x, x \in fv t -> x \in vars t.
-Proof. move=> x; by rewrite mem_filter => /andP []. Qed.
-
 Definition betat := tc beta.
-
-Lemma app_vars M N : 
-  vars (App M N) = undup (vars M ++ vars N).
-Proof. 
-  case: M => *;
-  by rewrite /= ?(undup_nilp, mem_undup, undupD).
-Qed.
 
 Definition normal_form t := forall x, beta t x -> False.
 
-Lemma subterm_vars s t : subterm s t -> forall x, x \in vars s -> x \in vars t.
-Proof.
-  elim: t =>
-  [/eqP <- //
-  |? /eqP <- //
-  | ? ? IH /orP [/IH H x /H|/eqP <- //]
-  | ? IH1 ? IH2 /orP [/orP [/IH1 H x /H|/IH2 H x /H]|/eqP <- //]].
-  + by rewrite !mem_undup /= in_cons orbC => ->.
-  + by rewrite !mem_undup /= mem_cat => ->.
-  + by rewrite !mem_undup /= mem_cat orbC => ->.
-Qed.
-
-Fixpoint has_var t :=
-  match t with
-  | d => false
-  | Var _ | Abs _ _ => true
-  | App p1 p2 => has_var p1 || has_var p2
-  end.
-
-Lemma has_var_suff s p : 
-  s \in vars p -> has_var p.
-Proof.
-  elim: p => // p1 IH1 p2 IH2 /=.
-  rewrite mem_undup mem_cat => /orP [].
-   by rewrite -mem_undup => /IH1 ->.
-  rewrite -mem_undup => /IH2 ->.
-  by rewrite orbT.
-Qed.
-
 Definition betat_trans := @tc_trans _ beta.
 
-Lemma beta_av v s M M' : beta (Abs v M) (Abs s M') -> v = s.
-Proof. repeat case/orP; repeat case/andP; by move=> /eqP ->. Qed.
+Lemma beta_abs M N : beta (Abs M) N -> exists M', N = (Abs M').
+Proof. by case: N M => // ? ? H; repeat apply: ex_intro. Qed.
 
-Lemma beta_av' v s M M' : Abs v M = Abs s M' -> v = s.
-Proof. by case. Qed.
-
-Lemma beta_abs v M N : beta (Abs v M) N -> exists M', N = (Abs v M').
-Proof.
-  case: N M v => // ? ? ? ? H; repeat apply: ex_intro.
-  congr Abs.
-  by apply/esym/beta_av/H.
-Qed.
-
-Lemma betat_abs v M N : betat (Abs v M) N -> exists M', N = Abs v M'.
+Lemma betat_abs M N : betat (Abs M) N -> exists M', N = Abs M'.
 Proof.
   case; case => // [H|]; first by exists M.
   move=> n.
-  elim: n v M N => [|n IH] v M N.
+  elim: n M N => [|n IH] M N.
    by apply: beta_abs.
-  case=> x [] /(IH _ _ _).
+  case=> x [] /(IH _ _).
   case=> y ->.
-  case: N => // s p H.
-  exists p.
-  by rewrite (beta_av H).
+  case: N => // p H.
+  by exists p.
 Qed.
 
 Lemma betat_refl a : betat a a.
@@ -277,54 +227,44 @@ Lemma tcn_betat s t n :
   tcn beta n s t -> betat s t. 
 Proof. move=> H; by exists n. Qed.
 
-Lemma betatAC' p2'' p2 p2' s s' s'' :
-  beta (Abs s p2) (Abs s' p2') ->
-  beta (Abs s' p2') (Abs s'' p2'') ->
+Lemma betatAC' p2'' p2 p2' :
+  beta (Abs p2) (Abs p2') ->
+  beta (Abs p2') (Abs p2'') ->
   betat p2 p2''.
 Proof.
-repeat case/orP; repeat case/andP; move=> /eqP <- H1;
-repeat case/orP; repeat case/andP; move=> /eqP ? H2.
-+ by apply: betat_trans; apply beta_betat; first apply H1.
-+ by move/eqP: H2 => <-; apply beta_betat.
-+ by apply: betat_trans; apply beta_betat; first apply H1.
-+ by move/eqP: H1 => ->; apply beta_betat.
-+ by move/eqP: H1 H2 => -> /eqP <-.
-+ by move/eqP: H1 => ->; apply beta_betat.
-+ by apply: betat_trans; apply beta_betat; first apply H1.
-+ by move/eqP: H2 => <-; apply beta_betat.
+repeat case/orP; repeat case/andP; move=> H1;
+repeat case/orP; repeat case/andP; move=> H2.
 + by apply: betat_trans; apply beta_betat; first apply H1.
 Qed.
 
-Lemma betatAC p2 p2' s : 
-  betat p2 p2' <-> betat (Abs s p2) (Abs s p2').
+Lemma betatAC p2 p2' : 
+  betat p2 p2' <-> betat (Abs p2) (Abs p2').
 Proof.
   split.
   case=> x H.
-  elim: (ltn_wf x) s p2 p2' H => {x} x _ IH s p2 p2' H.
+  elim: (ltn_wf x) p2 p2' H => {x} x _ IH p2 p2' H.
   case: x H IH => /= [-> ? //|[H IH|n H IH]].
-   by apply beta_betat; rewrite /= !eqxx H.
+   by apply beta_betat; rewrite /= H.
   case: H => c [] H b.
   apply: betat_trans; last first.
-   apply: (_ : betat (Abs s c) _).
+   apply: (_ : betat (Abs c) _).
    apply beta_betat.
-   by rewrite /= !eqxx b.
+   by rewrite /= b.
   by apply: (IH n.+1 _).
   case; case => [[] -> //|n /= H].
    case: n H.
-   repeat case/orP; repeat case/andP; move=> /eqP ? H1 //.
-   by apply beta_betat.
-   by move/eqP: H1 => ->.
+   repeat case/orP; repeat case/andP; move=> H1 //.
    by apply beta_betat.
   move=> n H.
   elim: (ltn_wf n) p2 p2' H => {n} n _ IH p2 p2'.
   case: n IH => // [IH [] x []|n IH].
-   by case: x => // ? ? /betatAC'; apply.
+   by case: x => // ? /betatAC'; apply.
   case=> x [] H p.
   case: n H IH => //.
    case=> // y [].
-   case: y => // ? ?.
-   case: x p => // ? ? a b c _.
-   move: b; repeat case/orP; repeat case/andP; move=> H1 H2 //.
+   case: y => // ? a.
+   case: x p => // q b c.
+   move: b; repeat case/orP; repeat case/andP; move=> H2 //.
     + apply: betat_trans.
        apply beta_betat; apply H2.
       by apply (betatAC' c a).
