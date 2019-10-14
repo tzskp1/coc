@@ -477,73 +477,32 @@ Proof.
 Qed.
 
 Lemma maxltE a c x : 
-  (maxn a x <= maxn c x) = (a <= c).
+  maxn a x <= maxn c x = ((x >= a) || (a <= c)).
 Proof.
-  
+elim: x a c => // x.
+move=> c.
+rewrite !maxn0 leqn0.
+by case: x.
 
-Lemma foldl_maxE a b c :
-  foldl maxn a b <= foldl maxn c b = (a <= c).
+move=> IH a c.
+case: a => [|a].
+by rewrite max0n !leq0n /= leq_maxr.
+case: c => [|c].
+rewrite max0n ltn0 orbF ltnS.
+case ax: (a < x).
+ by rewrite /maxn ltnS [in RHS]leq_eqVlt !ax orbT ltnS leqnn.
+by rewrite /maxn ltnS ax ltnS.
+
+by rewrite !maxnSS !ltnS IH.
+Qed.
+
+Lemma foldl_max_cat a b c :
+  foldl maxn a b <= foldl maxn a (b ++ c).
 Proof.
-  elim: b a c => // x b IH a c.
-  rewrite /= IH.
-  rewrite !maxnE.
-  rewrite /= IH /maxn.
-  
-  case ac: (a <= c).
-   case cx: (c < x).
-    have->: (a < x) by apply: leq_ltn_trans; first apply ac.
-    by rewrite leqnn.
-   case: ifP => // ?.
-   by rewrite leqNgt cx.
-  rewrite leqNgt in ac.
-  move/negP/negP: ac => ac.
-  rewrite !ltnNge.
-  case xc: (x <= c) => //=.
-   have->: (x <= a).
-   apply: leq_trans.
-   apply xc.
-   by apply ltnW.
-  apply/negP/negP.
-  by rewrite /= -ltnNge.
-  case: ifP => //.
-  move/negP/negP: xc => xc.
-  rewrite -ltnNge => ax.
-  rewrite -ltnNge in xc.
-  rewrite c < x
-  
-  rewrite xc.
-  case: ifP => // ax.
-  apply/negP/negP.
-  rewrite -ltnNge.
-  apply: ltn_trans.
-  apply 
-  rewrite leq_eqVlt eqxx.
-  rewrite ltneq
-  
-  have->: (x <= a).
-  apply: leq_trans; last apply ac.
-  
-  rewrite -leqNgt.
-  apply xc.
-  case: ifP => //.
-  rewrite -ltnNge.
-  case ax: (a < x).
-  rewrite ltnNge in ax.
-   case: ifP.
-    
-   case: ifP => //.
-    have->: (a < x) = false.
-     apply/negP/negP.
-     rewrite -leqNgt.
-     apply: leq_trans; last first.
-     apply ac.
-     
-     by apply: leq_ltn_trans; first apply ac.
-  rewrite /maxn.
-  rewrite /maxn.
-   
-   !maxnE.
-  rewrite leq_add2r.
+  elim: b a c => //= a c.
+  elim: c a => // ? c IH a /=.
+  apply: leq_trans; last apply IH.
+  by apply leq_maxl.
 Qed.
 
 Lemma fold_maxn_undup c t :
@@ -567,16 +526,17 @@ Lemma outer_var_subterm x y a b c :
 Proof.
   rewrite /outer_var.
   set T := vars a ++ vars b.
-  case: T => //.
-   rewrite !cats0.
-   elim: x y c => //.
-    move=> ? ? /= /eqP <- //=.
-    move=> ? ? ? /= /eqP <- //=.
-    move=> v ? IH y c /orP [].
+  move=> H.
+  rewrite foldl_cat foldl_maxC [X in _ < X.+1]foldl_cat [X in _ < X.+1]foldl_maxC ltnS.
+  set c' := foldl maxn c T.
+  elim: x y c' H => // {c T}.
+  move=> ? ? /= /eqP <- //=.
+  move=> ? ? ? /= /eqP <- //=.
+  move=> v ? IH y c /orP [].
     move=> ?.
     apply: leq_trans.
      by apply IH.
-    rewrite ltnS vars_abs fold_maxn_undup /=.
+    rewrite vars_abs fold_maxn_undup /=.
     elim: (vars _) c => //=.
      move=> ?; apply leq_maxl.
     move=> ? ? IHc ? /=.
@@ -584,40 +544,18 @@ Proof.
     move=> /eqP <-.
     rewrite !vars_abs !fold_maxn_undup /=.
     auto.
+    
     move=> ? IH1 ? IH2 ? ? /= /orP [].
     case/orP => ?.
     rewrite /= !vars_app !fold_maxn_undup -fold_maxn_undup.
-    apply: ltn_trans; first by apply IH1.
-    rewrite foldl_cat foldl_maxC.
-     
-    move=> ? ? IH /= ? ? /orP [].
-     
-    case/orP.
-    move=> ? ? IH /= ? ? /orP [|/eqP <-] //= H.
-    rewrite vars_abs fold_maxn_undup /=.
-    apply: ltn_trans; first apply IH.
-    apply subtermxx.
-    rewrite ltnS.
-     apply IH.
-    
-    case: ifP => ? /=.
-    rewrite undup_nilp; auto.
-    
-    rewrite undup_nilp /=.
-    
-    auto.
-   elim: y x c.
-    case=> //=.
-     move=> ? ? ? /=.
-     rewrite /subterm.
-     move=> v [] //=.
-      move=> ? _.
-      apply: leq_ltn_trans.
-      apply leq_maxl.
-      apply ltnW; rewrite ltnS.
-    rewrite /=.
-  elim: t => //=.
-  rewrite /outer_var.
+    apply: leq_trans; first by apply IH1.
+    apply foldl_max_cat.
+    rewrite /= !vars_app !fold_maxn_undup -fold_maxn_undup.
+    apply: leq_trans; first by apply IH2.
+    by rewrite foldl_cat /= foldl_maxC -foldl_cat foldl_max_cat.
+    move/eqP <-.
+    by rewrite !vars_app !fold_maxn_undup !foldl_cat IH2 // subtermxx.
+Qed.
 
 Lemma substC t1 t2 v t s p :
   t \notin vars t1 ->
@@ -629,20 +567,27 @@ elim: t1 t2 v t s => // [? | ? ? IH | ? IH1 ? IH2] ? ? ? ? /=.
 * rewrite vars_abs mem_undup mem_cat mem_seq1 eq_sym.
   case: ifP => [? ? /=|/=].
    by case: ifP => // /eqP <-; rewrite outer_var_max_lt.
-  case: ifP => //= ? ? ? ?. rewrite IH => //.
-  tttttttt
-  done.
-  done.
-* rewrite vars_app mem_undup mem_cat negb_or => /andP [] ? ? ?.
-  by rewrite /= IH1 // IH2 //.
+  case: ifP => //= ? ? ? H; rewrite IH => //.
+  apply: leq_ltn_trans; last apply H.
+  apply outer_var_subterm.
+  by rewrite /= subtermxx.
+* rewrite vars_app mem_undup mem_cat negb_or => /andP [] ? ? H.
+  rewrite /= IH1 //.
+  rewrite IH2 //.
+  apply: leq_ltn_trans; last apply H.
+  apply outer_var_subterm.
+  by rewrite /= subtermxx ?orbT.
+  apply: leq_ltn_trans; last apply H.
+  apply outer_var_subterm.
+  by rewrite /= subtermxx ?orbT.
 Qed.
 
 Lemma substD p q p1 p0 t s v :
-  t \notin varb p0 -> t \notin vars p1 -> t \notin vars q ->
+  t \notin varb p0 -> t \notin vars p1 -> outer_var p1 p0 s (maxn t v) < q ->
  subst q (subst p p1 t s) v (subst p p0 t s) = subst q (subst q p1 v p0) t s.
 Proof.
-move=> ? ? ?; rewrite -substC // [subst _ p1 _ _]subst0 //; congr subst.
-by apply subst_succ.
+  move=> ? ? H; rewrite -substC // [subst _ p1 _ _]subst0 //; congr subst.
+  by apply subst_succ.
 Qed.
 
 Lemma subst_vars t1 t2 v p :
@@ -690,11 +635,158 @@ Proof.
   apply betatApC; auto.
 Qed.
 
-Lemma subst_outer_var p t1 t2 t s q v :
-  v \notin varb t1 ->
-  (* v \notin varb (subst p t1 t s) -> *)
-  subst (Var (outer_var (subst p t1 t s) (subst p t2 t s) q v)) t1 v t2 = subst (Var (outer_var t1 t2 q v)) t1 v t2.
-Proof. by move=> H; apply subst_succ. Qed.
+Fixpoint paths_i t :=
+  match t with
+  | d | Var _ => [:: [::]]
+  | Abs _ t1 => map (cons 1) (paths_i t1) ++ paths_i t1
+  | App t1 t2 =>
+    map (cons 1) (paths_i t1) ++ paths_i t1
+    ++ map (cons 2) (paths_i t2) ++ paths_i t2
+  end.
+
+Definition paths := undup \o paths_i.
+
+Definition omega := Abs 0 (App (Var 0) (Var 0)).
+
+Fixpoint cut t p :=
+  match t, p with
+  | _, [::] => t
+  | Abs _ t1, 1 :: p1
+  | App t1 _, 1 :: p1 =>
+    cut t1 p1
+  | App t1 t2, 2 :: p1 =>
+    cut t2 p1
+  | _, _ => Var 999
+  end.
+         
+Compute (paths (App omega omega)).
+Compute cut (App omega omega) [:: 2].
+
+Fixpoint shift t n :=
+  match t with
+  | d => d
+  | Var v => Var (v + n)
+  | Abs v t1 => Abs (v + n) (shift t1 n)
+  | App t1 t2 =>
+    App (shift t1 n) (shift t2 n)
+  end.
+
+Lemma shiftt0 t : shift t 0 = t.
+Proof.
+elim: t => //= [?|? ? ->|? ? ? ?].
+by rewrite addn0.
+by rewrite addn0.
+by congr App.
+Qed.
+
+Lemma addr_eq0 x y : x + y == x = (y == 0).
+Proof.
+case: y; first by rewrite addn0 !eqxx.
+move=> y. rewrite -[in RHS]addn1 addn_eq0 andbF.
+apply/eqP. rewrite -[x in RHS]addn0. apply/eqP.
+by rewrite eqn_add2l.
+Qed.
+
+Lemma shifttS t x :
+  shift t x.+1 = (shift (shift t x) 1).
+Proof.
+elim: t x => // [? ?|? ? H ?|? ? ? ? ?].
+by rewrite /= addn1 addnS.
+by rewrite /= H addn1 addnS.
+by congr App.
+Qed.
+
+Lemma subst_shifttS t v s p :
+  subst p.+1 (shift t 1) v.+1 (shift s 1) = shift (subst p t v s) 1.
+Proof.
+elim: t => // [*|? ? IH|*].
+by rewrite /= -[v.+1]addn1 !eqn_add2r; case: ifP.
+by rewrite /= -[p.+1]addn1 -[v.+1]addn1 !eqn_add2r; case: ifP;
+rewrite // !addn1 IH /= !addn1 /=.
+by congr App.
+Qed.
+
+Lemma subst_shift x t v s p :
+  subst (p + x) (shift t x) (v + x) (shift s x) = shift (subst p t v s) x.
+Proof.
+  elim: (ltn_wf x) t p s v => // {x} [] [*|[*|x _ IH *]].
+  by rewrite !addn0 !shiftt0.
+  by rewrite !addn1 subst_shifttS.
+  by rewrite [in RHS]shifttS -(IH x.+1) // -(IH 1) // !addn1 !addnS;
+  congr subst; rewrite shifttS.
+Qed.
+
+Lemma subst_shiftt x t v s :
+(outer_var (shift t x) (shift ) d (_v_ + 1))
+
+Lemma shiftS_pres_beta u u' :
+  beta u u' -> beta (shift u 1) (shift u' 1).
+Proof.
+  elim: u u' => //.
+  move=> ? ? ?.
+  case=> // ? ?.
+  rewrite /= !eqn_add2r.
+  repeat case/orP; repeat case/andP.
+  move/eqP->.
+  rewrite !eqxx /= => ?.
+  apply/orP; auto.
+  move/eqP-> => /eqP ->.
+  by rewrite !eqxx /= !orbT.
+  move/eqP->.
+  rewrite !eqxx /= => ?.
+  apply/orP; auto.
+
+  move=> t IH1 ? IH2.
+  case=> //=.
+  case: t IH1 => // ? ? IH1.
+  rewrite /=.
+  move=> ?.
+  rewrite /= subst_shift.
+  move/eqP <-.
+  apply subst_succ.
+  rewrite /=.
+  
+  move=> *.
+  rewrite /=.
+
+Lemma shift_pres_beta u u' n :
+  beta u u' -> beta (shift u n) (shift u' n).
+Proof.
+  elim: (ltn_wf n) u u' => {n} [] [*|n _ IH] //.
+  by rewrite !shiftt0.
+  move=> u u' H.
+  rewrite shifttS [shift u' _]shifttS.
+  rewrite 
+  
+  elim: n => //.
+  elim: u u' n => //.
+  move=> ? u IH [] // ? u' n.
+  by rewrite /= !eqn_add2r.
+  move=> t IH1 ? IH2.
+  case: t IH1 => //.
+  move=> IH1 [] // ? ? n /=.
+  by rewrite !orbF => /andP [] /eqP <- ? /=; apply IH2.
+  move=> ? IH1 [] // ? ? n /=.
+  rewrite !orbF => /andP [] /eqP <- ? /=; by rewrite eqxx /= IH2.
+  move=> ? ? IH1 [] // ?.
+  rewrite /=.
+  move=> ? ? IH1 /= u' n.
+  rewrite /=.
+  
+  case=> //.
+  rewrite /=.
+  rewrite /=.
+Qed.
+
+(* Fixpoint canonical_term t := *)
+(*   match t with *)
+(*   | d | Var _ => [:: [::]] *)
+(*   | Abs _ t1 => map (cons 1) (paths t1) *)
+(*   | App t1 t2 => *)
+(*     map (cons 1) (paths t1) ++ map (cons 2) (paths t2) *)
+(*   end. *)
+  
+
 
 Lemma beta_pres_subst_notin t1 t2 t s p q :
   t \notin varb t1 ->
@@ -730,15 +822,18 @@ Proof.
   by apply betatApC => //; apply (IH (1 + (sizeu t1))).
 
   move=> v t11 t12 t2.
-  case t2e: (subst (Var (outer_var t11 t12 t2 v)) t11 v t12 == t2).
-   move=> ? ? ? ? ?.
+  case t2e: (subst (outer_var t11 t12 t2 v) t11 v t12 == t2).
+   move=> t s p q Hn.
     rewrite varb_app mem_undup mem_cat varb_abs mem_undup mem_cat mem_seq1 negb_or eq_sym /=.
     case: ifP => //= ? /andP [] ? ? /eqP H.
     apply beta_betat.
     rewrite /=.
+    t \notin varb (subst p t11 t s)
+    (subst _p_ t11 _t_ _s_)
+    rewrite /= subst_outer_var //; last first.
+    rewrite subst0 //.
+    rewrite /= substD //.
     move/eqP: t2e => <-.
-    rewrite /=.
-     rewrite /= substD //.
     
     case tt11 : (t \notin vars t11).
      apply beta_betat.
@@ -3663,4 +3758,3 @@ have: (beta_rel T (Univ Star)) \/ (beta_rel T (Univ Box)).
  case: H C.
 have: H = Pi asm p s q
 case.
-
