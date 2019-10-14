@@ -12,60 +12,46 @@ Inductive term :=
 
 Local Fixpoint eq_t t1 t2 := 
   match t1, t2 with
-  | Var u1, Var u2 => u1 == u2
   | d, d => true
+  | Var u1, Var u2 => u1 == u2
   | Abs p1, Abs p2 => eq_t p1 p2
   | App p11 p12, App p21 p22 =>
     eq_t p11 p21 && eq_t p12 p22
   | _, _ => false
   end.
-Local Lemma reflPu x : eq_t x x.
-Proof.
-elim: x => //= [? -> ? -> //]; by rewrite eqxx.
-Qed.
+Local Lemma reflP x : eq_t x x.
+Proof. elim: x => //= ? -> ? -> //; by rewrite eqxx. Qed.
+Local Hint Resolve reflP.
+
 Local Lemma eq_tE : Equality.axiom eq_t.
 Proof.
-elim=> [|?|? IH|? IH1 ? IH2] [];
-try by constructor.
-+ move=> *; apply/(iffP idP) => [/= /eqP -> | ->] //.
-  by rewrite reflPu.
-+ move=> *; apply/(iffP idP).
-  by move =>  /(IH _) ->.
-  by move=> ->; rewrite reflPu.
-+ move=> *; apply/(iffP idP).
-  by case/andP => /(IH1 _) -> /(IH2 _) ->.
-  by move=> ->; rewrite reflPu.
+elim=> [|?|? IH|? IH1 ? IH2] []; (try by constructor) => *.
++ by apply/(iffP idP)=> [/eqP|] ->.
++ by apply/(iffP idP)=> [/IH|] ->.
++ by apply/(iffP idP)=> [/andP [] /IH1 -> /IH2|] ->.
 Qed.
 Definition t_eqMixin := EqMixin eq_tE.
 Canonical t_eqType := Eval hnf in EqType _ t_eqMixin.
 
 Fixpoint shift t n m c :=
   match t with
-  | d => d
-  | Var v =>
-    if v < c
-    then Var v
-    else Var (v + n - m)
+  | d => d | Var v =>
+    if v < c then Var v else Var (v + n - m)
   | Abs t1 => Abs (shift t1 n m c.+1)
-  | App t1 t2 =>
-    App (shift t1 n m c) (shift t2 n m c)
+  | App t1 t2 => App (shift t1 n m c) (shift t2 n m c)
   end.
 
-Fixpoint well_formed_i t m n :=
+Fixpoint closed_i t m n :=
   match t with
-  | d => true
-  | Var v => v \in m
-  | Abs t1 => well_formed_i t1 (n :: m) n.+1
-  | App t1 t2 =>
-    well_formed_i t1 m n && well_formed_i t2 m n
+  | d => true | Var v => v \in m
+  | Abs t1 => closed_i t1 (n :: m) n.+1
+  | App t1 t2 => closed_i t1 m n && closed_i t2 m n
   end.
-
-Definition well_formed t := well_formed_i t [::] 0.
+Definition closed t := closed_i t [::] 0.
 
 Fixpoint subst t b r :=
   match t with
-  | Var v => if v == b then r else t
-  | d => t
+  | d => t | Var v => if v == b then r else t
   | Abs M => Abs (subst M b.+1 (shift r 1 0 0))
   | App M N => App (subst M b r) (subst N b r)
   end.
@@ -80,14 +66,14 @@ Fixpoint sizeu M :=
 Fixpoint beta M1 M2 :=
   match M1, M2 with
   | App (Abs M as M11) M12, App M21 M22 =>
-    ((beta M11 M21) && (beta M12 M22))
-    || ((M11 == M21) && (beta M12 M22))
-    || ((beta M11 M21) && (M12 == M22))
+    (beta M11 M21) && (beta M12 M22)
+    || (M11 == M21) && (beta M12 M22)
+    || (beta M11 M21) && (M12 == M22)
     || ((shift (subst M 0 (shift M12 1 0 0)) 0 1 0) == M2)
   | App M11 M12, App M21 M22 =>
-    ((beta M11 M21) && (beta M12 M22))
-    || ((M11 == M21) && (beta M12 M22))
-    || ((beta M11 M21) && (M12 == M22))
+    (beta M11 M21) && (beta M12 M22)
+    || (M11 == M21) && (beta M12 M22)
+    || (beta M11 M21) && (M12 == M22)
   | Abs M1, Abs M2 => beta M1 M2
   | App (Abs M) N, _ =>
     (shift (subst M 0 (shift N 1 0 0)) 0 1 0) == M2
@@ -97,42 +83,13 @@ Fixpoint beta M1 M2 :=
 Definition omega := Abs (App (Var 0) (Var 0)).
 Definition K := Abs (Abs (Var 1)).
 
-(* Compute subst omega 0 (Var 3). *)
-(* Compute subst K 0 (Var 0). *)
-(* Compute shift K 0 0. *)
-(* Compute subst (App omega (Var 0)) 0 (Var 3). *)
-(* Compute shift omega 1 0. *)
-
-(* Compute (subst omega 0 (shift omega 1 0)). *)
-
-(* Compute (subst (App K omega) 0 (shift omega 1 0)). *)
-
-(* Fixpoint beta' M1 := *)
-(*   match M1 with *)
-(*   | App (Abs M as M11) M12 => *)
-(*     (shift_down (subst M 0 (shift M12 1 0)) 1 0) *)
-(*   | _ => M1 *)
-(*   end. *)
-(* Compute (App K omega). *)
-(*      (* = App (App (Abs (Abs (Var 1))) (Abs (App (Var 0) (Var 0)))) (Abs (App (Var 0) (Var 0))) *) *)
-(* Compute (beta' (App K omega)). *)
-(* Compute beta' (App K omega) (beta' (App K omega)). *)
-  
-(* Compute beta' (App (beta' (App K omega)) omega). *)
-(* Compute beta (App (App K omega) omega) omega. *)
-
-(* Check App omega omega. *)
-(* Compute well_formed omega. *)
-
-Lemma shift_shift t n m c :
-  shift (shift t n 0 c) 0 m c = shift t n m c.
+Lemma shift_shift t n m c : shift (shift t n 0 c) 0 m c = shift t n m c.
 Proof.
   elim: t n m c => //.
   move=> v n m c /=.
   case: ifP => /= [->|] //.
   move/negP/negP.
-  rewrite -ltnNge ltnS.
-  rewrite subn0.
+  rewrite -ltnNge ltnS subn0.
   case: ifP => [H1 H2|? ?].
   have vc: v < c.
    elim: n H1 => //.
@@ -151,22 +108,18 @@ Proof.
   by rewrite /= IH.
   move=> ? IH1 ? IH2 ? ? ?.
   by rewrite /= IH1 IH2.
-  Qed.
+Qed.
 
 Lemma shiftnn t n c : shift t n n c = t.
 Proof.
-  elim: t n c => //=.
-  move=> ? ? ?.
-  rewrite addnK.
-  by case: ifP.
-  move=> ? IH ? ?.
+  elim: t n c => //= [*|? IH *|? IH1 ? IH2 *].
+  rewrite addnK; by case: ifP.
   by rewrite /= IH.
-  move=> ? IH1 ? IH2 ? ?.
   by rewrite IH1 IH2.
 Qed.
 
-Lemma betaE t1 t2 : 
-  well_formed (App (Abs t1) t2) ->
+Lemma betaE t1 t2 :
+  closed (App (Abs t1) t2) ->
   beta (App (Abs t1) t2) (shift (subst t1 0 (shift t2 1 0 0)) 0 1 0).
 Proof.
 elim: t1 t2 => //.
@@ -178,15 +131,15 @@ rewrite !shift_shift !shiftnn.
 case: t1 => //=.
 case: t2 => //=.
 move=> ?.
-rewrite /well_formed /= mem_seq1 andbT => /eqP ->.
+rewrite /closed /= mem_seq1 andbT => /eqP ->.
 by rewrite !eqxx.
 move=> ? ?.
-by rewrite /well_formed /= mem_seq1 andbC /=.
+by rewrite /closed /= mem_seq1 andbC /=.
 move=> ? ?.
-rewrite /well_formed /= mem_seq1 => /andP [] /eqP ->.
+rewrite /closed /= mem_seq1 => /andP [] /eqP ->.
 by rewrite !eqxx /= shift_shift shiftnn eqxx.
 move=> t ? ?.
-rewrite /well_formed /= mem_seq1 => /andP [] /eqP ->.
+rewrite /closed /= mem_seq1 => /andP [] /eqP ->.
 rewrite !eqxx /=.
 case:t => //= *; by rewrite !orbT.
 by move=> ? /= IH ? H.
@@ -205,87 +158,41 @@ Proof. by case: N M => // ? ? H; repeat apply: ex_intro. Qed.
 
 Lemma betat_abs M N : betat (Abs M) N -> exists M', N = Abs M'.
 Proof.
-  case; case => // [H|]; first by exists M.
-  move=> n.
-  elim: n M N => [|n IH] M N.
-   by apply: beta_abs.
-  case=> x [] /(IH _ _).
-  case=> y ->.
-  case: N => // p H.
-  by exists p.
+case; case => // [H|n]; first by exists M.
+elim: n M N => [|n IH] M N.
+ by apply: beta_abs.
+case=> x [] /(IH _ _) [] y ->.
+case: N => // p ?; by exists p.
 Qed.
 
 Lemma betat_refl a : betat a a.
 Proof. apply tc_refl. Qed.
 
 Lemma beta_betat a b : beta a b -> betat a b.
-Proof. move=> H. by exists 1. Qed.
+Proof. move=> *; by exists 1. Qed.
 
-Hint Resolve betat_refl betaE.
+Hint Resolve beta_betat betat_refl betaE.
 
-Lemma tcn_betat s t n :
-  tcn beta n s t -> betat s t. 
-Proof. move=> H; by exists n. Qed.
+Lemma tcn_betat s t n : tcn beta n s t -> betat s t. 
+Proof. move=> *; by exists n. Qed.
 
-Lemma betatAC' p2'' p2 p2' :
-  beta (Abs p2) (Abs p2') ->
-  beta (Abs p2') (Abs p2'') ->
-  betat p2 p2''.
+Lemma betatAC p p' : 
+  betat p p' <-> betat (Abs p) (Abs p').
 Proof.
-repeat case/orP; repeat case/andP; move=> H1;
-repeat case/orP; repeat case/andP; move=> H2.
-+ by apply: betat_trans; apply beta_betat; first apply H1.
-Qed.
-
-Lemma betatAC p2 p2' : 
-  betat p2 p2' <-> betat (Abs p2) (Abs p2').
-Proof.
-  split.
-  case=> x H.
-  elim: (ltn_wf x) p2 p2' H => {x} x _ IH p2 p2' H.
-  case: x H IH => /= [-> ? //|[H IH|n H IH]].
-   by apply beta_betat; rewrite /= H.
-  case: H => c [] H b.
-  apply: betat_trans; last first.
-   apply: (_ : betat (Abs c) _).
-   apply beta_betat.
-   by rewrite /= b.
-  by apply: (IH n.+1 _).
-  case; case => [[] -> //|n /= H].
-   case: n H.
-   repeat case/orP; repeat case/andP; move=> H1 //.
-   by apply beta_betat.
-  move=> n H.
-  elim: (ltn_wf n) p2 p2' H => {n} n _ IH p2 p2'.
-  case: n IH => // [IH [] x []|n IH].
-   by case: x => // ? /betatAC'; apply.
-  case=> x [] H p.
-  case: n H IH => //.
-   case=> // y [].
-   case: y => // ? a.
-   case: x p => // q b c.
-   move: b; repeat case/orP; repeat case/andP; move=> H2 //.
-    + apply: betat_trans.
-       apply beta_betat; apply H2.
-      by apply (betatAC' c a).
-    + apply: betat_trans.
-      move/eqP: H2 => ->.
-      by apply (betatAC' c a).
-      by apply betat_refl.
-    + apply: betat_trans.
-       apply beta_betat; apply H2.
-      by apply (betatAC' c a).
-  move=> n H IH.
-  case: (betat_abs (tcn_betat H)) => ? [].
-  case: x p H => // ? t a b [] e ?.
-  move: e a b => ->.
-  repeat case/orP; repeat case/andP; move=> H1 H2 //.
-  - move=> H; apply: betat_trans; last apply/beta_betat/H2.
-    apply: (IH n.+1) => //; apply H.
-  - case/eqP: H2 => -> H.
-    apply: (IH n.+1) => //; apply H.
-  - move=> H; apply: betat_trans; last apply/beta_betat/H2.
-    apply: (IH n.+1) => //; apply H.
+split.
+* case=> x; elim: (ltn_wf x) p p' => {x} x _ IH p p'.
+  case: x IH => [? ->|[*|n IH [] c [] *]]; auto.
+  apply: betat_trans; last by apply: (_ : betat (Abs c) _); auto.
+  by apply: (IH n.+1).
+* case; case => [[] -> //|[|n H]]; auto.
+  elim: (ltn_wf n) p p' H => {n} [] [_ _ ? ? [] x []|n _ IH p p']. 
+   case:x => //= ? a ?; by apply: betat_trans;apply beta_betat;first by apply a.
+  case: n IH => // [_ [] x [][] y []|n IH].
+   case: y x => // ? [] ? // /= a b c.
+   apply/(betat_trans (beta_betat a))
+        /(betat_trans (beta_betat b) (beta_betat c)).
+  rewrite tcSn => [][] x []; case: x => // ? /= a b.
+  by apply/(betat_trans (beta_betat a))/(IH n.+1).
 Qed.
 
 Lemma betatApC p2 p2' p1 p1' : 
