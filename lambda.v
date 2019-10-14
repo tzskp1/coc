@@ -8,30 +8,29 @@ Unset Printing Implicit Defensive.
 Definition var := nat.
 
 Inductive term :=
-| d | Var of var | Abs : var -> term -> term | App : term -> term -> term.
+| d | Var of var | Abs : term -> term | App : term -> term -> term.
 
 Local Fixpoint eq_t t1 t2 := 
   match t1, t2 with
   | Var u1, Var u2 => u1 == u2
   | d, d => true
-  | Abs v1 p1, Abs v2 p2 =>
-    eq_op v1 v2 && eq_t p1 p2
+  | Abs p1, Abs p2 => eq_t p1 p2
   | App p11 p12, App p21 p22 =>
     eq_t p11 p21 && eq_t p12 p22
   | _, _ => false
   end.
 Local Lemma reflPu x : eq_t x x.
 Proof.
-elim: x => //= [?? ->|? -> ? -> //]; by rewrite eqxx.
+elim: x => //= [? -> ? -> //]; by rewrite eqxx.
 Qed.
 Local Lemma eq_tE : Equality.axiom eq_t.
 Proof.
-elim=> [|?|?? IH|? IH1 ? IH2] [];
+elim=> [|?|? IH|? IH1 ? IH2] [];
 try by constructor.
 + move=> *; apply/(iffP idP) => [/= /eqP -> | ->] //.
   by rewrite reflPu.
 + move=> *; apply/(iffP idP).
-  by case/andP => /eqP -> /(IH _) ->.
+  by move =>  /(IH _) ->.
   by move=> ->; rewrite reflPu.
 + move=> *; apply/(iffP idP).
   by case/andP => /(IH1 _) -> /(IH2 _) ->.
@@ -40,134 +39,159 @@ Qed.
 Definition t_eqMixin := EqMixin eq_tE.
 Canonical t_eqType := Eval hnf in EqType _ t_eqMixin.
 
+Fixpoint shift t n m c :=
+  match t with
+  | d => d
+  | Var v =>
+    if v < c
+    then Var v
+    else Var (v + n - m)
+  | Abs t1 => Abs (shift t1 n m c.+1)
+  | App t1 t2 =>
+    App (shift t1 n m c) (shift t2 n m c)
+  end.
+
+Fixpoint well_formed_i t m n :=
+  match t with
+  | d => true
+  | Var v => v \in m
+  | Abs t1 => well_formed_i t1 (n :: m) n.+1
+  | App t1 t2 =>
+    well_formed_i t1 m n && well_formed_i t2 m n
+  end.
+
+Definition well_formed t := well_formed_i t [::] 0.
+
+Fixpoint subst t b r :=
+  match t with
+  | Var v => if v == b then r else t
+  | d => t
+  | Abs M => Abs (subst M b.+1 (shift r 1 0 0))
+  | App M N => App (subst M b r) (subst N b r)
+  end.
+
 Fixpoint sizeu M :=
   match M with
   | App T N => (sizeu T + sizeu N).+1
-  | Abs _ N => (sizeu N).+1
+  | Abs N => (sizeu N).+1
   | d | Var _ => 1
   end.
 
-Fixpoint vars_i M :=
-  match M with
-  | d => [::]
-  | Var x => [:: x]
-  | Abs v p1 => [:: v] ++ vars_i p1
-  | App p1 p2 => vars_i p1 ++ vars_i p2
-  end.
-
-Definition vars := undup \o vars_i.
-
-Fixpoint varb_i M :=
-  match M with
-  | d => [::]
-  | Var x => [::]
-  | Abs v p1 => [:: v] ++ varb_i p1
-  | App p1 p2 => varb_i p1 ++ varb_i p2
-  end.
-
-Definition varb := undup \o varb_i.
-
-Definition fv t := [seq x <- vars t | x \notin varb t].
-
-Fixpoint subterm s t :=
-  match t with
-  | App N M =>
-    (subterm s N) || (subterm s M) || (t == s)
-  | Abs _ N =>
-    (subterm s N) || (t == s)
-  | d | Var _ => t == s
-  end.
-
-Lemma subtermxx x : subterm x x.
-Proof. case:x => //= ? ?; by rewrite /= eqxx !orbT. Qed.
-
-Fixpoint subst dft t b r :=
-  match t with
-  | Var v => if v == b then r else t
-  | d => d
-  | Abs v M =>
-    if v == b
-    then Var dft
-    else Abs v (subst dft M b r)
-  | App M N => App (subst dft M b r) (subst dft N b r)
-  end.
-
-Definition outer_var t s v i := (foldl maxn i (vars t ++ vars s ++ vars v)).+1.
-
 Fixpoint beta M1 M2 :=
   match M1, M2 with
-  | App (Abs v M as M11) M12, App M21 M22 =>
-    (subst (outer_var M M12 M2 v) M v M12 == M2)
-    || ((beta M11 M21) && (beta M12 M22))
+  | App (Abs M as M11) M12, App M21 M22 =>
+    ((beta M11 M21) && (beta M12 M22))
     || ((M11 == M21) && (beta M12 M22))
     || ((beta M11 M21) && (M12 == M22))
+    || ((shift (subst M 0 (shift M12 1 0 0)) 0 1 0) == M2)
   | App M11 M12, App M21 M22 =>
     ((beta M11 M21) && (beta M12 M22))
     || ((M11 == M21) && (beta M12 M22))
     || ((beta M11 M21) && (M12 == M22))
-  | Abs v1 M1, Abs v2 M2 =>
-    ((v1 == v2) && (beta M1 M2))
-    || ((v1 == v2) && (M1 == M2))
-    || ((v1 == v2) && (beta M1 M2))
-  | App (Abs v M) N, _ =>
-    subst (outer_var M N M2 v) M v N == M2
+  | Abs M1, Abs M2 => beta M1 M2
+  | App (Abs M) N, _ =>
+    (shift (subst M 0 (shift N 1 0 0)) 0 1 0) == M2
   | _, _  => false
   end.
 
-Lemma vars_abs v q : vars (Abs v q) = undup ([:: v] ++ vars q).
-Proof. by rewrite /= !mem_undup !undup_nilp. Qed.
+Definition omega := Abs (App (Var 0) (Var 0)).
+Definition K := Abs (Abs (Var 1)).
 
-Lemma vars_app p q : vars (App p q) = undup (vars p ++ vars q).
-Proof. by rewrite /= !undupD. Qed.
+(* Compute subst omega 0 (Var 3). *)
+(* Compute subst K 0 (Var 0). *)
+(* Compute shift K 0 0. *)
+(* Compute subst (App omega (Var 0)) 0 (Var 3). *)
+(* Compute shift omega 1 0. *)
 
-Lemma varb_abs v q : varb (Abs v q) = undup ([:: v] ++ varb q).
-Proof. by rewrite /= !mem_undup !undup_nilp. Qed.
+(* Compute (subst omega 0 (shift omega 1 0)). *)
 
-Lemma varb_app p q : varb (App p q) = undup (varb p ++ varb q).
-Proof. by rewrite /= !undupD. Qed.
+(* Compute (subst (App K omega) 0 (shift omega 1 0)). *)
 
-Lemma varb_vars t : forall x, x \in varb t -> x \in vars t.
+(* Fixpoint beta' M1 := *)
+(*   match M1 with *)
+(*   | App (Abs M as M11) M12 => *)
+(*     (shift_down (subst M 0 (shift M12 1 0)) 1 0) *)
+(*   | _ => M1 *)
+(*   end. *)
+(* Compute (App K omega). *)
+(*      (* = App (App (Abs (Abs (Var 1))) (Abs (App (Var 0) (Var 0)))) (Abs (App (Var 0) (Var 0))) *) *)
+(* Compute (beta' (App K omega)). *)
+(* Compute beta' (App K omega) (beta' (App K omega)). *)
+  
+(* Compute beta' (App (beta' (App K omega)) omega). *)
+(* Compute beta (App (App K omega) omega) omega. *)
+
+(* Check App omega omega. *)
+(* Compute well_formed omega. *)
+
+Lemma shift_shift t n m c :
+  shift (shift t n 0 c) 0 m c = shift t n m c.
 Proof.
-elim: t => // [? ? IH x|? IH1 ? IH2 x];
-rewrite ?(varb_abs, vars_abs, varb_app, vars_app) !mem_undup !mem_cat;
-case/orP => ?; apply/orP; auto.
+  elim: t n m c => //.
+  move=> v n m c /=.
+  case: ifP => /= [->|] //.
+  move/negP/negP.
+  rewrite -ltnNge ltnS.
+  rewrite subn0.
+  case: ifP => [H1 H2|? ?].
+  have vc: v < c.
+   elim: n H1 => //.
+    by rewrite addn0.
+   move=> n IH C.
+   apply IH.
+    apply: ltn_trans; last apply C.
+    by rewrite ltn_add2l.
+  have: v < v.
+  apply: leq_trans.
+   apply vc.
+   apply H2.
+  by rewrite ltnn.
+  by rewrite addn0.
+  move=> ? IH ? ? ?.
+  by rewrite /= IH.
+  move=> ? IH1 ? IH2 ? ? ?.
+  by rewrite /= IH1 IH2.
+  Qed.
+
+Lemma shiftnn t n c : shift t n n c = t.
+Proof.
+  elim: t n c => //=.
+  move=> ? ? ?.
+  rewrite addnK.
+  by case: ifP.
+  move=> ? IH ? ?.
+  by rewrite /= IH.
+  move=> ? IH1 ? IH2 ? ?.
+  by rewrite IH1 IH2.
 Qed.
 
-Lemma fv_abs v q x : x \in fv (Abs v q) = (x \in fv q) && (x != v).
+Lemma betaE t1 t2 : 
+  well_formed (App (Abs t1) t2) ->
+  beta (App (Abs t1) t2) (shift (subst t1 0 (shift t2 1 0 0)) 0 1 0).
 Proof.
-  rewrite /fv ?(vars_abs, varb_abs) filter_undup filter_cat mem_undup mem_cat /=.
-  case: ifP.
-   case: ifP; first by rewrite !mem_undup => ->.
-   by rewrite in_cons eqxx.
-   case: ifP.
-    case xv: (x != v); first by move=> ? ?; rewrite andbT /= !mem_filter mem_undup.
-    move/eqP: xv => -> H ?.
-    by rewrite /= andbF mem_filter mem_undup H /=.
-  move=> ? _.
-  by rewrite !mem_filter !mem_undup in_cons !mem_undup /= negb_or -andbA andbC.
-Qed.
-
-Lemma subst_succ p q v t1 t2 :
-  v \notin varb t1 -> subst p t1 v t2 = subst q t1 v t2.
-Proof.
-elim: t1 t2 v p q => // [? ? IH|? IH1 ? IH2] ? ? ? ?.
-* rewrite varb_abs mem_undup mem_cat mem_seq1 eq_sym /=.
-  case: ifP => //= ? ?; congr Abs; auto.
-* rewrite varb_app mem_undup mem_cat negb_or => /andP [] ? ?.
-  congr App; auto.
-Qed.
-
-Lemma betaE v t1 t2 p : 
-  v \notin varb t1 ->
-  beta (App (Abs v t1) t2) (subst p t1 v t2).
-Proof.
-case: t1 => // ? ? /=.
-* rewrite eqxx. by case: (if _ then _ else _).
-* rewrite varb_abs mem_undup mem_cat mem_seq1 eq_sym /=.
-  case: ifP => //= ? ?; apply/eqP; congr Abs; by apply subst_succ.
-* rewrite varb_app mem_undup mem_cat negb_or => /andP [] ? ?.
-  repeat (apply/orP; left); apply/eqP; congr App;
-  by apply subst_succ.
+elim: t1 t2 => //.
+move=> ? /= t.
+case: ifP => //= /eqP ->.
+case: t => //=.
+case=> //= t1 t2.
+rewrite !shift_shift !shiftnn.
+case: t1 => //=.
+case: t2 => //=.
+move=> ?.
+rewrite /well_formed /= mem_seq1 andbT => /eqP ->.
+by rewrite !eqxx.
+move=> ? ?.
+by rewrite /well_formed /= mem_seq1 andbC /=.
+move=> ? ?.
+rewrite /well_formed /= mem_seq1 => /andP [] /eqP ->.
+by rewrite !eqxx /= shift_shift shiftnn eqxx.
+move=> t ? ?.
+rewrite /well_formed /= mem_seq1 => /andP [] /eqP ->.
+rewrite !eqxx /=.
+case:t => //= *; by rewrite !orbT.
+by move=> ? /= IH ? H.
+move=> ? /= IH1  ? IH2 ? ?.
+by rewrite /= eqxx orbT.
 Qed.
 
 Lemma fv_vars t : forall x, x \in fv t -> x \in vars t.
@@ -646,8 +670,6 @@ Fixpoint paths_i t :=
 
 Definition paths := undup \o paths_i.
 
-Definition omega := Abs 0 (App (Var 0) (Var 0)).
-
 Fixpoint cut t p :=
   match t, p with
   | _, [::] => t
@@ -661,15 +683,6 @@ Fixpoint cut t p :=
          
 Compute (paths (App omega omega)).
 Compute cut (App omega omega) [:: 2].
-
-Fixpoint shift t n :=
-  match t with
-  | d => d
-  | Var v => Var (v + n)
-  | Abs v t1 => Abs (v + n) (shift t1 n)
-  | App t1 t2 =>
-    App (shift t1 n) (shift t2 n)
-  end.
 
 Lemma shiftt0 t : shift t 0 = t.
 Proof.
@@ -3758,3 +3771,4 @@ have: (beta_rel T (Univ Star)) \/ (beta_rel T (Univ Box)).
  case: H C.
 have: H = Pi asm p s q
 case.
+h
