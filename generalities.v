@@ -194,6 +194,13 @@ apply/IH/ltn_trans; last apply H.
 by rewrite ltn_add2l.
 Qed.
 
+Lemma leq_wl v n c : v + n <= c -> v <= c.
+Proof.
+elim: n => [|? IH H]; first by rewrite addn0.
+apply/IH/leq_trans; last apply H.
+by rewrite leq_add2l.
+Qed.
+
 Lemma addr_eq0 x y : x + y == x = (y == 0).
 Proof.
 case: y; first by rewrite addn0 !eqxx.
@@ -202,3 +209,4 @@ apply/eqP. rewrite -[x in RHS]addn0. apply/eqP.
 by rewrite eqn_add2l.
 Qed.
 End Generalities.
+

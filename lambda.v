@@ -91,42 +91,21 @@ Proof.
   by rewrite IH1 IH2.
 Qed.
 
-Lemma shiftnSC q n m c : shift (shift q n 0 (c + m)) 1 0 m = shift (shift q 1 0 m) n 0 (c.+1 + m).
+Lemma shiftnSC q n m c :
+  shift (shift q n 0 (c + m)) 1 0 m = shift (shift q 1 0 m) n 0 (c + m.+1).
 Proof.
-  elim: q n c => // [? /=|t IH|? IH1 ? IH2] *.
+  elim: q n m c => //= [v|t IH|? IH1 ? IH2] *.
   * case: ifP.
-     case: ifP => /= ->.
-     rewrite addSn ltnS.
-     by case: ifP => // /negP H /ltnW /H.
-     rewrite !subn0.
-     by rewrite addSn ltnS addn1 => ->.
-    case: ifP.
-    rewrite /= !subn0.
-     
-      rewrite /=.
-  * rewrite !addn1 !subn0 ltnS.
-    case: ifP => /=.
-     by rewrite addn1 subn0.
-    by rewrite subn0 addn1 -addSn.
-  * move=> /=.
-    case: t IH => //=.
-    case=> // v IH.
-    rewrite /= addn1 !subn0 !ltnS.
-    case: ifP => /=.
-     by rewrite addn1 subn0.
-    move=> ?.
-    by rewrite subn0 addn1 -addSn.
-    move=> ? IH.
-    rewrite [_ + 1]addnC.
-    rewrite /=.
-    move=> v IH.
-    case: v => //.
-    rewrite /= IH.
-    
-(*     rewrite subn0 !addn1 addnS. *)
-(*     by case: ifP => // /ltn_wl ->. *)
-(*   * by rewrite /= IH. *)
-(*   * by rewrite /= IH1 IH2. *)
+     case: ifP => /= [|H1 H2].
+      case: ifP => // *; by rewrite addnS -addSn ltn_addl.
+     by rewrite H1 !subn0 addn1 addnS ltnS H2.
+    case: ifP => /= [?|]; first by rewrite ltn_addl // ltnW.
+    case: ifP; first by rewrite subn0 => /ltn_wl ->.
+    rewrite !subn0 !addn1 addSn addnS ltnS.
+    by case: ifP.
+  * by rewrite -addnS IH addnS.
+  * by rewrite IH1 IH2.
+Qed.
 
 Lemma shiftnS u n m c : shift u n.+1 m c = shift (shift u n 0 c) 1 m c.
 Proof.
