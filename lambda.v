@@ -273,16 +273,16 @@ Proof.
    apply: (IH 1) => //.
 Qed.
 
-Lemma shift_pres_beta u u' n m c :
-  beta u u' -> beta (shift u n m c) (shift u' n m c).
+Lemma shift_pres_beta u u' n c :
+  beta u u' -> beta (shift u n 0 c) (shift u' n 0 c).
 Proof.
-  elim: u u' n m c => //.
-   move=> ? IH [] // ? n m c.
+  elim: u u' n c => //.
+   move=> t IH [] // ? n c.
    rewrite /=.
    auto.
 
-  move=> t IH1 ? IH2.
-  move=> u n m c.
+  move=> t IH1 t2 IH2.
+  move=> u n c.
 
   case: t IH1 => //.
    move=> IH1.
@@ -296,11 +296,59 @@ Proof.
    case: u => // ? ? /= /orP [] // /andP [] /eqP <-.
    case: ifP => /= ->; rewrite /= eqxx orbF /=; auto.
    
-   move=> ? IH1.
+   move=> t1 IH1.
    case: u => //=.
-   move=> /eqP H.
+   * move=> /eqP H.
+     rewrite -H.
+     case: t1 IH1 H => //= v.
+     case: v => //.
+     by case: t2 IH2.
+   * move=> v /eqP <-.
+     case: ifP => //=.
+     case: t1 IH1 => //.
+     rewrite /=.
+      case: t2 IH2 => //.
+       move=> //=.
+       case: ifP => //.
+      
+     case: ifP => //.
+     case: ifP 
+      rewrite /=.
+      move=> *.
+      case: ifP => [/eqP -> //|].
+      rewrite /=.
+      case: ifP => //.
+       move=> /= ? ->.
+       done.
+      move=> ? /=.
+      rewrite subn_eq0.
+      case: ifP => //=.
+       rewrite /=.
+       rewrite addn0 /= => ? ->.
+       rewrite /=.
+       
+      rewrite /= ltnS ltnW.
+      
+     rewrite /=.
+     move=> *.
+     case: ifP => //.
+      move/eqP ->.
+      rewrite /=.
+      case: t2 IH2 => //.
+       intros.
+       rewrite /=.
+       case
+      rewri
+     rewrite 
+      rewrite /= in IH1.
+      case: ifP => //=.
+      
+      rewrite /=.
+      case: t2 IH2 => //.
+   
+   
    rewrite -[X in subst _ X _]addn0.
-   rewrite -subst_shift_shift.
+   rewrite subst_shift_shift.
    rewrite 
      : forall (p q : term) (r n c : nat), subst (shift p n 0 c) (r + c + n) (shift q n 0 c) = shift (subst p (r + c) q) n 0 c
    rewrite shiftnn.
