@@ -170,83 +170,20 @@ Lemma addr_lt r n : r + n < r = false.
 Proof. apply/negP/negP; rewrite -ltnNge -addSn; by apply ltn_addr. Qed.
 
 Lemma subst_shift_shift p q r n c:
-  subst (shift p n 0 c) (r + c + n) (shift q n 0 c) = shift (subst p (r + c) q) n 0 c.
+  subst (shift p n 0 c) (r + (c + n)) (shift q n 0 c)
+  = shift (subst p (r + c) q) n 0 c.
 Proof.
-  elim: p q r n c => //=.
-  move=> v q r n c.
-  case: ifP.
+elim: p q r n c => //= [v q r n c|? IH ? ? ? c|? IH1 ? IH2 *].
+* case: ifP.
    case: ifP => [/eqP ->|] /=.
     by rewrite addnC addr_lt.
    case: ifP => [/eqP -> ?|? ? ->] //.
-   by rewrite -addnA addnC -addnA addr_lt.
-  rewrite subn0 /= eqn_add2r.
-  case: ifP => //= ? ->.
-  by rewrite subn0.
-  
-  move=> t IH q r n c.
-  congr Abs.
-  rewrite -!addSn.
-  rewrite 
-  Check (shiftnS q n _ ).
-  -IH.
-  shiftSn.
-  rewrite IH.
-  case: t IH => //=.
-   move=> ? IH.
-  
-   rewrite -addnAC.
-   rewrite -addnCA.
-   move=> /=.
-   
-    by rewrite ltnNge => /negP H /H.
-   move=> ? /= H1 H2. 
-   have H3 : v < r by apply: leq_trans;first by apply H1.
-   case: ifP => [/eqP H4|].
-    by rewrite H4 addr_lt in H3.
-   by rewrite H1.
-  rewrite subn0.
-  case: ifP => //.
-   move/eqP ->.
-   by rewrite /= eqxx.
-  rewrite /= eqn_add2r => -> ->.
-  by rewrite subn0.
-  
-  move=> t H.
-  congr Abs.
-  rewrite /=.
-  
-   rewrite ltnNge => /negP H. /H.
-   
-   
-   Search (_ + _ < _).
-    rewrite 
-   
-   move=> ->.
-    rewrite /= eq_sym addr_eq0.
-    case: ifP => //.
-   rewrite /=.
-   case: ifP => //.
-   move/eqP -> => /=.
-   case: ifP => //.
-    move=> /eqP <-.
-    by rewrite /= add0n.
-   rewrite /=.
-   c
-    
-   rewrite /=.
-   by case: ifP => /= [->|] // -> ->.
-  case: ifP => /=.
-  move/eqP -> => ?.
-  case: ifP => //.
-  
-  Check addr_eq0.
-  rewrite addr_eq0.
-  rewrite ltn
-   
-   
-   rewrite /=.
-   rewrite /=.
-  case: r => //.
+   by rewrite addnCA addr_lt.
+  case: ifP => [/eqP ->|]; first by rewrite /= addnA subn0 eqxx.
+  by rewrite /= addnA !subn0 eqn_add2r => -> ->.
+* by rewrite -[c]addn0 shiftnSC !addn0 !addn1 -addnS -addSn IH addnS.
+* by rewrite IH1 IH2.
+Qed.
 
 Definition betat := tc beta.
 
@@ -362,6 +299,10 @@ Proof.
    move=> ? IH1.
    case: u => //=.
    move=> /eqP H.
+   rewrite -[X in subst _ X _]addn0.
+   rewrite -subst_shift_shift.
+   rewrite 
+     : forall (p q : term) (r n c : nat), subst (shift p n 0 c) (r + c + n) (shift q n 0 c) = shift (subst p (r + c) q) n 0 c
    rewrite shiftnn.
    rewrite -shiftnS.
    rewrite -shiftSn.
