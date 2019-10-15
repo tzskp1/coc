@@ -185,6 +185,18 @@ elim: p q r n c => //= [v q r n c|? IH ? ? ? c|? IH1 ? IH2 *].
 * by rewrite IH1 IH2.
 Qed.
 
+Lemma shift_subst_shift_shift t1 t2 n m c :
+  shift (subst (shift t1 n m c.+2) 1 (shift (shift t2 n m c) 2 0 0)) 0 1 1 = shift (shift (subst t1 1 (shift t2 2 0 0)) 0 1 1) n m c.+1.
+Proof.
+  rewrite -[c]addn0.
+  rewrite shiftnS.
+  Check shiftnSC.
+  rewrite -!shiftnS.
+  elim: t1 t2 n m c => //=.
+  rewrite /=.
+  elim: 
+  shift (subst (shift t1 n m c.+2) 1 (shift (shift (shift t2 n m c) 1 0 0) 1 0 0)) 0 1 1 = shift (shift (subst t1 1 (shift (shift t2 1 0 0) 1 0 0)) 0 1 1) n m c.+1
+
 Definition betat := tc beta.
 
 Definition normal_form t := forall x, beta t x -> False.
@@ -273,12 +285,12 @@ Proof.
    apply: (IH 1) => //.
 Qed.
 
-Lemma shift_pres_beta u u' n c :
-  beta u u' -> beta (shift u n 0 c) (shift u' n 0 c).
+Lemma shift_pres_beta u u' n m c :
+  m <= c + n ->
+  beta u u' -> beta (shift u n m c) (shift u' n m c).
 Proof.
   elim: u u' n c => //.
-   move=> t IH [] // ? n c.
-   rewrite /=.
+   move=> t IH [] // ? n c /=.
    auto.
 
   move=> t IH1 t2 IH2.
@@ -288,14 +300,144 @@ Proof.
    move=> IH1.
    rewrite /=.
    case: u => //=.
-    move=> ? ? /orP [] // /andP [] /eqP <- /= ?.
+    move=> ? ? ? /orP [] // /andP [] /eqP <- /= ?.
     rewrite orbF.
     auto.
 
    move=> ? IH1.
-   case: u => // ? ? /= /orP [] // /andP [] /eqP <-.
+   case: u => // ? ? ? /= /orP [] // /andP [] /eqP <-.
    case: ifP => /= ->; rewrite /= eqxx orbF /=; auto.
    
+   case=> //.
+   * case: u => //.
+     case=> //= ? ? ? ?.
+     rewrite !orbF => /andP [] /eqP [] <- /=; auto.
+   * move=> v IH1 H /=.
+     case: u => //=.
+     - case: ifP => // /eqP ->.
+       rewrite /= !shift_shift.
+       by case: t2 IH2.
+     - move=> v0.
+       case: ifP => [/eqP ->|].
+        rewrite !shift_shift /= !shiftnn => /eqP -> /=.
+        rewrite !eqxx.
+        case: (if _ then _ else _) => // ? ?.
+        by rewrite !orbT.
+       case: v IH1 => // v IH1 _.
+       rewrite /= addn0 subn1 => /eqP [] <-.
+       rewrite /= !ltnS.
+       case: ifP => //.
+        move=> ? /=.
+        by rewrite addn0 subn1.
+       move=> vc.
+       rewrite /= subn_eq0 /=.
+       have?: m <= v + n.
+        apply: leq_trans; first apply H.
+        by rewrite leq_add2r leqNgt vc.
+       have->: v.+1 + n <= m = false.
+        apply/negP/negP.
+        by rewrite -leqNgt.
+       by rewrite /= addn0 subSn // subn1 /=.
+     - move=> t.
+       case: ifP => // /eqP ->.
+       by rewrite /= !shift_shift !shiftnn /= => /eqP ->.
+     - move=> q1 q2.
+       case: ifP => /= [/eqP ->|]; last first.
+        move=> v0 /=.
+        case: ifP.
+         rewrite /= v0 /=.
+         case: q1 => //= ? vc.
+         rewrite !orbF => /andP [] [] /eqP [] <- ? /=.
+         rewrite vc eqxx /=; auto.
+        case: q1 => //= ? vc.
+        rewrite !orbF => /andP [] [] /eqP [] <- ? /=.
+        rewrite vc eqxx /=; apply/orP; left; auto.
+       rewrite /= !shift_shift !shiftnn.
+       move=> q12.
+       have: (Abs (Var 0) == q1) && beta t2 q2 || (t2 == App q1 q2).
+       move: q12.
+       case: q1 => //= ?.
+       by rewrite /= !orbF.
+       case/orP => [/andP [] /eqP <- ? /=|/eqP ->].
+        repeat (apply/orP; left); auto.
+       by rewrite /= eqxx !orbT.
+   * move=> t1 IH1 mcn.
+     case: u => //.
+      move=> u /= /eqP [] <-.
+      apply/eqP.
+      congr Abs.
+      rewrite -!shiftnS /=.
+      rewrite -subst_shift_shift.
+      rewrite -!shiftSn.
+      rewrite 
+      rewrite shiftnn.
+      rewrite !shift_shift.
+      rewr
+      rewrite /=.
+       
+       
+        
+        apply/orP; right.
+        rewrite /=.
+        ; auto.
+       
+       case: q1 => //=.
+        
+        
+         
+         rewrite /=.
+         case: q2 => //.
+          rewrite /=.
+         
+        move/eqP-> => /=.
+        rewrite !shift_shift !shiftnn.
+        
+       move=> H1.
+       case q12: (shift (if v == 0 then shift t2 1 0 0 else Var v) 0 1 0 == App q1 q2).
+       move/eqP: q12.
+       
+       rewrite shift_shift.
+       
+       move: q12.
+       
+       case: t2 IH2 H1 => //.
+       => ->.
+       c
+       have: shift (if v == 0 then shift t2 1 0 0 else Var v) 0 1 0 = App q1 q2.
+       move: H1; repeat case/orP => //.
+       case: q1 => //.
+       
+       case: t2 IH2 => //.
+       apply/eqP.
+       case: q1 H1 => //.
+       case: q2 => // ?.
+       rewrite /= andbC.
+       case: t2 IH2 => //= [] [] //.
+       
+       case: q1 q2 H1 => //= ? [] //=.
+       
+       case: ifP => //=.
+       
+       
+       case: ifP.
+        rewrite shift_shift shiftnn.
+        case: t2 IH2 => //.
+        rewrite 
+       ; last first.
+        rewrite /= addn0 subSn.
+        move=> /=.
+        
+        
+        move/eqP-> => /=.
+        rewrite shiftnn.
+        rew
+       case: ifP.
+     
+   * case: u => //.
+    
+    
+    
+    move=> ? ? /=.
    move=> t1 IH1.
    case: u => //=.
    * move=> /eqP H.
@@ -303,7 +445,20 @@ Proof.
      case: t1 IH1 H => //= v.
      case: v => //.
      by case: t2 IH2.
-   * move=> v /eqP <-.
+   * move=> v /eqP H.
+     elim: t1 IH1 H => //.
+     rewrite /=.
+     
+     have: shift t1 n m c.+1 = t1.
+     move=> {IH1 IH2}.
+     elim: t1 H => //= ? H.
+     
+     move: H.
+     rewrite 
+  have: shift t1 n m c.+1 = t1
+  elim: t1 
+ rewrite  
+
      case: ifP => //=.
      case: t1 IH1 => //.
      rewrite /=.
