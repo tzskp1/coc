@@ -196,8 +196,7 @@ split.
 Qed.
 
 Lemma betatApC p2 p2' p1 p1' : 
-  betat p1 p1' -> betat p2 p2' -> 
-  betat (App p1 p2) (App p1' p2').
+  betat p1 p1' -> betat p2 p2' -> betat (App p1 p2) (App p1' p2').
 Proof.
   move=> H1.
   case => x H2.
@@ -211,9 +210,7 @@ Proof.
    have H0: beta p1 p1' && beta p2' p2' || (p1 == p1') && beta p2' p2' || beta p1 p1' && (p2' == p2').
     by rewrite H eqxx !orbT.
    rewrite /= !H0.
-   case: p1 H H0 => // ? ? H.
-    rewrite -!orbA => ->.
-    by rewrite orbT.
+   by case: p1 H H0.
    case: y H IH => /= [[] x [] H1 H2 IH|].
     apply: betat_trans.
     apply: (_ : betat _ (App x p2')).
