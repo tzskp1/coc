@@ -85,9 +85,9 @@ Definition K := Abs (Abs (Var 1)).
 
 Lemma shiftnn t n c : shift t n n c = t.
 Proof.
-  elim: t n c => //= [*|? IH *|? IH1 ? IH2 *].
+  elim: t n c => //= [|? IH|? IH1 ? IH2] *.
   * rewrite addnK; by case: ifP.
-  * by rewrite /= IH.
+  * by rewrite IH.
   * by rewrite IH1 IH2.
 Qed.
 
@@ -112,39 +112,39 @@ Qed.
 
 Lemma shiftnS u n m c : shift (shift u n 0 c) 1 m c = shift u n.+1 m c.
 Proof.
-  elim: u n m c => // [? /=|? IH|? IH1 ? IH2] *.
+  elim: u n m c => //= [?|? IH|? IH1 ? IH2] *.
   * case: ifP => /= [->|] //.
     rewrite subn0 !addn1 addnS.
     by case: ifP => // /ltn_wl ->.
-  * by rewrite /= IH.
-  * by rewrite /= IH1 IH2.
+  * by rewrite IH.
+  * by rewrite IH1 IH2.
 Qed.
 
 Lemma shiftSn u n m c : shift (shift u 1 0 c) n m c = shift u n.+1 m c.
 Proof.
-  elim: u n m c => // [? /=|? IH|? IH1 ? IH2] *.
+  elim: u n m c => //= [?|? IH|? IH1 ? IH2] *.
   * case: ifP => /= [->|] //.
     rewrite subn0 addnS addn0 addnS -addSn.
     by case: ifP => // /ltnW ->.
-  * by rewrite /= IH.
-  * by rewrite /= IH1 IH2.
+  * by rewrite IH.
+  * by rewrite IH1 IH2.
 Qed.
 
 Lemma shift_shift t n m c : shift (shift t n 0 c) 0 m c = shift t n m c.
 Proof.
-  elim: t n m c => // [? /=|? IH|? IH1 ? IH2] *.
+  elim: t n m c => //= [?|? IH|? IH1 ? IH2] *.
   * case: ifP => /= [->|] //.
     rewrite subn0 addn0.
     by case: ifP => // /ltn_wl ->.
-  * by rewrite /= IH.
-  * by rewrite /= IH1 IH2.
+  * by rewrite IH.
+  * by rewrite IH1 IH2.
 Qed.
 
 Lemma shiftnC q n m r c :
   c >= m ->
   shift (shift q n 0 c) r 0 m = shift (shift q r 0 m) n 0 (c + r).
 Proof.
-  elim: r n q c m => [*|[*|? IH *]]. 
+  elim: r n q c m => [*|[|? IH] *]. 
   * by rewrite !shiftnn addn0.
   * by rewrite shiftnSC // !addnS addn0.
   * by rewrite -[in RHS]shiftnS addnS -addSn shiftnSC // -IH ?ltnS //
