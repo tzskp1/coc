@@ -208,5 +208,8 @@ move=> y. rewrite -[in RHS]addn1 addn_eq0 andbF.
 apply/eqP. rewrite -[x in RHS]addn0. apply/eqP.
 by rewrite eqn_add2l.
 Qed.
+
+Lemma suff_gt0 i c : i < c -> 0 < c.
+Proof. by case: c. Qed.
 End Generalities.
 

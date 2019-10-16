@@ -92,10 +92,9 @@ Proof.
 Qed.
 
 Lemma shiftnSC q n m c :
-  c >= m ->
-  shift (shift q n 0 c) 1 0 m = shift (shift q 1 0 m) n 0 c.+1.
+  m <= c -> shift (shift q n 0 c) 1 0 m = shift (shift q 1 0 m) n 0 c.+1.
 Proof.
-  elim: q n m c => //= [v|t IH|? IH1 ? IH2] *.
+  elim: q n m c => //= [v|? IH|? IH1 ? IH2] *.
   * case: ifP.
      case: ifP => /= [|H1 H2].
       case: ifP => // *; by rewrite ltnS ltnW.
@@ -141,8 +140,7 @@ Proof.
 Qed.
 
 Lemma shiftnC q n m r c :
-  c >= m ->
-  shift (shift q n 0 c) r 0 m = shift (shift q r 0 m) n 0 (c + r).
+  m <= c -> shift (shift q n 0 c) r 0 m = shift (shift q r 0 m) n 0 (c + r).
 Proof.
   elim: r n q c m => [*|[|? IH] *]. 
   * by rewrite !shiftnn addn0.
@@ -155,23 +153,20 @@ Lemma betaE t1 t2 :
   closed (App (Abs t1) t2) ->
   beta (App (Abs t1) t2) (shift (subst t1 0 (shift t2 1 0 0)) 0 1 0).
 Proof.
-elim: t1 t2 => //= [? t|*]; last by rewrite eqxx orbT.
-case: ifP => //= /eqP ->.
-case: t => [] // [] // [] //= ? t.
-rewrite /closed /= !mem_seq1 !shift_shift !shiftnn.
-case: t => [|?|?|??] /andP [] /eqP ->;
-by rewrite ?(eqxx, orbT).
+  elim: t1 t2 => //= [? t|*]; last by rewrite eqxx orbT.
+  case: ifP => //= /eqP ->.
+  case: t => [] // [] // [] //= ? t.
+  rewrite /closed /= !mem_seq1 !shift_shift !shiftnn.
+  case: t => [|?|?|??] /andP [] /eqP ->;
+  by rewrite ?(eqxx, orbT).
 Qed.
 
 Lemma absE v n m : v + n - m = v + (n - m) - (m - n).
 Proof.
- case nm: (n <= m).
-  rewrite subnBA //.
-  move/eqP: nm ->.
-  by rewrite addn0.
- move/negP/negP: nm; rewrite -ltnNge => mn.
- rewrite addnBA; last by apply ltnW.
- move/ltnW/eqP: mn ->; by rewrite subn0.
+  case nm: (n <= m).
+   by rewrite (eqP nm) subnBA // addn0.
+  move/negP/negP: nm; rewrite -ltnNge => mn.
+  by rewrite (eqP (ltnW mn)) addnBA // ?subn0 // ltnW.
 Qed.
 
 Lemma shiftE t n m c : shift t n m c = shift t (n - m) (m - n) c.
@@ -181,12 +176,73 @@ Proof.
   * by rewrite IH.
   * by rewrite IH1 IH2.
 Qed.
+  
+Lemma shiftSnC q n c i :
+  i < c -> shift (shift q n 0 c.+1) 0 1 i = shift (shift q 0 1 i) n 0 c.
+Proof.
+  elim: q n c i => //= [v ? ? ? ic|? IH|? IH1 ? IH2] *.
+  * case: ifP.
+     case: ifP => /= [vi|].
+      by rewrite (ltn_trans vi ic) vi.
+     case: v => [|v].
+      by rewrite (suff_gt0 ic) => ->.
+     by rewrite ltnS addn0 subn1 => -> ->.
+    case: v => // v /negP/negP; rewrite -ltnNge !ltnS => cv.
+    set iv := ltnW (leq_trans ic cv).
+    rewrite ltnNge (leqW iv) /= !subn0 !addn0
+            !subn1 [in RHS]ltnNge cv.
+    case: ifP => // /ltn_wl.
+    by rewrite ltnNge leqW.
+  * by rewrite IH.
+  * by rewrite IH1 // IH2.
+Qed.
 
 Lemma shift_subst_shift_shift t1 t2 n m c :
-  shift (subst (shift t1 n m c.+2) 1 (shift (shift t2 n m c) 2 0 0)) 0 1 1 = shift (shift (subst t1 1 (shift t2 2 0 0)) 0 1 1) n m c.+1.
+  shift (subst (shift t1 n m c.+2) 1 (shift t2 n m c.+2)) 0 1 1
+= shift (shift (subst t1 1 t2) 0 1 1) n m c.+1.
 Proof.
-  rewrite -[c]addn0.
-  rewrite shiftnS.
+  case: t1 => //.
+   move=> /= v.
+   case: ifP => /=.
+    case: ifP => /= [/eqP -> ?|].
+    rewrite -shift_shift.
+    
+  shift (shift t2 n m c.+2) 0 1 1 = shift (shift t2 0 1 1) n m c.+1
+  ============================
+  Abs (shift (shift t n m c.+3) 0 1 2) = Abs (shift (shift t 0 1 2) n m c.+2)
+     elim: t2 => //.
+      rewrite /=.
+      move=> v0.
+      case: ifP => /=.
+       case: ifP => /=.
+        rewrite /leq subn1 /= => /eqP -> //.
+       rewrite !addn0 !subn1 !ltnS.
+       case: v0 => //= v0 ?.
+       by rewrite ltnS => ->.
+      case: ifP => /=.
+       case: ifP => /=.
+        rewrite /leq subn1 /= => /eqP -> //.
+       rewrite addn0 subn1 !ltnS.
+       case: v0 => //= v0 ?.
+       rewrite addSn leqn0 subn_eq0 !ltnS => H ->.
+       by rewrite (eqP H) (eqP (ltnW H)).
+      case: ifP => /=.
+       rewrite /leq subn1 /= => /eqP -> //.
+      rewrite !addn0 !subn1.
+      case: v0 => //= v0 ? /negP/negP.
+      rewrite !ltnS addSn -ltnNge ltn_subRL addn0 ltnS => H ->.
+      by rewrite subSn //.
+     move=> t /= H.
+     rewrite 
+      
+       move=. ?.
+     rewrite 
+  rewrite [shift t2 _ _ _]shiftE.
+  case nm: (n >= m).
+   move/eqP: (nm) => nm'.
+   rewrite nm' shiftnC // -[in shift _ _ 0 _]nm' -shiftE !nm' addn2.
+   move/eqP: (nm) => nm'.
+   
   Check shiftnSC.
   rewrite -!shiftnS.
   elim: t1 t2 n m c => //=.
