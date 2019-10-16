@@ -41,7 +41,7 @@ Fixpoint shift t n m c :=
   | App t1 t2 => App (shift t1 n m c) (shift t2 n m c)
   end.
 
-Fixpoint closed_i t m n :=
+Local Fixpoint closed_i t m n :=
   match t with
   | d => true | Var v => v \in m
   | Abs t1 => closed_i t1 (n :: m) n.+1
@@ -92,22 +92,25 @@ Proof.
 Qed.
 
 Lemma shiftnSC q n m c :
-  shift (shift q n 0 (c + m)) 1 0 m = shift (shift q 1 0 m) n 0 (c + m.+1).
+  c >= m ->
+  shift (shift q n 0 c) 1 0 m = shift (shift q 1 0 m) n 0 c.+1.
 Proof.
   elim: q n m c => //= [v|t IH|? IH1 ? IH2] *.
   * case: ifP.
      case: ifP => /= [|H1 H2].
-      case: ifP => // *; by rewrite addnS -addSn ltn_addl.
-     by rewrite H1 !subn0 addn1 addnS ltnS H2.
-    case: ifP => /= [?|]; first by rewrite ltn_addl // ltnW.
+      case: ifP => // *; by rewrite ltnS ltnW.
+     by rewrite H1 !subn0 addn1 ltnS H2.
+    case: ifP => /= [vm /negP/negP|].
+     rewrite -ltnNge ltnS => cv.
+     suff: v < v by rewrite ltnn.
+     by apply: (leq_trans (leq_trans vm _) cv).
     case: ifP; first by rewrite subn0 => /ltn_wl ->.
-    rewrite !subn0 !addn1 addSn addnS ltnS.
-    by case: ifP.
-  * by rewrite -addnS IH addnS.
-  * by rewrite IH1 IH2.
+    rewrite !subn0 !addn1 ltnS; by case: ifP.
+  * by rewrite IH.
+  * by rewrite IH1 // IH2.
 Qed.
 
-Lemma shiftnS u n m c : shift u n.+1 m c = shift (shift u n 0 c) 1 m c.
+Lemma shiftnS u n m c : shift (shift u n 0 c) 1 m c = shift u n.+1 m c.
 Proof.
   elim: u n m c => // [? /=|? IH|? IH1 ? IH2] *.
   * case: ifP => /= [->|] //.
@@ -117,11 +120,11 @@ Proof.
   * by rewrite /= IH1 IH2.
 Qed.
 
-Lemma shiftSn u n m c : shift u n.+1 m c = shift (shift u 1 0 c) n m c.
+Lemma shiftSn u n m c : shift (shift u 1 0 c) n m c = shift u n.+1 m c.
 Proof.
   elim: u n m c => // [? /=|? IH|? IH1 ? IH2] *.
   * case: ifP => /= [->|] //.
-    rewrite subn0 addnS addn1 addSn -addn1.
+    rewrite subn0 addnS addn0 addnS -addSn.
     by case: ifP => // /ltnW ->.
   * by rewrite /= IH.
   * by rewrite /= IH1 IH2.
@@ -135,6 +138,17 @@ Proof.
     by case: ifP => // /ltn_wl ->.
   * by rewrite /= IH.
   * by rewrite /= IH1 IH2.
+Qed.
+
+Lemma shiftnC q n m r c :
+  c >= m ->
+  shift (shift q n 0 c) r 0 m = shift (shift q r 0 m) n 0 (c + r).
+Proof.
+  elim: r n q c m => [*|[*|? IH *]]. 
+  * by rewrite !shiftnn addn0.
+  * by rewrite shiftnSC // !addnS addn0.
+  * by rewrite -[in RHS]shiftnS addnS -addSn shiftnSC // -IH ?ltnS //
+               -[in LHS]shiftnS !shiftnSC.
 Qed.
 
 Lemma betaE t1 t2 :
@@ -168,22 +182,6 @@ Qed.
 
 Lemma addr_lt r n : r + n < r = false.
 Proof. apply/negP/negP; rewrite -ltnNge -addSn; by apply ltn_addr. Qed.
-
-Lemma subst_shift_shift p q r n c:
-  subst (shift p n 0 c) (r + (c + n)) (shift q n 0 c)
-  = shift (subst p (r + c) q) n 0 c.
-Proof.
-elim: p q r n c => //= [v q r n c|? IH ? ? ? c|? IH1 ? IH2 *].
-* case: ifP.
-   case: ifP => [/eqP ->|] /=.
-    by rewrite addnC addr_lt.
-   case: ifP => [/eqP -> ?|? ? ->] //.
-   by rewrite addnCA addr_lt.
-  case: ifP => [/eqP ->|]; first by rewrite /= addnA subn0 eqxx.
-  by rewrite /= addnA !subn0 eqn_add2r => -> ->.
-* by rewrite -[c]addn0 shiftnSC !addn0 !addn1 -addnS -addSn IH addnS.
-* by rewrite IH1 IH2.
-Qed.
 
 Lemma shift_subst_shift_shift t1 t2 n m c :
   shift (subst (shift t1 n m c.+2) 1 (shift (shift t2 n m c) 2 0 0)) 0 1 1 = shift (shift (subst t1 1 (shift t2 2 0 0)) 0 1 1) n m c.+1.
