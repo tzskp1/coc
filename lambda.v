@@ -86,9 +86,9 @@ Definition K := Abs (Abs (Var 1)).
 Lemma shiftnn t n c : shift t n n c = t.
 Proof.
   elim: t n c => //= [*|? IH *|? IH1 ? IH2 *].
-  rewrite addnK; by case: ifP.
-  by rewrite /= IH.
-  by rewrite IH1 IH2.
+  * rewrite addnK; by case: ifP.
+  * by rewrite /= IH.
+  * by rewrite IH1 IH2.
 Qed.
 
 Lemma shiftnSC q n m c :
