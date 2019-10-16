@@ -155,29 +155,12 @@ Lemma betaE t1 t2 :
   closed (App (Abs t1) t2) ->
   beta (App (Abs t1) t2) (shift (subst t1 0 (shift t2 1 0 0)) 0 1 0).
 Proof.
-elim: t1 t2 => //.
-move=> ? /= t.
+elim: t1 t2 => //= [? t|*]; last by rewrite eqxx orbT.
 case: ifP => //= /eqP ->.
-case: t => //=.
-case=> //= t1 t2.
-rewrite !shift_shift !shiftnn.
-case: t1 => //=.
-case: t2 => //=.
-move=> ?.
-rewrite /closed /= mem_seq1 andbT => /eqP ->.
-by rewrite !eqxx.
-move=> ? ?.
-by rewrite /closed /= mem_seq1 andbC /=.
-move=> ? ?.
-rewrite /closed /= mem_seq1 => /andP [] /eqP ->.
-by rewrite !eqxx /= shift_shift shiftnn eqxx.
-move=> t ? ?.
-rewrite /closed /= mem_seq1 => /andP [] /eqP ->.
-rewrite !eqxx /=.
-case:t => //= *; by rewrite !orbT.
-by move=> ? /= IH ? H.
-move=> ? /= IH1  ? IH2 ? ?.
-by rewrite /= eqxx orbT.
+case: t => [] // [] // [] //= ? t.
+rewrite /closed /= !mem_seq1 !shift_shift !shiftnn.
+case: t => [|?|?|??] /andP [] /eqP ->;
+by rewrite ?(eqxx, orbT).
 Qed.
 
 Lemma addr_lt r n : r + n < r = false.
