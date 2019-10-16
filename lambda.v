@@ -1,4 +1,4 @@
-From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import all_ssreflect algebra.ssrint.
 Require Import generalities.
 
 Set Implicit Arguments.
@@ -163,8 +163,24 @@ case: t => [|?|?|??] /andP [] /eqP ->;
 by rewrite ?(eqxx, orbT).
 Qed.
 
-Lemma addr_lt r n : r + n < r = false.
-Proof. apply/negP/negP; rewrite -ltnNge -addSn; by apply ltn_addr. Qed.
+Lemma absE v n m : v + n - m = v + (n - m) - (m - n).
+Proof.
+ case nm: (n <= m).
+  rewrite subnBA //.
+  move/eqP: nm ->.
+  by rewrite addn0.
+ move/negP/negP: nm; rewrite -ltnNge => mn.
+ rewrite addnBA; last by apply ltnW.
+ move/ltnW/eqP: mn ->; by rewrite subn0.
+Qed.
+
+Lemma shiftE t n m c : shift t n m c = shift t (n - m) (m - n) c.
+Proof.
+  elim: t c => //= [?|? IH|? IH1 ? IH2] ?.
+  * by case: ifP => //; rewrite absE.
+  * by rewrite IH.
+  * by rewrite IH1 IH2.
+Qed.
 
 Lemma shift_subst_shift_shift t1 t2 n m c :
   shift (subst (shift t1 n m c.+2) 1 (shift (shift t2 n m c) 2 0 0)) 0 1 1 = shift (shift (subst t1 1 (shift t2 2 0 0)) 0 1 1) n m c.+1.
