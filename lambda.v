@@ -124,27 +124,17 @@ Qed.
 Lemma vnmi i n m c v :
   i + m <= c -> c <= v -> v + n - m < i = false.
 Proof.
-  move=> imc cv.
-  apply/negP/negP.
-  rewrite -ltnNge ltnS.
-  have: i <= v - m.
+  move=> imc cv; apply/negP/negP; rewrite -ltnNge ltnS.
+  have ivm: i <= v - m.
    rewrite leq_eqVlt in imc.
-   case/orP: imc => [/eqP imc|].
-    rewrite -imc in cv.
-    rewrite leq_eqVlt in cv.
-    case/orP: cv => [/eqP <-| cv].
-     by rewrite addnK.
+   case/orP: imc => [/eqP|] imc.
+    rewrite -imc leq_eqVlt in cv.
+    case/orP: cv => [/eqP <-| cv]; first by rewrite addnK.
     by rewrite leq_eqVlt ltn_subRL addnC cv orbT.
-  move=> imc. 
-  rewrite leq_eqVlt ltn_subRL addnC; apply/orP; right.
-  by apply: leq_trans; first apply imc.
-  move=> ivm.
+    by rewrite leq_eqVlt ltn_subRL addnC (leq_trans imc) // orbT.
   rewrite addnC -addnBA.
-  apply: leq_trans; first apply ivm.
-  apply leq_addl.
-  apply: leq_trans; last apply cv.
-  apply: leq_trans; last apply imc.
-  apply leq_addl.
+  apply/(leq_trans ivm)/leq_addl.
+  apply/(leq_trans _ cv)/(leq_trans _ imc)/leq_addl.
 Qed.
 
 Lemma shiftnSC q n m c i :
