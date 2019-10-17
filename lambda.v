@@ -180,33 +180,50 @@ Proof.
   * by rewrite IH1 IH2.
 Qed.
 
+Lemma shiftSn0 u n c : shift (shift u n.+1 0 c) 0 1 c = shift u n 0 c.
+Proof.
+  elim: u n c => //= [?|? IH|? IH1 ? IH2] *.
+  * case: ifP => /= [->|] //.
+    rewrite !subn0 !addnS subn1 !addn0.
+    by case: ifP => // /ltnW /ltn_wl ->.
+  * by rewrite IH.
+  * by rewrite IH1 IH2.
+Qed.
+
 Lemma shiftnS u n m c :
   c + m <= n -> shift (shift u n m c) 1 0 c = shift u n.+1 m c.
 Proof.
-  elim: u n m c => //= [? ? ? ? H|? IH n m c H|? IH1 ? IH2] *.
+  elim: u n m c => //= [? ? ? ? H|? IH ? ? ? H|? IH1 ? IH2] *.
   * case: ifP => /= [->|] //.
     move/negP/negP; rewrite -ltnNge ltnS => cv.
-    rewrite subn0 !addn1 addnS subSn.
-     case: ifP => //.
-      rewrite addnC (vnmi _ H) //.
-      apply: leq_trans; last apply leq_addl.
-      apply: leq_trans; last apply H.
-      apply leq_addl.
+    rewrite subn0 !addn1 addnS subSn
+            ?(et (et (leq_addl _ _) H) (leq_addl _ _)) //.
+    by case: ifP => //; rewrite addnC (vnmi _ H).
   * rewrite leq_eqVlt in H.
-    case/orP: H => [/eqP <-|H].
-     rewrite [X in shift X _ _ _]shiftE [in RHS]shiftE
-             subSn // ?leq_addl // !addnK -addSn.
-     do 2! rewrite subnDA subnAC subnn sub0n.
-     by rewrite shiftnS0.
-    rewrite IH //.
+    case/orP: H => [/eqP <-|?]; last by rewrite IH.
+    rewrite [X in shift X _ _ _]shiftE [in RHS]shiftE
+            subSn // ?leq_addl // !addnK -addSn.
+    do 2! rewrite subnDA subnAC subnn sub0n.
+    by rewrite shiftnS0.
   * by rewrite IH1 // IH2.
 Qed.
 
-Lemma shiftSn u n m i : shift (shift u n.+1 m i) 0 1 i = shift u n m i.
+Lemma shiftSn u n m i :
+  i + m <= n -> shift (shift u n.+1 m i) 0 1 i = shift u n m i.
 Proof.
-  
-  
-Proof. by rewrite shift_shift shiftSS. Qed.
+  elim: u n m i => //= [? ? ? ? H|? IH ? ? ? H|? IH1 ? IH2] *.
+  * case: ifP => /= [->|] //.
+    move/negP/negP; rewrite -ltnNge ltnS => cv.
+    by rewrite addnC (vnmi _ H) // addn0 subn1 subSn
+               ?(et (leq_addl _ _) (et H (leq_addr _ _))) // addnC.
+  * rewrite leq_eqVlt in H.
+    case/orP: H => [/eqP <-|?]; last by rewrite IH.
+    rewrite [X in shift X _ _ _]shiftE [in RHS]shiftE
+            subSn // ?leq_addl // !addnK -addSn.
+    do 2! rewrite subnDA subnAC subnn sub0n.
+    by rewrite shiftSn0.
+  * by rewrite IH1 // IH2.
+Qed.
   
 Lemma shiftnC q n m s r c i :
   i + m < c -> shift (shift q n m c) r s i = shift (shift q r s i) n m (c + r).
