@@ -131,9 +131,8 @@ Proof.
     rewrite -imc leq_eqVlt in cv.
     case/orP: cv => [/eqP <-| cv]; first by rewrite addnK.
     by rewrite leq_eqVlt ltn_subRL addnC cv orbT.
-    by rewrite leq_eqVlt ltn_subRL addnC (leq_trans imc) // orbT.
-  rewrite addnC -addnBA.
-  apply/(leq_trans ivm)/leq_addl.
+   by rewrite leq_eqVlt ltn_subRL addnC (leq_trans imc) // orbT.
+  rewrite addnC -addnBA; first by apply/(leq_trans ivm)/leq_addl.
   apply/(leq_trans _ cv)/(leq_trans _ imc)/leq_addl.
 Qed.
 
