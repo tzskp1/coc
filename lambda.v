@@ -4,6 +4,10 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Local Notation ett := leq_ltn_trans.
+Local Notation tt := ltn_trans.
+Local Notation et := leq_trans.
+
 Definition var := nat.
 
 Inductive term :=
@@ -117,20 +121,46 @@ Proof.
   * by rewrite IH1 IH2.
 Qed.
 
-Lemma shiftnSC q n m c :
-  m <= c -> shift (shift q n 0 c) 1 0 m = shift (shift q 1 0 m) n 0 c.+1.
+Lemma vnmi i n m c v :
+  i + m <= c -> c <= v -> v + n - m < i = false.
 Proof.
-  elim: q n m c => //= [v|? IH|? IH1 ? IH2] *.
+  move=> imc cv.
+  apply/negP/negP.
+  rewrite -ltnNge ltnS.
+  have: i <= v - m.
+   rewrite leq_eqVlt in imc.
+   case/orP: imc => [/eqP imc|].
+    rewrite -imc in cv.
+    rewrite leq_eqVlt in cv.
+    case/orP: cv => [/eqP <-| cv].
+     by rewrite addnK.
+    by rewrite leq_eqVlt ltn_subRL addnC cv orbT.
+  move=> imc. 
+  rewrite leq_eqVlt ltn_subRL addnC; apply/orP; right.
+  by apply: leq_trans; first apply imc.
+  move=> ivm.
+  rewrite addnC -addnBA.
+  apply: leq_trans; first apply ivm.
+  apply leq_addl.
+  apply: leq_trans; last apply cv.
+  apply: leq_trans; last apply imc.
+  apply leq_addl.
+Qed.
+
+Lemma shiftnSC q n m c i :
+  i + m <= c -> shift (shift q n m c) 1 0 i = shift (shift q 1 0 i) n m c.+1.
+Proof.
+  elim: q n m c i => //= [v ? ? ? ? imc|? IH|? IH1 ? IH2] *.
   * case: ifP.
-     case: ifP => /= [|H1 H2].
-      case: ifP => // *; by rewrite ltnS ltnW.
-     by rewrite H1 !subn0 addn1 ltnS H2.
-    case: ifP => /= [vm /negP/negP|].
-     rewrite -ltnNge ltnS => cv.
-     suff: v < v by rewrite ltnn.
-     by apply: (leq_trans (leq_trans vm _) cv).
-    case: ifP; first by rewrite subn0 => /ltn_wl ->.
-    rewrite !subn0 !addn1 ltnS; by case: ifP.
+     case: ifP => /= [|H1 H2]; last by rewrite H1 !subn0 addn1 ltnS H2.
+     by case: ifP => // *; rewrite ltnS ltnW.
+    case: ifP => /= [vm /negP/negP|? vc].
+     rewrite -ltnNge ltnS => cv; suff: v < v by rewrite ltnn.
+     by apply/(et (et vm _) cv)/(leq_wl imc).
+    rewrite !addn1 ltnS !subn0 vc !addSn.
+    move/negP/negP: vc; rewrite -ltnNge ltnS => cv.
+    by rewrite subSn ?(et (et (et (leq_addl _ _) imc) cv) (leq_addr _ _))
+               // (vnmi _ imc).
   * by rewrite IH.
   * by rewrite IH1 // IH2.
 Qed.
@@ -150,17 +180,14 @@ Lemma shiftnC q n m r c :
 Proof.
   elim: r n q c m => [*|[|? IH] *]. 
   * by rewrite !shiftnn addn0.
-  * by rewrite shiftnSC // !addnS addn0.
-  * by rewrite -[in RHS]shiftnS addnS -addSn shiftnSC // -IH ?ltnS //
-               -[in LHS]shiftnS !shiftnSC.
+  * by rewrite shiftnSC // ?addn0 ?addn1.
+  * by rewrite -[in RHS]shiftnS addnS -addSn shiftnSC ?addn0 // -IH ?ltnS //
+               -[in LHS]shiftnS !shiftnSC ?addn0.
 Qed.
 
 Lemma shiftSnC q n m c i :
   i + m < c -> shift (shift q n m c.+1) 0 1 i = shift (shift q 0 1 i) n m c.
 Proof.
-Local Notation ett := leq_ltn_trans.
-Local Notation tt := ltn_trans.
-Local Notation et := leq_trans.
 elim: q n m c i => //= [v ? ? ? ? ic|? IH|? IH1 ? IH2] *.
 * case: ifP.
    case: ifP => /= [vi|]; first by rewrite (tt vi (ett (leq_addr _ _) ic)) vi.
@@ -169,10 +196,8 @@ elim: q n m c i => //= [v ? ? ? ? ic|? IH|? IH1 ? IH2] *.
   case: v => // ? /negP/negP; rewrite -ltnNge !ltnS => cv.
   set iv := ltnW (et (ett (leq_addr _ _) ic) cv).
   set mv := ltnW (et (ett (leq_addl _ _) ic) cv).
-  rewrite ltnNge (leqW iv) /= !addn0 !subn1 [in RHS]ltnNge cv ltn_neqAle
-          leq_subLR addSn andbC subSn ?(et mv (leq_addr _ _)) //.
-  case: ifP => // /andP [] /ltn_wl.
-  by rewrite addnC => /(fun x => et (tt x ic) cv); rewrite ltnn.
+  by rewrite ltnNge (leqW iv) /= !addn0 !subn1 [in RHS]ltnNge cv
+             (vnmi _ (leqW ic)) ?leqW // subSn ?(et mv (leq_addr _ _)).
 * by rewrite IH.
 * by rewrite IH1 // IH2.
 Qed.
@@ -192,15 +217,15 @@ Proof.
 Qed.
 
 Lemma shift_subst_shift_shift t1 t2 n m c :
-  m <= c + n -> 
+  m < c + n -> 
   shift (subst (shift t1 n m c.+2) 1 (shift t2 n m c.+2)) 0 1 1
 = shift (shift (subst t1 1 t2) 0 1 1) n m c.+1.
 Proof.
   case: t1 => //.
    move=> /= v.
    case: ifP => /=.
-    case: ifP => /= [/eqP -> ?|].
-    
+    case: ifP => /= [/eqP -> ?|] H.
+    rewrite shiftSnC // add1n ltnS.
     rewrite shiftSn.
     rewrite -shiftnS.
      rewrite [shift t2 _ _ _]shiftE.
@@ -295,7 +320,7 @@ Proof.
 Qed.
 
 Lemma shift_pres_beta u u' n m c :
-  m <= c + n ->
+  m < c + n ->
   beta u u' -> beta (shift u n m c) (shift u' n m c).
 Proof.
   elim: u u' n c => //.
