@@ -170,16 +170,6 @@ elim: q n m c i => //= [v ? ? ? ? ic|? IH|? IH1 ? IH2] *.
 * by rewrite IH1 // IH2.
 Qed.
 
-Lemma shiftSn0' u n m c : shift (shift u 1 0 c) n m c = shift u n.+1 m c.
-Proof.
-  elim: u n m c => // [? /=|? IH|? IH1 ? IH2] *.
-  * case: ifP => /= [->|] //.
-    rewrite subn0 addnS addn0 addnS -addSn.
-    by case: ifP => // /ltnW ->.
-  * by rewrite /= IH.
-  * by rewrite /= IH1 IH2.
-Qed.
-
 Lemma shiftnS0 u n m c : shift (shift u n 0 c) 1 m c = shift u n.+1 m c.
 Proof.
   elim: u n m c => //= [?|? IH|? IH1 ? IH2] *.
@@ -245,59 +235,57 @@ Proof.
                -[in LHS]shiftnS0 !shiftnSC ?addn0.
 Qed.
 
+Local Lemma vcx i c v x : i < c -> (v < i) = false -> v < c + x -> v - x < c.
+Proof.
+move=> ic vi; rewrite ltn_neqAle andbC addnC -leq_subLR leq_eqVlt
+    => /andP[]/orP[]// /eqP ce.
+move/negP/negP: vi; rewrite -ltnNge ltnS => vi.
+rewrite -ce ltn_subRL in ic.
+by rewrite -ce subnKC ?eqxx // (leq_trans _ ic)
+           // -addSn (leq_trans _ (leq_addr _ _)).
+Qed.
+
+Local Lemma icv i c v n x : i < c -> v + n < i -> v < c + x.
+Proof.
+move=> ic vni.
+apply: ltn_trans; last by apply ltn_addr, ic.
+apply: leq_ltn_trans; last by apply vni.
+apply leq_addr.
+Qed.
+
 Lemma shiftnC' i c q n x : i < c ->
   shift (shift q n 0 (c + x.+2)) 0 x.+2 i = shift (shift q 0 x.+2 i) n 0 c.
 Proof.
-  
-Lemma shiftnC' q n s r c i :
-  i < c -> shift (shift q n 0 (c + s)) r s i = shift (shift q r s i) n 0 (c + r).
-Proof.
-  elim: s r n q c i => [|[|x IH]]. 
-  move=> r n q c i ic.
-  by rewrite addn0 shiftnC // ltnW.
-  move=> IH r n q c i ci.
-  
-  elim: r => /=.
-   rewrite addn0 /=.
-   by rewrite -shiftSnC ?addn0 ?addn1.
-  move=> r.
-  by rewrite !shiftSS addn1 -[c.+1]addn0 IH ?leqW // addnS addSn.
-  elim; last first.
-   move=> *.
-   by rewrite !shiftSS addnS -addSn IH ?leqW // !addnS !addSn.
+  elim: q c i n x => //.
+   move=> ? ? ? ? ? ic /=.
+   case: ifP => /=.
+    case: ifP => vi /= *; first by rewrite subn0 (tt vi ic).
+    by rewrite addn0 (vcx ic).
+   case: ifP => /= [|? /negP/negP]; first by rewrite subn0 => /(icv _ ic) ->.
+   rewrite -ltnNge ltnS => vcx'.
+   case: ifP => /= [/(fun x => tt ic (ett (et (leq_addr _ _) vcx') x))|?];
+    first by rewrite ltnn.
+   case: ifP.
+    rewrite addn0.
+    v < c + x
+   i < c < c + x < v
+   v + n > i
+   rewrite !addn0 (vcx ic) //.
    
-  move=> n q c i ic.
-  elim: q c i ic x IH => //.
-   move=> ? ? ? ic ? IH.
-   move=> *.
-   rewrite /=.
-    case: ifP.
-     case: ifP => /=.
-      rewrite !addn0 subn0.
-      move=> vi.
-      by rewrite vi (ltn_trans vi ic).
-     move=> vi.
-     rewrite vi !addn0.
-     rewrite ltn_neqAle andbC addnC -leq_subLR leq_eqVlt => /andP []. 
-     case/orP => [/eqP |].
-      move/negP/negP: vi.
-      rewrite -ltnNge ltnS.
-      move=> iv.
-      move=> ce.
-      rewrite -ce in ic.
-      rewrite ltn_subRL in ic.
-      rewrite -ce subnKC ?eqxx //.
-      apply: ltn_trans; last apply ic.
-      by apply ltn_addr.
-     move-> => //.
-    move=> H.
-    rewrite /= subn0.
-    case: ifP.
-     case: ifP => //.
-    move/negP/negP: H.
+   rewrite -ltnNge ltnS => ivn /negP/negP.
+   rewrite subn0 => /negP/negP.
+   i < c < v < i
+   move/(et _ (
+   
+   
+    rewrite /= (ltn_trans vi ic).
+    
+    
+    move/negP/negP.
     rewrite -ltnNge ltnS => /leq_wl.
-    move/leq_ltn_trans => H.
-    move/H.
+    move/leq_ltn_trans => H0.
+    Check (H0 (leq_add
+    move/H0.
     move/(ltn_trans ic).
     by rewrite ltnn.
     rewrite /= !addn0 => /negP/negP vi vni.
@@ -320,60 +308,24 @@ Proof.
     rewrite [in RHS]addnC.
     rewrite addnBA.
     rewrite addnC //.
-    
-    rewrite addnCA.
-    
-     rewrite ltn_neqAle.
-     rewrite leq_subLR addnC.
-     rewrite 
-     
-     move/negP/negP: H.
-     rewrite -ltnNge ltnS.
-     rewrite leq_eqVlt.
-     rewrite ltn_subRL.
-     rewrite leq_subLR.
-     move=> *.
-     rewrite addn
-     
-     rewrite -ltnNge ltnS.
-    
-     rewrite /= !addn0.
-     
-    
-    rewrite addnC -leq_subLR in H.
-    rewrite leq_eqVlt.
-    rewrite subSS in H.
-    rewrite H.
-    rewrite subnSK.
-    rewrite H.
-    
-    
-    rewrite -ltnS.
-    rewrite 
-     
-   by rewrite !shiftnn.
-   rewrite -[RHS]shiftnS.
-   rewrite -[shift _ n.+1 _ _]shiftnS.
-   rewrite -[shift _ 0 _ _]shiftSn.
-   rewrite -[shift q 0 _ _]shiftSn.
-  rewrite -[in RHS]shiftnS.
-   rewrite [in RHS]addnC.
-   rewrite -[in RHS]shiftnC.
-   rewrite 
+  
+Lemma shiftnC' q n s r c i :
+  i < c -> shift (shift q n 0 (c + s)) r s i = shift (shift q r s i) n 0 (c + r).
+Proof.
+  elim: s r n q c i => [|[|x IH]]. 
+  move=> r n q c i ic.
+  by rewrite addn0 shiftnC // ltnW.
+  move=> IH r n q c i ci.
+  
+  elim: r => /=.
+   rewrite addn0 /=.
+   by rewrite -shiftSnC ?addn0 ?addn1.
+  move=> r.
+  by rewrite !shiftSS addn1 -[c.+1]addn0 IH ?leqW // addnS addSn.
+  elim; last first.
+   move=> *.
+   by rewrite !shiftSS addnS -addSn IH ?leqW // !addnS !addSn.
    
-   case: x IH.
-    move=> IH.
-    rewrite !addn0 !addn2.
-   rewrite addn0.
-  
-  rewrite -[shift q r _ _ ]shiftSn.
-  rewrite [in RHS]addnC.
-  rewrite -[in RHS]shiftSn.
-  rewrite 
-  rewrite -shiftnS.
-  
-  rewrite addnC.
-  rewrite shiftE.
    rewrite 
   * elim.
      move=> n q c m i imc.
