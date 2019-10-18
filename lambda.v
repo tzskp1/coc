@@ -507,84 +507,21 @@ case/orP => /= [|/andP [] /eqP ->] H; first by apply (IHx _ H).
 by apply (IHy _ H) => *; apply IHx.
 Qed.
 
-Lemma abs_in_vars s t : s.+1 \in vars t -> s \in vars (Abs t).
+Lemma abs_in_vars s t : s.+1 \in t -> s \in [seq i.-1 | i <- t].
 Proof.
-  elim: t s => //=.
-  move=> n s.
-  by rewrite !mem_seq1 => /eqP <-.
+  elim: t s => // ? t IH s.
+  rewrite in_cons => /orP [/eqP <-|?]; first by rewrite in_cons eqxx.
+  by rewrite in_cons IH // orbT.
+Qed.
 
-  move=> ? IH /=.
-  
-  rewrite /=.
-  
-
-Lemma subst_fail t s r : 
-  s \notin vars t -> subst t s r = t.
+Lemma subst_fail t s r : s \notin vars t -> subst t s r = t.
 Proof.
-  elim: t s r => //.
-   move=> ?? ? /=.
-   by rewrite mem_seq1 eq_sym /= => /negPf ->.
-
-   move=> t IH s r.
-   rewrite /=.
-   
-  move ste: (t, s) => st.
-  elim: (wf_dict wf_wfr_term ltn_wf st) s t r ste => [][] x y _ IH s t r [] sx ty.
-  move: sx ty IH => <- <- IH.
-  case: s IH.
-   move=> IH H.
-   apply: IH => //.
-   rewrite /dict_order /=.
-   
-  case: t IH => //.
-   move=> ? IH.
-   by rewrite mem_seq1 eq_sym /= => /negPf ->.
-   move=> ? /= IH H.
-   rewrite /= (IH _ _ _ _ _ erefl) //.
-   rewrite /= /dict_order /=.
-   by rewrite /wfr_term /= ltnS leqnn.
-   
-   move: H.
-   rewrite -filter_map.
-     mem_filter.
-   apply: contra => H.
-   rewrite subn1.
-   case=> //.
-   move=> ? ? /=.
-   case: ifP.
-   
-   rewrite mem_seq1 eq_sym /= => // /negPf.
-    
-   move=> ? /= IH H.
-   
-   rewrite /dict_order /=.
-   
-  case: s IH.
-  
-   move=> ? IH.
-   by rewrite mem_seq1 eq_sym /= => /negPf ->.
-   move=> ? /= IH H.
-   rewrite (IH _ _ _ _ _ erefl) //.
-   congr Abs.
-   apply: (IH _ _ _ _ _ erefl).
-   
-   move=> IH H
-   
-  (* induction by dict order *)
-  elim: s t r.
-   move=> t r.
-   elim: t r => //.
-    move=> n r.
-    by rewrite mem_seq1 /= eq_sym => /negPf ->.
-
-    move=> t IH ? /= ?.
-    rewrite /= IH //.
-    rewrite /=.
-  elim: t s r => //.
-   move=> ? ? ?.
-   by rewrite mem_seq1 /= eq_sym => /negPf ->.
-   move=> ? IH ? ? /= H.
-   rewrite IH //.
+  elim: t s r => //= [???|? IH ?? H|? IH1 ? IH2 ??].
+  * by rewrite mem_seq1 eq_sym /= => /negPf ->.
+  * by rewrite /= IH //; move: H; apply contra, abs_in_vars.
+  * rewrite /= mem_cat negb_or => /andP [] ? ?.
+    by rewrite IH1 // IH2.
+Qed.
 
 Lemma shift_subst n s t r i :
   i <= s -> s < n -> subst (shift t n 0 i) s r = shift t n 0 i.
