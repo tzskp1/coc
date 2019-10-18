@@ -212,9 +212,9 @@ Qed.
 Lemma suff_gt0 i c : i < c -> 0 < c.
 Proof. by case: c. Qed.
 
-Lemma ltn_subLR c v x : 0 < c -> v < c + x = (v - x < c).
+Lemma ltn_subLR c v x : 0 < c -> v - x < c = (v < c + x).
 Proof.
-move=> ic ; apply/eqP; case: ifP; last first.
+move=> ic ; apply/esym/eqP; case: ifP; last first.
 * move=> /negP vxc /eqP vcx; apply: vxc.
   move: vcx; rewrite subn_eq0.
   rewrite ltn_neqAle andbC addnC -leq_subLR leq_eqVlt
@@ -229,4 +229,3 @@ move=> ic ; apply/eqP; case: ifP; last first.
   by rewrite addnC addnK ltnn.
 Qed.
 End Generalities.
-
