@@ -50,6 +50,13 @@ Local Fixpoint closed_i t m n :=
   end.
 Definition closed t := closed_i t [::] 0.
 
+Fixpoint vars t :=
+  match t with
+  | d => [::] | Var v => [:: v]
+  | Abs t1 => map predn (vars t1)
+  | App t1 t2 => vars t1 ++ vars t2
+  end.
+
 Fixpoint subst t b r :=
   match t with
   | d => t | Var v => if v == b then r else t
@@ -386,14 +393,12 @@ Qed.
 (*   rewrite addn0. *)
 
 Lemma betaE t1 t2 :
-  closed (App (Abs t1) t2) ->
   beta (App (Abs t1) t2) (shift (subst t1 0 (shift t2 1 0 0)) 0 1 0).
 Proof.
   elim: t1 t2 => //= [? t|*]; last by rewrite eqxx orbT.
   case: ifP => //= /eqP ->.
   case: t => [] // [] // [] //= ? t.
-  rewrite /closed /= !mem_seq1 !shift_shift !shiftnn.
-  case: t => [|?|?|??] /andP [] /eqP ->; by rewrite ?(eqxx, orbT).
+  by rewrite !shift_shift !shiftnn eqxx !orbT.
 Qed.
 
 Definition betat := tc beta.
@@ -419,7 +424,13 @@ Proof. apply tc_refl. Qed.
 Lemma beta_betat a b : beta a b -> betat a b.
 Proof. move=> *; by exists 1. Qed.
 
-Hint Resolve beta_betat betat_refl betaE.
+Lemma beta_id t : beta (App (Abs (Var 0)) t) t.
+Proof.
+case: t => //= [*|*|[] //= *];
+by rewrite ?(shift_shift, shiftnn, addn1, subn0, addn0, subn1, eqxx, orbT).
+Qed.
+
+Hint Resolve beta_betat betat_refl betaE beta_id : core.
 
 Lemma tcn_betat s t n : tcn beta n s t -> betat s t. 
 Proof. move=> *; by exists n. Qed.
@@ -483,41 +494,150 @@ Proof.
    apply: (IH 1) => //.
 Qed.
 
-(* Lemma sizeu0 t : sizeu t = 0 -> exists v, Var v = t \/ t = d. *)
-(* Proof. *)
-(*   have max0: forall n, maxn 1 n == 0 = false *)
-(*    by move=> n; rewrite maxnE addn_eq0. *)
-(*   case: t => // [*|n *|? ? /eqP]. *)
-(*   * exists 0; auto. *)
-(*   * exists n; auto. *)
-(*   * by rewrite max0. *)
-(* Qed. *)
+Definition dict_order (S T : eqType) (f : S -> S -> bool) (g : T -> T -> bool) a b :=
+  f a.1 b.1 || ((a.1 == b.1) && (g a.2 b.2)).
 
-(* Lemma beta_sizeu u u': beta u u' -> sizeu u > sizeu u'. *)
-(* Proof. *)
-(*   have max1mon : forall s t, s.+1 < t.+1 -> maxn 1 s.+1 < maxn 1 t.+1 *)
-(*    by move=> s t st; rewrite !maxnE ltn_add2l !subn1. *)
-(*   elim: u u' => //. *)
-(*    move=> u IHu. *)
-(*    case => //. *)
-(*   move=> u IHu u0 IHu0. *)
-(*   case: u IHu => //. *)
-(*    move=> IHu. *)
-(*    case=> //= ? u'. *)
-(*    rewrite orbF => /andP [] /eqP <-. *)
-(*    rewrite /= !max0n. *)
-(*    case: u0 IHu0 => //. *)
-(*     move=> u0 IHu0. *)
-(*     case: u' => //=. *)
-(*     move=> u' b. *)
-(*     apply max1mon. *)
-(*     apply (IHu0 (Abs u') b). *)
-
-Lemma beta_id t : beta (App (Abs (Var 0)) t) t.
+Lemma wf_dict (S T : eqType) (f : S -> S -> bool) (g : T -> T -> bool) :
+  well_founded f -> well_founded g -> well_founded (@dict_order S T f g).
 Proof.
-case: t => //= [*|*|[] //= *];
-by rewrite ?(shift_shift, shiftnn, addn1, subn0, addn0, subn1, eqxx, orbT).
+move=> fw gw [] x y.
+elim: (fw x) y => {x} x _ IHx y; elim: (gw y) x IHx => {y} y _ IHy x IHx.
+constructor => [][] x0 y0.
+case/orP => /= [|/andP [] /eqP ->] H; first by apply (IHx _ H).
+by apply (IHy _ H) => *; apply IHx.
 Qed.
+
+Lemma abs_in_vars s t : s.+1 \in vars t -> s \in vars (Abs t).
+Proof.
+  elim: t s => //=.
+  move=> n s.
+  by rewrite !mem_seq1 => /eqP <-.
+
+  move=> ? IH /=.
+  
+  rewrite /=.
+  
+
+Lemma subst_fail t s r : 
+  s \notin vars t -> subst t s r = t.
+Proof.
+  elim: t s r => //.
+   move=> ?? ? /=.
+   by rewrite mem_seq1 eq_sym /= => /negPf ->.
+
+   move=> t IH s r.
+   rewrite /=.
+   
+  move ste: (t, s) => st.
+  elim: (wf_dict wf_wfr_term ltn_wf st) s t r ste => [][] x y _ IH s t r [] sx ty.
+  move: sx ty IH => <- <- IH.
+  case: s IH.
+   move=> IH H.
+   apply: IH => //.
+   rewrite /dict_order /=.
+   
+  case: t IH => //.
+   move=> ? IH.
+   by rewrite mem_seq1 eq_sym /= => /negPf ->.
+   move=> ? /= IH H.
+   rewrite /= (IH _ _ _ _ _ erefl) //.
+   rewrite /= /dict_order /=.
+   by rewrite /wfr_term /= ltnS leqnn.
+   
+   move: H.
+   rewrite -filter_map.
+     mem_filter.
+   apply: contra => H.
+   rewrite subn1.
+   case=> //.
+   move=> ? ? /=.
+   case: ifP.
+   
+   rewrite mem_seq1 eq_sym /= => // /negPf.
+    
+   move=> ? /= IH H.
+   
+   rewrite /dict_order /=.
+   
+  case: s IH.
+  
+   move=> ? IH.
+   by rewrite mem_seq1 eq_sym /= => /negPf ->.
+   move=> ? /= IH H.
+   rewrite (IH _ _ _ _ _ erefl) //.
+   congr Abs.
+   apply: (IH _ _ _ _ _ erefl).
+   
+   move=> IH H
+   
+  (* induction by dict order *)
+  elim: s t r.
+   move=> t r.
+   elim: t r => //.
+    move=> n r.
+    by rewrite mem_seq1 /= eq_sym => /negPf ->.
+
+    move=> t IH ? /= ?.
+    rewrite /= IH //.
+    rewrite /=.
+  elim: t s r => //.
+   move=> ? ? ?.
+   by rewrite mem_seq1 /= eq_sym => /negPf ->.
+   move=> ? IH ? ? /= H.
+   rewrite IH //.
+
+Lemma shift_subst n s t r i :
+  i <= s -> s < n -> subst (shift t n 0 i) s r = shift t n 0 i.
+Proof.
+  (* elim: s t n r i => //. *)
+  (*  move=> ? n ? ?. *)
+  (*  rewrite leqn0 => /eqP ->. *)
+  (*  case: n => // n ?. *)
+  (*  rewrite /=. *)
+  (* case=> //. *)
+   
+  (* move=> s IH. *)
+  (* case => //. *)
+  elim: t n s r i => //.
+  move=> ? ? n r i /=.
+  case: ifP => /=.
+   case: ifP => // /eqP <-.
+   move/et => H /H.
+   by rewrite ltnn.
+  case: ifP => //= /eqP <- ? ?.
+  rewrite !subn0 addnC => /ltn_wl.
+  by rewrite ltnn.
+  
+  move=> t IH /= [] // n s.
+  elim: s n t IH => //.
+   move=> n t IH r [] // _ _.
+   elim: n t r IH => //.
+    case => //.
+     move=> ? ?.
+     rewrite /= /leq subSS subn0; case: ifP => [/eqP -> //|] H.
+     by rewrite /= addn1 subn0 eqSS H.
+     move=> ? ? /= IH.
+     
+     rewrite IH.
+     rewrite /=.
+     rewrite /=.
+     
+    move=> t r.
+    rewrite 
+   rewrite /=.
+  case sn: (s == n).
+   move/eqP: sn => <- H ?.
+   case: t IH => //.
+    move=> ? ? /=.
+    case: ifP => /=.
+     case: ifP => // /eqP ->.
+     rewrite /= ltnS => /(ett H).
+     by rewrite ltnn.
+    case: ifP => //.
+    by rewrite subn0 -[X in _ == X]add0n eqn_add2r => /eqP ->.
+    move=> ? /= IH.
+    rewrite /= IH.
+    
 
 Lemma subst_pres_beta u u' s t :
   beta u u' -> betat (subst u s t) (subst u' s t).
@@ -530,19 +650,35 @@ Proof.
     case: ifP => // /eqP ->.
     by case: u2 => // *; apply beta_betat.
   * case: u1 IH => //= u1.
-    case: u1 => //= ?.
-    case: ifP.
-    move/eqP ->.
+    case: u1 => //= n.
+    case: ifP => [/eqP ->|].
+     case: u2 => //= ? ? ? /eqP [] <-.
+     rewrite /= !addn1 subn0 addn0 subn1 /=.
+     by case: ifP; auto.
+    case: n => // ? ? IH ?.
+    rewrite /= addn0 subn1 eqSS => /eqP [] <-.
+    case: ifP => /= [/eqP <-|].
+    apply: betat_trans.
+     apply: beta_betat.
+     apply: betaE.
+    
+     
+     rewrite shiftnn.
+    case: t => /=; auto.
+     move=> ?.
+     apply: beta_betat.
+     by rewrite !addn1 /= !subn0 addn0 !subn1.
+     case=> //=; auto.
+     move=> ?.
+     apply: beta_betat.
+     rewrite /=.
+     apply betatApC.
+     rewrite /= -betatAC.
+     rewrite /=.
+     
+     auto.
+    apply: beta_betat.
     rewrite /=.
-    case: u2 => //= ? ? ? /eqP [] <-.
-    rewrite /= !addn1 subn0 addn0 subn1 /=.
-    case: ifP.
-     move=> *.
-     apply beta_betat.
-     case: t => // *.
-      by rewrite /= !addn1 subn0 addn0 subn1 /=.
-      by rewrite /= shift_shift shiftnn.
-      rewrite /=.
      
     move=> ? ?.
     by case: u2 => // *; apply beta_betat.
