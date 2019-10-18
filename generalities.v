@@ -6,7 +6,7 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 Section Generalities.
-Variable T : eqType.
+Variables T U : eqType.
 
 Fixpoint tcn (r : T -> T -> Prop) n (a b : T) := 
   match n with
@@ -227,5 +227,27 @@ move=> ic ; apply/esym/eqP; case: ifP; last first.
   apply/negP => /eqP H.
   move: H vxc => ->.
   by rewrite addnC addnK ltnn.
+Qed.
+
+Definition dict_order (f : U -> U -> bool) (g : T -> T -> bool) a b :=
+  f a.1 b.1 || ((a.1 == b.1) && (g a.2 b.2)).
+
+Lemma wf_dict (f : U -> U -> bool) (g : T -> T -> bool) :
+  well_founded f -> well_founded g -> well_founded (dict_order f g).
+Proof.
+move=> fw gw [] x y.
+elim: (fw x) y => {x} x _ IHx y; elim: (gw y) x IHx => {y} y _ IHy x IHx.
+constructor => [][] x0 y0.
+case/orP => /= [|/andP [] /eqP ->] H; first by apply (IHx _ H).
+by apply (IHy _ H) => *; apply IHx.
+Qed.
+
+Lemma ltnpredn n : n < n.-1 = false.
+Proof. by case: n => //= n; apply/negP/negP; rewrite -ltnNge. Qed.
+
+Lemma ltn_gap x y z : x < y -> y < z -> x < z.-1.
+Proof.
+case: z => [|z xy yz]; first by rewrite ltn0.
+exact: (leq_trans xy yz).
 Qed.
 End Generalities.
