@@ -59,7 +59,7 @@ Fixpoint subst t b r :=
 
 Fixpoint sizeu M :=
   match M with
-  | App T N => (sizeu T + sizeu N).+1
+  | App T N => sizeu T + sizeu N
   | Abs N => (sizeu N).+1
   | d | Var _ => 1
   end.
@@ -83,6 +83,54 @@ Fixpoint beta M1 M2 :=
 
 Definition omega := Abs (App (Var 0) (Var 0)).
 Definition K := Abs (Abs (Var 1)).
+
+Definition wfr_term s t := sizeu s < sizeu t.
+
+Local Lemma sizeu0 t : sizeu t == 0 = false.
+Proof. elim: t => // ? IH1 ? IH2; by rewrite /= addn_eq0 IH1. Qed.
+
+Local Lemma subpattern x y :
+  (forall y : term, wfr_term y x -> Acc (fun s t : term => wfr_term s t) y) -> 
+  sizeu y < (sizeu x).+1 -> Acc (fun s t : term => sizeu s < sizeu t) y.
+Proof.
+  case xy: (sizeu x == sizeu y).
+   case: x xy => [|?|?|??] /eqP xy IH *; constructor => ?.
+   * by rewrite /wfr_term -xy /leq subSS subn0 sizeu0.
+   * by rewrite /wfr_term -xy /leq subSS subn0 sizeu0.
+   * by rewrite /wfr_term -xy /leq subSS subn_eq0 => H; apply IH, H.
+   * by rewrite /wfr_term -xy => H; apply IH, H.
+  by rewrite /wfr_term ltnS leq_eqVlt eq_sym xy /= => IH H; apply IH, H.
+Qed.
+
+Lemma ltn_gap x y z : x < y -> y < z -> x < z.-1.
+Proof.
+case: z => [|z xy yz]; first by rewrite ltn0.
+exact: (leq_trans xy yz).
+Qed.
+
+Local Lemma subpattern_n n x y :
+  (forall y : term, wfr_term y x -> Acc (fun s t : term => wfr_term s t) y) -> 
+  sizeu y < sizeu x + n -> Acc (fun s t : term => sizeu s < sizeu t) y.
+Proof.
+  elim: (ltn_wf n) x y => {n} n _ IH x y H yxn.
+  case: n IH yxn => [? yxn|[?|n IH yxn]].
+  * by rewrite addn0 in yxn; apply H, yxn.
+  * by rewrite addn1 => ?; apply (subpattern H).
+  * apply: (IH n.+1 _ y); first by [].
+    move=> y0 y0y; apply: (IH n.+1 _ x); first by [].
+    - apply H.
+    - by move: (ltn_gap y0y yxn); rewrite addnS; apply.
+    - by rewrite addnS -addSn; apply leq_addr.
+Qed.
+
+Lemma wf_wfr_term : well_founded wfr_term.
+Proof.
+  move=> x; constructor; elim: x => [[//|//|//|??]|??|???|? IH ? ? ? H].
+  * by rewrite /wfr_term /leq subSS /= subn0 addn_eq0 sizeu0.
+  * by rewrite /wfr_term /leq subSS /= subn0 sizeu0.
+  * by apply subpattern.
+  * by apply: (subpattern_n IH H).
+Qed.
 
 Lemma absE v n m : v + n - m = v + (n - m) - (m - n).
 Proof.
@@ -296,87 +344,46 @@ elim: t n i =>//=[|? IH|? IH1 ? IH2] *; last first.
   rewrite /= !ltnS !addn0 !subn1 /= => ? C.
   by rewrite ltn_neqAle C andbF ltnNge ni /= subn0 addSn.
 Qed.
-
-Lemma shift_subst_shift_shift t1 t2 n m c i :
-  m < c + n -> 
-  shift (subst (shift t1 n m (c + i).+2) i.+1 (shift (shift t2 n m c) i.+2 0 0)) 0 1 i.+1
-  = shift (shift (subst t1 i.+1 (shift t2 i.+2 0 0)) 0 1 i.+1) n m (c + i).+1.
-Proof.
-elim: t1 t2 c i n m => //; last first.
-move=> ? IH1 ? IH2 *.
-by rewrite /= IH1 // IH2.
-move=> ? IH *.
-by rewrite /= -addnS !shiftnS // IH.
-
-intros n t2 c i n0 m H.
-rewrite /=.
-case: ifP => /=.
- case: ifP => /= [/eqP ->|].
-  rewrite !ltnS => ?.
-  rewrite shift3.
- 
-
- 
-elim: c i t1 t2 n m.
- move=> i t1 t2 n m.
- rewrite add0n => mn.
- rewrite [RHS]shiftE [shift t1 _ _ _ ]shiftE
-         [shift t2 _ _ _ ]shiftE !(eqP (ltnW mn)).
- elim: t1 t2 n m mn => //.
-  case=> //.
-  case=> //.
-   move=> t2 n m mn.
-   rewrite add0n /=.
-   by rewrite /= shift3 // subn_gt0.
-  move=> ? t2 n m mn.
-  by rewrite /= !subn0 !addn0 !subn1 addSn.
- move=> t1 IHt1 t2 n m mn.
- rewrite /= !shiftnS //= !addn0.
- shift3.
+(* Lemma shift3' t2 n0 m c i j : *)
+(*   m < c + n0 ->  *)
+(* shift (shift (shift t2 n0 m c) i.+2 0 j) 0 1 (i + j).+1 = shift (shift (shift t2 i.+2 0 j) 0 1 (i + j).+1) n0 m (c + (i + j).+1). *)
+(* Proof. *)
+(* elim: t2 n0 m c i j =>//=[|? IH|? IH1 ? IH2] *; last first. *)
+(* * by rewrite IH1 // IH2. *)
+(*   rewrite -addnS IH. *)
+(*   rewrite !addSn. *)
+(*   rewrite !addnS. *)
+(* * rewrite -shiftSnC. *)
+(*     rewrite IH. *)
+(* * case: ifP => /= [ni|/negP/negP]; first by rewrite ltnS ni ltnW //= !ltnS ltnW. *)
+(*   rewrite -ltnNge ltnS => ni; rewrite !subn0 !addn2 !ltnS. *)
+(*   case: ifP => [/ltn_wl/(ett ni)|]; first by rewrite ltnn. *)
+(*   case: ifP => [/leqW /(ett ni)|]; first by rewrite ltnn. *)
+(*   rewrite /= !ltnS !addn0 !subn1 /= => ? C. *)
+(*   by rewrite ltn_neqAle C andbF ltnNge ni /= subn0 addSn. *)
   
-   
-   rewrite !addn0.
-     : forall (q : term) (n s r c t i : nat), i < c -> t <= s -> shift (shift q n t (c + s)) r s i = shift (shift q r s i) n t (c + r)
-   
-   Check shiftnC.
-   case: t2 => //.
-    move=> ? /=.
-   rewrite /=.
-  rewrite /=.
-  rewrite eqSS ltnS.
-  move=> t1 t2 n m mn.
-  rewrite /=.
- rewrite [in RHS]shift_shift.
-   move=> mcn.
-   rewrite /=.
-   
+(* Lemma shift_subst_shift_shift t1 t2 n m c i : *)
+(*   m < c + n ->  *)
+(*   shift (subst (shift t1 n m (c + i).+2) i.+1 (shift (shift t2 n m c) i.+2 0 0)) 0 1 i.+1 *)
+(*   = shift (shift (subst t1 i.+1 (shift t2 i.+2 0 0)) 0 1 i.+1) n m (c + i).+1. *)
+(* Proof. *)
+(* elim: t1 t2 c i n m => //; last first. *)
+(* move=> ? IH1 ? IH2 *. *)
+(* by rewrite /= IH1 // IH2. *)
+(* move=> ? IH *. *)
+(* by rewrite /= -addnS !shiftnS // IH. *)
 
-Lemma shift_shift_inv t n m c : shift (shift t 0 m c.+1) n 0 c.+1 = shift t n m c.+1.
-Proof.
-  elim: t n m c => //= [?|? IH|? IH1 ? IH2] *.
-  * case: ifP => /= [->|] // /negP/negP.
-    rewrite -ltnNge !ltnS subn0 addn0 => cn.
-    rewrite leq_subLR.
-  _c_ < _n_ ->
-       _n_ <= _m_ + _c_ = m > n        
-  (if  then Var (_n_ - _m_) else Var (_n_ - _m_ + _n1_)) = Var (_n_ - _m_ + _n1_)
-
-subgoal 2 (ID 780) is:
- _m_ <= _n_
-    rewrite -[in RHS]addnBAC.
-    rewrite leqNgt.
-    rewrite [in RHS]addnC.
-            ; case: ifP => //.
-    by rewrite subn0 addn0; case: ifP => // /ltn_wl ->.
-  * by rewrite IH.
-  * by rewrite IH1 IH2.
-Qed.
-  move=> mcn.
-  rewrite 
-      set T := (subst t1 (1 + 0) (shift t2 (1 + 0).+1 0 0)).
-      rewrite -[c.+1]addn0.
-      rewrite -(@shiftnC T) //.
-      rewrite -[1]addn0.
+(* intros n t2 c i n0 m H. *)
+(* rewrite /=. *)
+(* case: ifP => /=. *)
+(*  case: ifP => /= [/eqP ->|]. *)
+(*   rewrite -addnS. *)
+(*   rewrite -shiftSnC. *)
+(*   move=> ?. *)
+(*   congr shift. *)
+(*   rewrite -addnS. *)
+(*   rewrite -shiftnC. *)
+(*   rewrite addn0. *)
 
 Lemma betaE t1 t2 :
   closed (App (Abs t1) t2) ->
@@ -475,6 +482,73 @@ Proof.
     apply: (IH n.+1) => //.
    apply: (IH 1) => //.
 Qed.
+
+(* Lemma sizeu0 t : sizeu t = 0 -> exists v, Var v = t \/ t = d. *)
+(* Proof. *)
+(*   have max0: forall n, maxn 1 n == 0 = false *)
+(*    by move=> n; rewrite maxnE addn_eq0. *)
+(*   case: t => // [*|n *|? ? /eqP]. *)
+(*   * exists 0; auto. *)
+(*   * exists n; auto. *)
+(*   * by rewrite max0. *)
+(* Qed. *)
+
+(* Lemma beta_sizeu u u': beta u u' -> sizeu u > sizeu u'. *)
+(* Proof. *)
+(*   have max1mon : forall s t, s.+1 < t.+1 -> maxn 1 s.+1 < maxn 1 t.+1 *)
+(*    by move=> s t st; rewrite !maxnE ltn_add2l !subn1. *)
+(*   elim: u u' => //. *)
+(*    move=> u IHu. *)
+(*    case => //. *)
+(*   move=> u IHu u0 IHu0. *)
+(*   case: u IHu => //. *)
+(*    move=> IHu. *)
+(*    case=> //= ? u'. *)
+(*    rewrite orbF => /andP [] /eqP <-. *)
+(*    rewrite /= !max0n. *)
+(*    case: u0 IHu0 => //. *)
+(*     move=> u0 IHu0. *)
+(*     case: u' => //=. *)
+(*     move=> u' b. *)
+(*     apply max1mon. *)
+(*     apply (IHu0 (Abs u') b). *)
+
+Lemma subst_pres_beta u u' s t :
+  beta u u' -> betat (subst u s t) (subst u' s t).
+Proof.
+  elim: u u' s t => //.
+  move=> u IH u' ? ?.
+  case: u' => // u' /= H.
+  rewrite -betatAC.
+  by apply IH.
+  move=> u IH1 t1 IH2.
+  case: u IH1 => //.
+   move=> IHu.
+   case=> //.
+   case=> //.
+   move=> t2 ? t.
+   
+  case=> //.
+   case: u IH1 => // t2 IH1 ? ?.
+   
+   rewrite /=.
+   
+   move/eqP => <-.
+   apply/eqP.
+   congr shift.
+   congr subst.
+   
+  subst _t1_ _s_.+1 (shift _t2_ 1 0 0) = _t1_
+
+subgoal 2 (ID 1299) is:
+ shift (subst _t_ _s_ _t2_) 1 0 0 = shift _t_ 1 0 0
+   
+  subst (subst _t1_ _s_.+1 (shift _t2_ 1 0 0)) 0 (shift (subst _t_ _s_ _t2_) 1 0 0) = subst _t1_ 0 (shift _t_ 1 0 0)
+   
+  shift (subst (subst _t1_ _s_.+1 (shift _t2_ 1 0 0)) 0 (shift (subst _t_ _s_ _t2_) 1 0 0)) 0 1 0 == shift (subst _t1_ 0 (shift _t_ 1 0 0)) 0 1 0
+   
+  case: u' => //=.
+   case=> //.
 
 Lemma shift_pres_beta u u' n m c :
   m < c + n ->
