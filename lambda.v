@@ -117,10 +117,10 @@ Proof.
   * by rewrite addn0 in yxn; apply H, yxn.
   * by rewrite addn1 => ?; apply (subpattern H).
   * apply: (IH n.+1 _ y); first by [].
-    move=> y0 y0y; apply: (IH n.+1 _ x); first by [].
-    - apply H.
-    - by move: (ltn_gap y0y yxn); rewrite addnS; apply.
-    - by rewrite addnS -addSn; apply leq_addr.
+    + move=> y0 y0y; apply: (IH n.+1 _ x); first by [].
+      - by apply H.
+      - by move: (ltn_gap y0y yxn); rewrite addnS; apply.
+    +  by rewrite addnS -addSn; apply leq_addr.
 Qed.
 
 Lemma wf_wfr_term : well_founded wfr_term.
@@ -513,42 +513,48 @@ Qed.
 (*     apply max1mon. *)
 (*     apply (IHu0 (Abs u') b). *)
 
+Lemma beta_id t : beta (App (Abs (Var 0)) t) t.
+Proof.
+case: t => //= [*|*|[] //= *];
+by rewrite ?(shift_shift, shiftnn, addn1, subn0, addn0, subn1, eqxx, orbT).
+Qed.
+
 Lemma subst_pres_beta u u' s t :
   beta u u' -> betat (subst u s t) (subst u' s t).
 Proof.
-  elim: u u' s t => //.
-  move=> u IH u' ? ?.
-  case: u' => // u' /= H.
-  rewrite -betatAC.
-  by apply IH.
-  move=> u IH1 t1 IH2.
-  case: u IH1 => //.
-   move=> IHu.
-   case=> //.
-   case=> //.
-   move=> t2 ? t.
+  elim: (wf_wfr_term u) u' s t => {u}[][]// =>[u _ IH []//= *|u1 u2 _ IH u' s t];
+  first by rewrite -betatAC; apply IH => //; rewrite /wfr_term.
+  case: u'.
+  * case: u1 IH => //= u1.
+    case: u1 => //= [*|?]; first by apply beta_betat.
+    case: ifP => // /eqP ->.
+    by case: u2 => // *; apply beta_betat.
+  * case: u1 IH => //= u1.
+    case: u1 => //= ?.
+    case: ifP.
+    move/eqP ->.
+    rewrite /=.
+    case: u2 => //= ? ? ? /eqP [] <-.
+    rewrite /= !addn1 subn0 addn0 subn1 /=.
+    case: ifP.
+     move=> *.
+     apply beta_betat.
+     case: t => // *.
+      by rewrite /= !addn1 subn0 addn0 subn1 /=.
+      by rewrite /= shift_shift shiftnn.
+      rewrite /=.
+     
+    move=> ? ?.
+    by case: u2 => // *; apply beta_betat.
+  * 
    
-  case=> //.
-   case: u IH1 => // t2 IH1 ? ?.
+    
+    move=> IH.
+    rewrite /=.
+   apply IH.
+   rewrite /wfr_term.
    
-   rewrite /=.
-   
-   move/eqP => <-.
-   apply/eqP.
-   congr shift.
-   congr subst.
-   
-  subst _t1_ _s_.+1 (shift _t2_ 1 0 0) = _t1_
-
-subgoal 2 (ID 1299) is:
- shift (subst _t_ _s_ _t2_) 1 0 0 = shift _t_ 1 0 0
-   
-  subst (subst _t1_ _s_.+1 (shift _t2_ 1 0 0)) 0 (shift (subst _t_ _s_ _t2_) 1 0 0) = subst _t1_ 0 (shift _t_ 1 0 0)
-   
-  shift (subst (subst _t1_ _s_.+1 (shift _t2_ 1 0 0)) 0 (shift (subst _t_ _s_ _t2_) 1 0 0)) 0 1 0 == shift (subst _t1_ 0 (shift _t_ 1 0 0)) 0 1 0
-   
-  case: u' => //=.
-   case=> //.
+  
 
 Lemma shift_pres_beta u u' n m c :
   m < c + n ->
