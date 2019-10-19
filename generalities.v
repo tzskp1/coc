@@ -250,4 +250,7 @@ Proof.
 case: z => [|z xy yz]; first by rewrite ltn0.
 exact: (leq_trans xy yz).
 Qed.
+
+Lemma eqnpredn n : n != n.-1 = (n != 0).
+Proof. case: n => //= n. apply/negP => /eqP. by elim: n => // n IH []. Qed.
 End Generalities.
