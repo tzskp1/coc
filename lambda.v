@@ -682,6 +682,43 @@ Proof.
     by rewrite IH1 // IH2.
 Qed.
 
+Lemma shift_subst_subst_shift_subst u11 s t u2 i :
+  shift (subst (subst u11 (i + s.+1) (shift t i.+1 0 0)) i (shift (subst u2 s t) i.+1 0 0)) 0 1 i = subst (shift (subst u11 i (shift u2 i.+1 0 0)) 0 1 i) (i + s) (shift t i 0 0).
+Proof.
+  have C: forall s i, i + s.+1 == i = false.
+   move=> s' i'.
+   by rewrite -[i']addn0 [X in X + _ == _]addn0 eqn_add2l.
+  elim: u11 s t u2 i => //.
+  move=> n p t q s /=.
+   case: ifP => /= [/eqP ->|].
+    rewrite C /= ltnNge leq_addr /= addn0 subn1 addnS eqxx.
+    case: s => //.
+     by rewrite shift_subst_shift shiftnn.
+    move=> s.
+    move: (shift_subst_shift_subst s (subst q p t) t 0).
+    by rewrite !add0n.
+   case: ifP => /= [/eqP ->|].
+    case: s => /=.
+     by rewrite !shift_shift !addn0 !add0n !shiftnn.
+    move=> s ?.
+    rewrite !shift_shift01'.
+    move: (shift_substC' 0 q t s p).
+    by rewrite addn0 add0n addnC shiftnn => ->.
+   case: ifP => /=.
+    case: ifP => //= /eqP -> /ltn_wl.
+    by rewrite ltnn.
+   rewrite addn0 subn1.
+   case: n => /= [|n]; first by case: s.
+   case: ifP => // /eqP ->.
+   by rewrite addnS eqxx.
+   
+  move=> ? IH ? ? ? ? /=.
+  by rewrite -addSn !shiftnS //= IH !addSn.
+
+  move=> ? IH1 ? IH2 * /=.
+  by rewrite IH1 IH2.
+Qed.
+
 Lemma subst_pres_beta u u' s t :
   beta u u' -> beta (subst u s t) (subst u' s t).
 Proof.
@@ -728,7 +765,27 @@ Proof.
       * by rewrite !eqxx !(IH u2) // !orbT.
       * by rewrite !eqxx !(IH u1) ?orbT // /wfr_term /= -addnS ltn_addr.
      move=> H.
-     have: (shift (subst (subst u1 s.+1 (shift t 1 0 0)) 0 (shift (subst u2 s t) 1 0 0)) 0 1 0 == App (subst t1 s t) (subst t2 s t)).
+     have Hs: (shift (subst (subst u1 s.+1 (shift t 1 0 0)) 0 (shift (subst u2 s t) 1 0 0)) 0 1 0 == App (subst t1 s t) (subst t2 s t)).
+      move=> {IH}.
+      apply/eqP.
+      case: u1 H => //=.
+       move=> ?.
+       case: ifP => // /eqP ->.
+       by rewrite !shift_shift !addn0 !shiftnn => /eqP -> /=.
+      move=> u11 u12 /eqP [] H1 H2.
+      rewrite -H1 -H2.
+      congr App;
+      by rewrite shift_subst_subst_shift_subst !add0n !shiftnn.
+     by rewrite /= Hs orbT. 
+
+     move=> t3 t4 IH.
+     rewrite /=.
+     case: t1 IH => //=.
+     case: t4 t3 IH => //.
+     case: t3 t4 IH => //.
+     rewrite /=.
+     rewrite /=.
+       
      Check shift_substC.
       rewrite 
      rewrite /=.
@@ -736,6 +793,7 @@ Proof.
       move: (IH1 _ _ _ H1).
       case/orP => [/andP []|/orP [/andP []|/andP []]].
      rewrite shift_substC.
+     shift_subst_subst_shift_subst
   shift (subst (shift p q.+2 0 i) (i + q.+1) (shift t (i + q.+2) 0 0)) 0 1 (i + q.+1) = shift p q.+1 0 i.
   shift (subst (subst _t_ s.+1 (shift t 1 0 0)) 0 (shift (subst u2 s t) 1 0 0)) 0 1 0 == App (subst t1 s t) (subst t2 s t))
      case: t1 => //=.
