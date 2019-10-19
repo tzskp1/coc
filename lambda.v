@@ -359,15 +359,29 @@ Qed.
 Lemma shift_subst_shift t s i :
   shift (subst (shift t 1 0 i) i (shift s i.+1 0 0)) 0 1 i = t.
 Proof.
-elim: t s i => //= [???|? IH|? IH1 ? IH2] *.
+elim: t s i => //= [??|? IH|? IH1 ? IH2] *.
 * case: ifP => //= H.
    move: (H); rewrite ltn_neqAle => /andP [] /negPf -> _.
    by rewrite /= H.
   rewrite addn1 subn0.
   case: ifP => [/eqP ni|]; first by rewrite ni leqnn in H.
   by rewrite /= ltn_neqAle H andbF addn0 subn1.
+* by rewrite !shiftnS // IH.
+* by rewrite IH1 IH2.
+Qed.
+
+Lemma shift_subst_shift2 t s i :
+  shift (subst (shift t 2 0 i.+1) i.+1 (shift s i.+2 0 0)) 0 1 i.+1 = shift t 1 0 i.+1.
+Proof.
+elim: t s i => //= [??|? IH|? IH1 ? IH2] *.
+* case: ifP => //= H.
+   move: (H); rewrite ltn_neqAle => /andP [] /negPf -> _.
+   by rewrite /= H.
+  rewrite addn1 subn0 addn2 eqSS.
+  case: ifP => [/eqP ni|]; first by rewrite -ni ltnS leqnSn in H.
+  by rewrite /= 2!ltn_neqAle H !andbF addn0 subn1 subn0.
 * by rewrite /= !shiftnS // IH.
-* by rewrite /= IH1 IH2.
+* by rewrite IH1 // IH2.
 Qed.
 
 Lemma beta_shift1 t s : beta (App (Abs (shift t 1 0 0)) s) t.
@@ -457,73 +471,47 @@ Proof.
 Qed.
 
 Lemma subst_pres_beta u u' s t :
-  beta u u' -> betat (subst u s t) (subst u' s t).
+  beta u u' -> beta (subst u s t) (subst u' s t).
 Proof.
-  elim: (wf_wfr_term u) u' s t => {u}[][]// =>[u _ IH []//= *|u1 u2 _ IH u' s t];
-  first by rewrite -betatAC; apply IH => //; rewrite /wfr_term.
+  elim: u u' s t => // [? IH [] //= *|u1 _ u2 _ u' s t]; first by apply IH.
   case: u'.
-  * case: u1 IH => //= u1.
-    case: u1 => //= [*|?]; first by apply beta_betat.
+  * case: u1 => //= u1.
+    case: u1 => //= ?.
     case: ifP => // /eqP ->.
-    by case: u2 => // *; apply beta_betat.
-  * case: u1 IH => //= u1.
+    by case: u2 => // *.
+  * case: u1 => //= u1.
     case: u1 => //= n.
     case: ifP => [/eqP ->|].
-     case: u2 => //= ? ? ? /eqP [] <-.
-     rewrite /= !addn1 subn0 addn0 subn1 /=.
-     by case: ifP; auto.
-    case: n => // ? ? IH ?.
+     case: u2 => //= ? ? /eqP [] <-.
+     rewrite /= !addn1 subn0 addn0 subn1 /= !shift_shift !addn0 !shiftnn eqxx.
+     case: ifP; auto.
+     by case: t => // *; rewrite orbT.
+    case: n => // ? ? ?.
     rewrite /= addn0 subn1 eqSS => /eqP [] <-.
-    case: ifP => /= [/eqP <-|?]; apply: beta_betat.
+    case: ifP => /= [/eqP <-|?].
      by apply beta_shift1.
     by rewrite /= addn0 subn1.
   * move=> t'.
-    case: u1 IH => // u1 IH H.
+    case: u1 =>//[][]// => [/= ?|].
+     case: ifP => // /eqP -> /=.
+     by rewrite !shift_shift !addn0 !shiftnn => /eqP ->.
+    move=> t0 /eqP [] <-.
+    rewrite /= !shiftnS //.
+    elim: t0 => //.
+     move=> ? /=.
+     case: ifP => /= [/eqP ->|].
+     rewrite /= addn0 subn1 eqxx.
+     Check shift_subst_shift.
+    elim: s => //.
+    
+  (shift (subst (subst t0 s.+2 (shift t 2 0 0)) 1 (shift (subst u2 s t) 2 0 0)) 0 1 1) == (subst (shift (subst t0 1 (shift u2 2 0 0)) 0 1 1) s.+1 (shift t 1 0 0))
+    rewrite shift_subst_shift.
+    rewrite /= .
+    (* elim: (wf_wfr_term u1) u2 s t t' => {u1} u1 _ IH u2 s t t'. *)
+    move=> t0 H.
+    Check IH (Abs t0) _ _ _ _ _ H.
+    apply IH.
     rewrite /=.
-    rewrite /= in H.
-    case: t' => //=.
-    
-    case: u2 => //.
-    case: u
-    apply: betat_trans; last first.
-     apply: (_ : betat (Abs (subst t' s.+1 (shift t 1 0 0))) _) => //.
-    apply IH => //.
-    rewrite 
-    
-    rewrite /=.
-     : forall (t s : term) (i : nat), shift (subst (shift t 1 0 i) i (shift s i.+1 0 0)) 0 1 i = t
-    
-    Check shift_subst_shift.
-    
-     
-     rewrite shiftnn.
-    case: t => /=; auto.
-     move=> ?.
-     apply: beta_betat.
-     by rewrite !addn1 /= !subn0 addn0 !subn1.
-     case=> //=; auto.
-     move=> ?.
-     apply: beta_betat.
-     rewrite /=.
-     apply betatApC.
-     rewrite /= -betatAC.
-     rewrite /=.
-     
-     auto.
-    apply: beta_betat.
-    rewrite /=.
-     
-    move=> ? ?.
-    by case: u2 => // *; apply beta_betat.
-  * 
-   
-    
-    move=> IH.
-    rewrite /=.
-   apply IH.
-   rewrite /wfr_term.
-   
-  
 
 Lemma shift_pres_beta u u' n m c :
   m < c + n ->
