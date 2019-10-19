@@ -427,6 +427,17 @@ Proof.
   rewrite /= IH1 // IH2 //.
 Qed.
 
+Lemma shift_shift01' t s :
+shift (shift t s.+1 0 0) 0 1 s = shift t s 0 0.
+Proof.
+  elim: t s => // [? ? /=|? IH s|? IH1 ? IH2] *.
+  by rewrite ltnNge subn0 ltnW ?ltn_addl //= addn0 subn1 subn0 addnS.
+  case: s => [|s].
+   by rewrite shift_shift addn0 shiftSS.
+  by rewrite /= -addn1 shift_add // ?addn1 // shiftSS.
+  by rewrite /= IH1 IH2.
+Qed.
+
 Lemma shift_shift10 t i j :
   shift (shift t i 0 j) 1 0 (i + j) = shift t i.+1 0 j.
 Proof.
@@ -477,16 +488,23 @@ Proof.
    by rewrite /= !IH.
 Qed.
 
-  Abs (shift (subst (subst _t_ _s_.+3 (shift (shift _t1_ 2 0 0) 1 0 0)) 2 (shift (shift (subst _u2_ _s_ _t1_) 2 0 0) 1 0 0)) 0 1 2) =
-  Abs (subst (shift (subst _t_ 2 (shift (shift _u2_ 2 0 0) 1 0 0)) 0 1 2) _s_.+2 (shift (shift _t1_ 1 0 0) 1 0 0))
+  (* Abs (shift (subst (subst _t_ _s_.+3 (shift (shift _t1_ 2 0 0) 1 0 0)) 2 (shift (shift (subst _u2_ _s_ _t1_) 2 0 0) 1 0 0)) 0 1 2) = *)
+  (* Abs (subst (shift (subst _t_ 2 (shift (shift _u2_ 2 0 0) 1 0 0)) 0 1 2) _s_.+2 (shift (shift _t1_ 1 0 0) 1 0 0)) *)
 
-Lemma shift_substC' u2 t0 t s :
-  shift (subst (subst t0 s.+2 (shift t 2 0 0)) 1 (shift (subst u2 s t) 2 0 0)) 0 1 1
-= subst (shift (subst t0 1 (shift u2 2 0 0)) 0 1 1) s.+1 (shift t 1 0 0).
+Lemma shift_substC' u2 t0 t s i :
+  shift (subst (subst t0 (s + i).+2 (shift t i.+2 0 0)) i.+1 (shift (subst u2 s t) i.+2 0 0)) 0 1 i.+1
+= subst (shift (subst t0 i.+1 (shift u2 i.+2 0 0)) 0 1 i.+1) (s + i).+1 (shift t i.+1 0 0).
 Proof.
-  elim: t0 u2 t s => //=.
-   move=> u2 t s s0.
+  elim: t0 u2 t s i => //=.
+   move=> u2 t s s0 i.
    case: ifP => [/eqP ->|] /=.
+    rewrite /= eqSS.
+    case: ifP => [/= /eqP <-|].
+     rewrite !shift_shift01' /=.
+     rewrite /=.
+     rewrite 
+     : forall (t s : term) (i : nat), shift (subst (shift t 2 0 i) i.+1 (shift s i.+2 0 0)) 0 1 i.+1 = shift t 1 0 i
+    Check shift_subst_shift3.
     by rewrite addn0 subn1 eqxx shift_subst_shift3.
    case: ifP => /=.
     rewrite -[1]addn0 !shift_add // addn0 !shiftSS.
