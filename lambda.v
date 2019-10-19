@@ -778,48 +778,22 @@ Proof.
       by rewrite shift_subst_subst_shift_subst !add0n !shiftnn.
      by rewrite /= Hs orbT. 
 
-     move=> t3 t4; set T := (App t3 t4) => IH.
-     
-     rewrite /=.
-     case: t1 IH => //.
-      case: t3 => // t3 IH.
-      rewrite /= orbF.
-      case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
-       by rewrite !shift_subst_subst_shift_subst !add0n H /= orbF IH //.
-      by rewrite !shift_subst_subst_shift_subst !add0n !H !eqxx !orbT.
-      
-      case: t3 => // t3 ? IH.
-      rewrite /= orbF.
-      case: ifP => /= [/eqP ->|Hi].
-       case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
-       * rewrite !shift_subst_subst_shift_subst !add0n !H /= eqxx shiftnn eqxx !IH //.
-         by case: t => //= *; rewrite ?orbT.
-       * rewrite !shift_subst_subst_shift_subst !add0n !H /= !shiftnn !eqxx !andbT.
-         by case: t => //= *; rewrite ?orbT.
-      case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
-      * by rewrite !shift_subst_subst_shift_subst !add0n !H /= !Hi !eqxx !IH.
-      * by rewrite !shift_subst_subst_shift_subst !add0n !H /= !Hi !eqxx !andbT !orbT.
-      
-      move=> ?.
-      rewrite /= orbF.
-      case: t3 => // t3 IH.
-      case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
-      * by rewrite /= !shift_subst_subst_shift_subst !H !add0n !shiftnn !eqxx IH.
-      * by rewrite /= !shift_subst_subst_shift_subst !H !add0n !shiftnn !eqxx !orbT.
-
-      move=> ? ?. 
-      case: t3 => //; last first.
-      
-       move=> ? ? IH.
-       rewrite /=.
-       move=> IH.
-       rewrite /= orbF.
-      case/orP.
-       case/orP.
-        case/andP => H1 H2.
-        rewrite !(IH u2) // !(IH t3) // ?andTb ?orbT ?andbT.
-      rewrite /=.
-      rewrite /= orbF.
+     move=> t3 t4 IH H.
+     have: ((beta (App t3 t4) t1) && beta u2 t2) || ((App t3 t4 == t1) && beta u2 t2) || ((beta (App t3 t4) t1) && (u2 == t2)).
+      move: H => {IH}.
+      case: t1 => //=; case: t3 => //=.
+    case/orP.
+     case/orP => /andP [] H1 H2.
+      rewrite /= !(IH u2) //=.
+      by move: (fun x => IH (App t3 t4) x t1 s t) => /= -> //.
+      rewrite /= !(IH u2) //=.
+      move/eqP: H1 => <-.
+      by rewrite /= !eqxx !orbT.
+    case/andP => H1 /eqP H2.
+    move: H2 H => <- H2.
+    move: (fun x => IH (App t3 t4) x t1 s t) => /= -> //.
+    by rewrite eqxx !orbT.
+Qed.
 
 Lemma shift_pres_beta u u' n m c :
   m < c + n ->
