@@ -371,13 +371,13 @@ elim: t s i => //= [??|? IH|? IH1 ? IH2] *.
 Qed.
 
 Lemma shift_subst_shift2 t s i :
-  shift (subst (shift t 2 0 i.+1) i.+1 (shift s i.+2 0 0)) 0 1 i.+1 = shift t 1 0 i.+1.
+  shift (subst (shift t 2 0 i) i (shift s i.+1 0 0)) 0 1 i = shift t 1 0 i.
 Proof.
 elim: t s i => //= [??|? IH|? IH1 ? IH2] *.
 * case: ifP => //= H.
    move: (H); rewrite ltn_neqAle => /andP [] /negPf -> _.
    by rewrite /= H.
-  rewrite addn1 subn0 addn2 eqSS.
+  rewrite addn1 subn0 addn2.
   case: ifP => [/eqP ni|]; first by rewrite -ni ltnS leqnSn in H.
   by rewrite /= 2!ltn_neqAle H !andbF addn0 subn1 subn0.
 * by rewrite /= !shiftnS // IH.
