@@ -778,84 +778,48 @@ Proof.
       by rewrite shift_subst_subst_shift_subst !add0n !shiftnn.
      by rewrite /= Hs orbT. 
 
-     move=> t3 t4 IH.
-     rewrite /=.
-     case: t1 IH => //=.
-     case: t4 t3 IH => //.
-     case: t3 t4 IH => //.
-     rewrite /=.
-     rewrite /=.
-       
-     Check shift_substC.
-      rewrite 
-     rewrite /=.
-      rewrite /= in IH1.
-      move: (IH1 _ _ _ H1).
-      case/orP => [/andP []|/orP [/andP []|/andP []]].
-     rewrite shift_substC.
-     shift_subst_subst_shift_subst
-  shift (subst (shift p q.+2 0 i) (i + q.+1) (shift t (i + q.+2) 0 0)) 0 1 (i + q.+1) = shift p q.+1 0 i.
-  shift (subst (subst _t_ s.+1 (shift t 1 0 0)) 0 (shift (subst u2 s t) 1 0 0)) 0 1 0 == App (subst t1 s t) (subst t2 s t))
-     case: t1 => //=.
-
-      
-    elim: t0 => //.
-     move=> n /=.
-     case: ifP => /= [/eqP ->|].
-      by rewrite /= addn0 subn1 eqxx !shift_subst_shift3.
-     case: ifP => [/eqP ->|/=].
-      by rewrite -[1]addn0 !shift_add // !addn0 -[s.+1]add0n -shift_substC addn0 shiftnn.
-     case: ifP => /=; first by case: ifP => // /eqP ->.
-     case: ifP => //.
-     case: n => // n.
-     rewrite addn0 subn1 => /eqP <- /=.
-     by rewrite eqxx.
-     move=> ?.
-     rewrite /= !shift_shift => H.
-     rewrite shift_shift10.
-     rewrite 
-     IH //=.
+     move=> t3 t4; set T := (App t3 t4) => IH.
      
-     : forall (t : term) (i j : nat), shift (shift t i 0 j) 1 0 (i + j) = shift t i.+1 0 j
-      Check shift_substC.
-     : forall (u t : term) (s i : nat), shift (subst u (s + i) (shift t i 0 0)) 2 1 i = subst (shift u 2 1 i) (i + s.+1) (shift t i.+1 0 0)
-      rewrite shift_substC.
+     rewrite /=.
+     case: t1 IH => //.
+      case: t3 => // t3 IH.
+      rewrite /= orbF.
+      case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
+       by rewrite !shift_subst_subst_shift_subst !add0n H /= orbF IH //.
+      by rewrite !shift_subst_subst_shift_subst !add0n !H !eqxx !orbT.
       
-      rewrite -shiftSn.
-      rewrite -shiftnS.
-      rewrite -[2]addn1.
-      rewrite shiftnC.
-      rewrite 
-     
-     case: t => //.
-      move=> ? /=.
-      by rewrite addn2 subn0 /= addn0 addn1 subn0 subn1.
+      case: t3 => // t3 ? IH.
+      rewrite /= orbF.
+      case: ifP => /= [/eqP ->|Hi].
+       case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
+       * rewrite !shift_subst_subst_shift_subst !add0n !H /= eqxx shiftnn eqxx !IH //.
+         by case: t => //= *; rewrite ?orbT.
+       * rewrite !shift_subst_subst_shift_subst !add0n !H /= !shiftnn !eqxx !andbT.
+         by case: t => //= *; rewrite ?orbT.
+      case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
+      * by rewrite !shift_subst_subst_shift_subst !add0n !H /= !Hi !eqxx !IH.
+      * by rewrite !shift_subst_subst_shift_subst !add0n !H /= !Hi !eqxx !andbT !orbT.
+      
       move=> ?.
-      by rewrite /= !shiftnS // shift_subst_shift3.
+      rewrite /= orbF.
+      case: t3 => // t3 IH.
+      case/orP => [] /andP [] /eqP H => [H2|/eqP ->].
+      * by rewrite /= !shift_subst_subst_shift_subst !H !add0n !shiftnn !eqxx IH.
+      * by rewrite /= !shift_subst_subst_shift_subst !H !add0n !shiftnn !eqxx !orbT.
 
-      move=> ? ?.
-      by rewrite /= !shift_subst_shift3.
+      move=> ? ?. 
+      case: t3 => //; last first.
       
-      
-      
-     : forall (t s : term) (i : nat), shift (subst (shift t 2 0 i) i.+1 (shift s i.+2 0 0)) 0 1 i = shift t 1 0 i
-      
-  Abs (Abs (shift (subst (shift _t_ 2 0 1) 2 (shift (shift (subst u2 s (Abs _t_)) 2 0 0) 1 0 0)) 0 1 2)) == Abs (Abs (shift _t_ 1 0 1))
-     rewrite shiftSn.
-     Check shift_subst_shift2.
-     
-     : forall (t s : term) (i : nat), shift (subst (shift t 2 0 i) i (shift s i.+1 0 0)) 0 1 i = shift t 1 0 i
-     rewrite shift_subst_shift2.
-    elim: s => //.
-    
-  (shift (subst (subst t0 s.+2 (shift t 2 0 0)) 1 (shift (subst u2 s t) 2 0 0)) 0 1 1) == (subst (shift (subst t0 1 (shift u2 2 0 0)) 0 1 1) s.+1 (shift t 1 0 0))
-    rewrite shift_subst_shift.
-    rewrite /= .
-    (* elim: (wf_wfr_term u1) u2 s t t' => {u1} u1 _ IH u2 s t t'. *)
-    move=> t0 H.
-    Check IH (Abs t0) _ _ _ _ _ H.
-    apply IH.
-    rewrite /=.
+       move=> ? ? IH.
+       rewrite /=.
+       move=> IH.
+       rewrite /= orbF.
+      case/orP.
+       case/orP.
+        case/andP => H1 H2.
+        rewrite !(IH u2) // !(IH t3) // ?andTb ?orbT ?andbT.
+      rewrite /=.
+      rewrite /= orbF.
 
 Lemma shift_pres_beta u u' n m c :
   m < c + n ->
