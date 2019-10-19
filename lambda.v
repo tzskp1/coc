@@ -384,6 +384,72 @@ elim: t s i => //= [??|? IH|? IH1 ? IH2] *.
 * by rewrite IH1 // IH2.
 Qed.
 
+Lemma shift_subst_shift3 t s i :
+  shift (subst (shift t 2 0 i) i.+1 (shift s i.+2 0 0)) 0 1 i = shift t 1 0 i.
+Proof.
+  move tie: (t, i) => ti.
+  elim: (wf_dict wf_wfr_term ltn_wf ti) s t i tie => [][] x y _ IH s t i [] tx iy.
+  move: tx iy IH => <- <- IH.
+  case: i t s IH => //.
+   move=> t ? IH.
+   case: t IH => //.
+    move=> ? IH.
+    by rewrite /= addn2 subn0 /= addn0 subn1 subn0 addn1.
+
+    move=> ? IH /=.
+    rewrite shiftnS //.
+    congr Abs.
+    apply: IH => //.
+    by rewrite /dict_order /= /wfr_term /= ltnS leqnn.
+
+    move=> ? ? IH.
+    rewrite /=.
+    congr App.
+    apply: IH => //.
+    rewrite /dict_order /= /wfr_term /=.
+    
+   apply: IH => //.
+   rewrite 
+  case: t s i IH => //.
+   move=> ? ? ? IH.
+   rewrite /=.
+   case: ifP => /=.
+    by case: ifP => [/eqP -> /ltnW|/= ? -> //]; rewrite ltnn.
+   rewrite subn0 addn2 eqSS.
+    move/ltnW.
+    move=> ?.
+    rewrite /=.
+    rewrite IH.
+    
+elim: i t s => //.
+ move=> t s.
+ elim: t s => //.
+  move=> ? ? /=.
+  by rewrite addn2 subn0 /= addn0 subn1 subn0 addn1.
+  
+-   
+-  case: t IH => //.
+-   move=> ? IH.
+-   by rewrite mem_seq1 eq_sym /= => /negPf ->.
+-   move=> ? /= IH H.
+-   rewrite /= (IH _ _ _ _ _ erefl) //.
+
+  move=> ? IH ?.
+  rewrite /= !shiftnS //.
+ rewrite 
+elim: t s i => //= [??|? IH|? IH1 ? IH2] *.
+* case: ifP => //= H.
+   move: (H); rewrite ltn_neqAle => /andP [] /negPf -> _.
+   by rewrite /= H.
+  rewrite addn1 subn0 addn2.
+  case: ifP => [/eqP ni|]; first by rewrite -ni ltnS leqnSn in H.
+  by rewrite /= 2!ltn_neqAle H !andbF addn0 subn1 subn0.
+* by rewrite /= !shiftnS // IH.
+* by rewrite IH1 // IH2.
+Qed.
+
+  Abs (shift (subst (shift t 2 0 0) 1 (shift (subst u2 s t) 2 0 0)) 0 1 1) == Abs (shift t 1 0 0)
+
 Lemma beta_shift1 t s : beta (App (Abs (shift t 1 0 0)) s) t.
 Proof.
   rewrite /= !shift_subst_shift !eqxx.
@@ -501,7 +567,19 @@ Proof.
      move=> ? /=.
      case: ifP => /= [/eqP ->|].
      rewrite /= addn0 subn1 eqxx.
-     Check shift_subst_shift.
+     
+     case: t => //.
+      move=> ? /=.
+      by rewrite addn2 subn0 /= addn0 addn1 subn0 subn1.
+      move=> ?.
+      rewrite /=.
+      
+  Abs (Abs (shift (subst (shift _t_ 2 0 1) 2 (shift (shift (subst u2 s (Abs _t_)) 2 0 0) 1 0 0)) 0 1 2)) == Abs (Abs (shift _t_ 1 0 1))
+     rewrite shiftSn.
+     Check shift_subst_shift2.
+     
+     : forall (t s : term) (i : nat), shift (subst (shift t 2 0 i) i (shift s i.+1 0 0)) 0 1 i = shift t 1 0 i
+     rewrite shift_subst_shift2.
     elim: s => //.
     
   (shift (subst (subst t0 s.+2 (shift t 2 0 0)) 1 (shift (subst u2 s t) 2 0 0)) 0 1 1) == (subst (shift (subst t0 1 (shift u2 2 0 0)) 0 1 1) s.+1 (shift t 1 0 0))
