@@ -66,8 +66,8 @@ Fixpoint subst t b r :=
 
 Fixpoint sizeu M :=
   match M with
-  | App T N => sizeu T + sizeu N
-  | Abs N => (sizeu N).+1
+  | App T N => (sizeu T + sizeu N).+1
+  | Abs N => (sizeu N).+2
   | d | Var _ => 1
   end.
 
@@ -126,11 +126,13 @@ Qed.
 
 Lemma wf_wfr_term : well_founded wfr_term.
 Proof.
-  move=> x; constructor; elim: x => [[//|//|//|??]|??|???|? IH ? ? ? H].
-  * by rewrite /wfr_term /leq subSS /= subn0 addn_eq0 sizeu0.
-  * by rewrite /wfr_term /leq subSS /= subn0 sizeu0.
-  * by apply subpattern.
-  * by apply: (subpattern_n IH H).
+  move=> x; constructor; elim: x => [[//|//|//|??]|??|? H ?|? IH ? ? ? H].
+  * by rewrite /wfr_term ltnS /leq subn0.
+  * by rewrite /wfr_term ltnS /leq subn0 sizeu0.
+  * rewrite /= /wfr_term /= -addn2.
+    by apply (subpattern_n H).
+  * rewrite /wfr_term /= -addnS in H.
+    by apply (subpattern_n IH H).
 Qed.
 
 Lemma absE v n m : v + n - m = v + (n - m) - (m - n).
@@ -390,65 +392,25 @@ Proof.
   move tie: (t, i) => ti.
   elim: (wf_dict wf_wfr_term ltn_wf ti) s t i tie => [][] x y _ IH s t i [] tx iy.
   move: tx iy IH => <- <- IH.
-  case: i t s IH => //.
-   move=> t ? IH.
-   case: t IH => //.
-    move=> ? IH.
-    by rewrite /= addn2 subn0 /= addn0 subn1 subn0 addn1.
-
-    move=> ? IH /=.
-    rewrite shiftnS //.
-    congr Abs.
-    apply: IH => //.
-    by rewrite /dict_order /= /wfr_term /= ltnS leqnn.
-
-    move=> ? ? IH.
-    rewrite /=.
-    congr App.
-    apply: IH => //.
-    rewrite /dict_order /= /wfr_term /=.
-    
-   apply: IH => //.
-   rewrite 
-  case: t s i IH => //.
-   move=> ? ? ? IH.
-   rewrite /=.
-   case: ifP => /=.
-    by case: ifP => [/eqP -> /ltnW|/= ? -> //]; rewrite ltnn.
-   rewrite subn0 addn2 eqSS.
-    move/ltnW.
-    move=> ?.
-    rewrite /=.
-    rewrite IH.
-    
-elim: i t s => //.
- move=> t s.
- elim: t s => //.
-  move=> ? ? /=.
-  by rewrite addn2 subn0 /= addn0 subn1 subn0 addn1.
   
--   
--  case: t IH => //.
--   move=> ? IH.
--   by rewrite mem_seq1 eq_sym /= => /negPf ->.
--   move=> ? /= IH H.
--   rewrite /= (IH _ _ _ _ _ erefl) //.
-
-  move=> ? IH ?.
-  rewrite /= !shiftnS //.
- rewrite 
-elim: t s i => //= [??|? IH|? IH1 ? IH2] *.
-* case: ifP => //= H.
-   move: (H); rewrite ltn_neqAle => /andP [] /negPf -> _.
-   by rewrite /= H.
-  rewrite addn1 subn0 addn2.
-  case: ifP => [/eqP ni|]; first by rewrite -ni ltnS leqnSn in H.
-  by rewrite /= 2!ltn_neqAle H !andbF addn0 subn1 subn0.
-* by rewrite /= !shiftnS // IH.
-* by rewrite IH1 // IH2.
+  case: i t s IH => // [[|??|?? IH|??? IH] //=|? [|?? IH|?? IH|??? IH] //=].
+  * by rewrite addn2 subn0 /= addn0 subn1 subn0 addn1.
+  * rewrite shiftnS //; congr Abs; apply: IH => //.
+    by rewrite /dict_order /= /wfr_term /= ltnS leqnSn.
+  * congr App; apply: IH => //.
+     by rewrite /dict_order /wfr_term /= -addSn ltn_addr.
+    by rewrite /dict_order /wfr_term /= -addnS ltn_addl.
+  * case: ifP => /=.
+     by case: ifP => [/eqP -> /ltnW|/= ? -> //]; rewrite ltnn.
+    rewrite addn2 subn0 !eqSS.
+    case: ifP => [/eqP ->|]; first by rewrite ltnSn.
+    rewrite /= addn0 subn1 !ltnS addn1 subn0 leq_eqVlt orbC.
+    by case: ifP => // /ltnW ->.
+  * rewrite !shiftnS //; congr Abs; apply: IH => //.
+    by rewrite /dict_order /wfr_term /= ltnS leqnSn.
+  * by congr App; apply: IH => //;
+    rewrite /dict_order /wfr_term /= ltnS ?leq_addr ?leq_addl.
 Qed.
-
-  Abs (shift (subst (shift t 2 0 0) 1 (shift (subst u2 s t) 2 0 0)) 0 1 1) == Abs (shift t 1 0 0)
 
 Lemma beta_shift1 t s : beta (App (Abs (shift t 1 0 0)) s) t.
 Proof.
@@ -4223,4 +4185,3 @@ have: (beta_rel T (Univ Star)) \/ (beta_rel T (Univ Box)).
  case: H C.
 have: H = Pi asm p s q
 case.
-h
