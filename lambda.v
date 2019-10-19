@@ -389,17 +389,15 @@ Qed.
 Lemma shift_subst_shift3 t s i :
   shift (subst (shift t 2 0 i) i.+1 (shift s i.+2 0 0)) 0 1 i = shift t 1 0 i.
 Proof.
-  move tie: (t, i) => ti.
-  elim: (wf_dict wf_wfr_term ltn_wf ti) s t i tie => [][] x y _ IH s t i [] tx iy.
-  move: tx iy IH => <- <- IH.
+  elim: (wf_wfr_term t) i s => {t} t _ IH i s.
   
-  case: i t s IH => // [[|??|?? IH|??? IH] //=|? [|?? IH|?? IH|??? IH] //=].
+  case: i t s IH => // [[|??|?? IH|??? IH]|? [|?? IH|?? IH|??? IH]] //=.
   * by rewrite addn2 subn0 /= addn0 subn1 subn0 addn1.
   * rewrite shiftnS //; congr Abs; apply: IH => //.
-    by rewrite /dict_order /= /wfr_term /= ltnS leqnSn.
+    by rewrite /wfr_term /= ltnS leqnSn.
   * congr App; apply: IH => //.
-     by rewrite /dict_order /wfr_term /= -addSn ltn_addr.
-    by rewrite /dict_order /wfr_term /= -addnS ltn_addl.
+     by rewrite /wfr_term /= -addSn ltn_addr.
+    by rewrite /wfr_term /= -addnS ltn_addl.
   * case: ifP => /=.
      by case: ifP => [/eqP -> /ltnW|/= ? -> //]; rewrite ltnn.
     rewrite addn2 subn0 !eqSS.
@@ -407,9 +405,9 @@ Proof.
     rewrite /= addn0 subn1 !ltnS addn1 subn0 leq_eqVlt orbC.
     by case: ifP => // /ltnW ->.
   * rewrite !shiftnS //; congr Abs; apply: IH => //.
-    by rewrite /dict_order /wfr_term /= ltnS leqnSn.
+    by rewrite /wfr_term /= ltnS leqnSn.
   * by congr App; apply: IH => //;
-    rewrite /dict_order /wfr_term /= ltnS ?leq_addr ?leq_addl.
+    rewrite /wfr_term /= ltnS ?leq_addr ?leq_addl.
 Qed.
 
 Lemma beta_shift1 t s : beta (App (Abs (shift t 1 0 0)) s) t.
