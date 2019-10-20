@@ -27,7 +27,7 @@ Proof.
   by apply/ltP.
 Qed.
 
-Lemma tcnS n f (a b : T) :
+Lemma tcnS n f a b :
   tcn f n.+1 a b <-> exists c, tcn f n a c /\ f c b.
 Proof.
   split; case: n => //.
@@ -35,7 +35,7 @@ Proof.
   by case=> ? /= [] <-.
 Qed.
 
-Lemma tcSn n f (a b : T) :
+Lemma tcSn n f a b :
   tcn f n.+1 a b <-> exists c, f a c /\ tcn f n c b.
 Proof.
   split.
