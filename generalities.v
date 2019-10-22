@@ -87,6 +87,13 @@ Proof.
   by [].
 Qed.
 
+Lemma tcE f a b :
+  tc f a b <-> exists c, tc f a c /\ tc f c b.
+Proof.
+  split => [?|[] x [] /tc_trans]; first by exists b; split => //; exists 0.
+  by apply.
+Qed.
+
 Lemma undup_nilp (a : seq T) : (undup (undup a)) = undup a.
 Proof. by rewrite /= undup_id // undup_uniq. Qed.
   
