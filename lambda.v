@@ -609,10 +609,10 @@ Proof.
   by case: t => // *; rewrite !orbT.
 Qed.
 
-Hint Resolve beta_betat betat_refl betaE beta_id : core.
-
 Lemma tcn_betat s t n : tcn beta n s t -> betat s t. 
 Proof. move=> *; by exists n. Qed.
+
+Hint Resolve beta_betat betat_refl betaE beta_id tcn_betat : core.
 
 Lemma betatAC p p' : 
   betat p p' <-> betat (Abs p) (Abs p').
@@ -973,55 +973,75 @@ Proof.
   by apply; apply beta_betat.
 Qed.
 
+Lemma id_peel_app_abs_var t11 t12 t2 :
+  betat (App (Abs (Var 0)) (App (Abs (Var t11)) t12)) (Var t2) -> betat (App (Abs (Var t11)) t12) (Var t2).
+Proof.
+  case: t11.
+   move=> [] x.
+   elim: x t12 t2 => // x IHx t12 t2.
+   rewrite tcSn => [][] c [].
+   case: c => []//[]//[]//[]// c.
+   case t12c: (t12 == c); first by move/eqP: t12c => -> _ /tcn_betat.
+   rewrite /= orbF !shift_shift !addn0 !shiftnn !t12c.
+   case/orP => [|/eqP [] /eqP]; last by rewrite t12c.
+   case: c t12c => []//[]//[]//[]// c t12c.
+   rewrite /= !orbF => t12c' /(IHx _ _).
+   apply/betat_trans.
+   rewrite -/betat betat_id_id.
+   by apply beta_betat.
+  move=> n [] x.
+  elim: x n t12 t2 => // x IHx n t12 t2.
+  rewrite tcSn => [][] c [].
+  case: c => []//[]//[]// ? t.
+  rewrite /= addn0 subn1 !shift_shift !shiftnn addn0 subn0 addnK !orbF.
+  case/orP; last first.
+   by move/eqP => [] <- <- /tcn_betat.
+  case/andP => /eqP [] <-.
+  case: x IHx => // x IHx.
+  case: t => //.
+   move=> ? /eqP [] <-.
+   rewrite tcSn => [][] c [].
+   case: c => //; last by case=> // ? ?; rewrite /= andbF.
+   move=> ? /eqP [] <- /tcn_betat /betat_var ->.
+   rewrite subn0 addn0 addnK.
+   by apply beta_betat; rewrite /= addn0 subn1.
+  case=> []//[]//[]// ? ? H /(IHx _ _ _).
+  move: H; rewrite /= !orbF => /andP [] /eqP [] <- t12t.
+  apply/betat_trans/beta_betat.
+  by rewrite /= eqxx !orbF t12t.
+Qed.
+
+Lemma id_peel_app_var t11 t12 t2 :
+  betat (App (Abs (Var 0)) (App (Var t11) t12)) (Var t2) -> betat (App (Var t11) t12) (Var t2).
+Proof.
+  case=> [][]// n.
+  elim: n t11 t2 t12 => // n IHn m t2 t12.
+  rewrite tcSn => [][] c [].
+  case: c => []//[]//.
+   by move=> ? ? ? /tcn_betat /betat_app_var [] ? [].
+  case=> []//[]//[]//[]// ? ? a /(IHn _ _ _); apply/betat_trans.
+  move: a; rewrite /= !orbF => /andP [] /eqP [] <- a.
+  by apply beta_betat; rewrite /= eqxx a.
+Qed.
+
+Lemma betat01 t s : 
+  (t == s) || beta t s -> betat t s.
+Proof.
+  case/orP => [/eqP ->//|]; auto.
+Qed.
+
+Hint Resolve betat01 : core.
+
 Lemma id_peel_app t11 t12 t2 :
   betat (App (Abs (Var 0)) (App t11 t12)) (Var t2) -> betat (App t11 t12) (Var t2).
 Proof.
-  elim: (wf_wfr_term t11) t12 t2 => {t11} t11 _ IH.
-  case: t11 IH.
-  * move=> m _ t12 t2 [][] // n.
-    elim: n m t2 t12 => // n IHn m t2 t12.
-    rewrite tcSn => [][] c [].
-    case: c => []//[]//.
-     by move=> ? ? ? /tcn_betat /betat_app_var [] ? [].
-    case=> []//[]//[]//[]// ? ? a /(IHn _ _ _); apply/betat_trans.
-    move: a; rewrite /= !orbF => /andP [] /eqP [] <- a.
-    by apply beta_betat; rewrite /= eqxx a.
+  case=> x.
+  elim: x t11 t12 t2 => // x IHx t11 t12 t2.
+  case: t11.
+  * by move=>*; apply id_peel_app_var; eauto.
   * case=> //.
-    - case.
-       move=> IH t12 t2 [] x.
-       elim: x t12 t2 => // x IHx t12 t2.
-       rewrite tcSn => [][] c [].
-       case: c => []//[]//[]//[]// c.
-       case t12c: (t12 == c); first by move/eqP: t12c => -> _ /tcn_betat.
-       rewrite /= orbF !shift_shift !addn0 !shiftnn !t12c.
-       case/orP => [|/eqP [] /eqP]; last by rewrite t12c.
-       case: c t12c => []//[]//[]//[]// c t12c.
-       rewrite /= !orbF => t12c' /(IHx _ _).
-       apply/betat_trans.
-       rewrite -/betat betat_id_id.
-       by apply beta_betat.
-      move=> n _ t12 t2 [] x.
-      elim: x n t12 t2 => // x IHx n t12 t2.
-      rewrite tcSn => [][] c [].
-      case: c => []//[]//[]// ? t.
-      rewrite /= addn0 subn1 !shift_shift !shiftnn addn0 subn0 addnK !orbF.
-      case/orP; last first.
-       by move/eqP => [] <- <- /tcn_betat.
-      case/andP => /eqP [] <-.
-      case: x IHx => // x IHx.
-      case: t => //.
-       move=> ? /eqP [] <-.
-       rewrite tcSn => [][] c [].
-       case: c => //; last by case=> // ? ?; rewrite /= andbF.
-       move=> ? /eqP [] <- /tcn_betat /betat_var ->.
-       rewrite subn0 addn0 addnK.
-       by apply beta_betat; rewrite /= addn0 subn1.
-      case=> []//[]//[]// ? ? H /(IHx _ _ _).
-      move: H; rewrite /= !orbF => /andP [] /eqP [] <- t12t.
-      apply/betat_trans/beta_betat.
-      by rewrite /= eqxx !orbF t12t.
-    - move=> t _ t12 t2 [] x.
-      elim: x t12 t2 t => // x IHx t12 t2 t.
+    - by move=> *; apply id_peel_app_abs_var; eauto.
+    - move=> t.
       rewrite tcSn => [][] c [].
       case: c => []//[]// c1 c2.
       rewrite /= !shift_shift !addn1 !addn0 !shiftnn !orbF.
@@ -1040,190 +1060,54 @@ Proof.
       case: c => //.
        by move=> ? ? /tcn_betat /betat_abs [].
       by case=> []//[]//[]//[]// ? ? /tcn_betat /id_peel_abs.
-    - move=> t t' _ t12 t2 [] x.
-      elim: x t t' t12 t2 => // x IHx t t' t12 t2.
+    - move=> t t'.
       rewrite tcSn => [][] c [].
       case: c => []//[]//[]//; last first.
        move=> ? ? ?.
        by rewrite /= !shift_shift !addn0 !shiftnn => /eqP <- /tcn_betat.
-      case=> []//[]// t0 ?.
+      case=> []//[]// t0 t1.
       rewrite beta_id_id.
       case: x IHx => // x IHx H.
       rewrite tcnS => [][] c [].
       case: c => []//[]//[]//[].
-       move=> t1 /tcn_betat.
+       move=> ? /tcn_betat.
        rewrite betat_id_id /= shift_shift shiftnn => Ht1 /eqP <-.
        by apply/(betat_trans _ Ht1)/beta_betat.
-      rewrite /=.
-      case: x IHx => // x IHx ? ?.
-      rewrite tcnS => [][] c [].
-      
-      case: c => //.
-      case=> //.
-      
-      case=> //.
-      rewrite /=.
-       
-        
-      rewrite /=.
-      
-      case: t0 H => //.
-       case: t => //.
-       rewrite /=.
-      
-      move=> ? /(IHx _ _ _ _).
-      
-       rewrite /=.
-       case: t IH => //=.
-      rewrite /=.
-      rewrite /= !shift_shift !addn0 !shiftnn !orbF.
-      
-       case/orP; last first.
-        move/eqP => [] <- <-.
-        case: x IHx => // x IHx.
-        rewrite tcSn => [][] c [].
-        case: c => //.
-        rewrite /=.
-        case=> //.
-       case: t0 => //.
-        H /tcn_betat /(IH _ _ _ _).
-       rewrite /=.
-       rewrite 
-      
-      rewrite /=.
-      
-      
-        
-       
-       case: c1 => //=.
-        rewrite /=.
-       move=> ? ? /tcn_betat.
-       move
-      /id_peel_var.
-       rewrite /=.
-      
-      
-     
-     case: t => //.
-      rewrite /=.
-     rewrite tcSn.
-     
-      
-      case: n H => // n.
-      rewrite tcSn => [][] c' [].
-      case: c' => []//[]//[]//[]//.
-      apply IHc.
-      rewrite /=.
-      
-      rewrite /=.
-      rewrite /=.
-      rewrite /=.
-      
-      
-      case=> //.
-       
-      rewrite /= orbF.
-      elim: c t2 t12 H => //.
-      + move=> ? ? ?.
-        rewrite /= orbF !shift_shift !addn0 !shiftnn.
-        by case/orP => /eqP => [|[]] ->.
-      + move=> ? _ ? ?.
-        rewrite /= orbF !shift_shift !addn0 !shiftnn.
-        by case/orP => /eqP => [|[]] ->.
-      + case.
-         move=> ? _ ? _ ??.
-         rewrite /= orbF !shift_shift !addn0 !shiftnn.
-         by case/orP => /eqP => [|[]] ->.
-         
-         move=> ? IH1 ? IH2 t2 t12.
-         rewrite /= !orbF !shift_shift !addn0 !shiftnn.
-         case/orP => [/orP [/andP []|]|] /eqP [] <- //.
-         
-         apply/betat_trans.
-         rewrite -/betat betat_id_id.
-         apply IH.
-         
-         rewrite /=.
-         by case/orP => /eqP => [|[]] -> /tcn_betat.
-         
-      + move=> ? ? ? /tcn_betat
-                 /(IH _ _ _ _).
-        
-       rewrite /= !orbF.
-       t12c.
-       /tcn_betat.
-      /(IH _ _ _ _).
-      rewrite /= orbF !shift_shift !addn0 !shiftnn.
-      
-      case=> //.
-      case: x => //.
-      rewrite /=.
-      
-  * move=> t IH.
-    
-(*      rewrite /= !orbF => tt /tcn_betat. *)
-(*      apply. *)
-(*      apply beta_betat. *)
-(*      rewrite /=. *)
-(*       shift_shift shiftnn => /eqP [] <- /tcn_betat /(betat_trans _). *)
-(*       apply; apply betatApC => //. *)
-(*       by move: a; rewrite /= !orbF; auto. *)
-     
-(*      rewrite /=. *)
-(*      case: n => // ? ? a. *)
-(*      rewrite tcSn => [][] c []. *)
-     
-(*      case: c => []//[]//. *)
-(*       case=> // ?. *)
-(*       rewrite /= shift_shift shiftnn => /eqP [] <- /tcn_betat /(betat_trans _). *)
-(*       apply; apply betatApC => //. *)
-(*       by move: a; rewrite /= !orbF; auto. *)
-(*      case=> []//[]//[]//[]//[]//. *)
-(*      case: n => // ? ? a. *)
-(*      rewrite tcSn => [][] c []. *)
-(*      case: c => []//[]//. *)
-(*       case=> // ?. *)
-(*       rewrite /= shift_shift shiftnn => /eqP [] <- /tcn_betat /(betat_trans _). *)
-(*       apply; apply betatApC => //. *)
-(*       by move: a; rewrite /= !orbF; auto. *)
-(*      rewrite /=. *)
-      
-(*      rewrite /=.  *)
-(*       rewrite /= in a. *)
-(*       apply beta_betat, a. *)
-(*       rewrite /= in a. *)
-(*       rewrite /=. *)
-     
-(*      rewrite /=. *)
-(*       rewrite /=. *)
-(*      rewrite /=. *)
-(*      move=> /=. *)
-      
-(*       rewrite /=. *)
-(*      rewrite/=. *)
-(*      case=> //. *)
-(*      rewrite /=. *)
-(*      rewrite /=. *)
-(*            /betat_app_var. *)
-(*   move=> ? /=. *)
-(*   case=>[][]// n. *)
-(*   elim: n t11 t12 t2 => // n IHn t11 t12 t2. *)
-(*   rewrite tcnS => [][] c []. *)
-(*   case: c => []//[]//[]// c1 c2. *)
-(*   case: c1. *)
-(*    move=> H /eqP t20. *)
-(*    rewrite /= shift_shift addn0 shiftnn in t20. *)
-(*    rewrite t20 in H. *)
-(*    move/tcn_betat: H. *)
-(*    by rewrite betat_id_id. *)
-(*   move=> ? tcn' /eqP H. *)
-(*   move: H tcn' => <- H. *)
-(*   rewrite /= addn0 subn1 /=. *)
-(*   apply IHn. *)
-(* Qed. *)
-
-(* Lemma id_peel' t1 t2 : *)
-(*   betat (App (Abs (Var 0)) t1) (Var t2) <-> betat t1 (Var t2). *)
+      move=> n ? tcn' /eqP <-.
+      rewrite /= addn0 subn1.
+      have: tcn (fun M1 M2 : term => beta M1 M2) x.+1 (App (Abs (Var 0)) (App t0 t1)) (Var n).
+       rewrite tcnS.
+       apply: ex_intro; split; first by apply tcn'.
+       by rewrite /= addn0 subn1.
+      move/(IHx _ _ _).
+      by apply/betat_trans/beta_betat.
+  * move=> t11 t12'.
+    rewrite tcSn => [][] c [].
+    case: c => // c1 c2.
+    case/orP; last by rewrite /= !shift_shift !shiftnn => /eqP -> /tcn_betat.
+    case: c1 => // ?.
+    rewrite /= andbC.
+    case: c2 => // c21 c22.
+    rewrite /= -/beta orbF => /andP [] H /eqP <-.
+    rewrite orbC orbA -andb_orr in H.
+    case/orP: H => /andP []; last first.
+     move/eqP => <- t12c22 /(IHx _ _ _).
+     by apply/betat_trans/betatApC; auto.
+    case: t11 => //.
+    + case: c21 => //.
+      move=> ? ? ? ? ? /(IHx _ _ _). 
+      by apply/betat_trans/betatApC; auto.
+    + case: c21.
+      * move=> ? ? /eqP a b /tcn_betat /id_peel_app_var.
+        rewrite -a; by apply/betat_trans/betatApC; auto.
+      * move=> t t0 /eqP <- H0 /(IHx _ _ _).
+        by apply/betat_trans/betatApC; auto.
+      * move=> ? ? ? ? ? /(IHx _ _ _).
+        by apply/betat_trans/betatApC; auto.
+    + case: c21 => //.
+      move=> ? ? ? ? ? ? /(IHx _ _ _).
+      by apply/betat_trans/betatApC; auto.
+Qed.
 
 Lemma id_peel t1 t2 :
   betat (App (Abs (Var 0)) t1) (Var t2) <-> betat t1 (Var t2).
@@ -1231,80 +1115,11 @@ Proof.
   split; last first.
    apply: betat_trans.
    apply/beta_betat/beta_id.
-  elim: t1 t2 => //.
-  * by move=> t1 t2 /id_peel_var ->.
-  * by move=> t1 _ t2 /id_peel_abs.
-  * move=> t1 IH1 t2 IH2 t0.
-    case=>[][]// n.
-    rewrite tcSn => [][] c [].
-    case: c => []//[]//.
-    - by rewrite /= !shift_shift !addn0 !shiftnn => ? ? /eqP -> /tcn_betat.
-    - Focus 2.
-      move=> ? ? ?.
-      by rewrite /= !shift_shift !addn0 !shiftnn => /eqP -> /tcn_betat.
-    - move=> t3 t4.
-      case/orP => //; last
-      by rewrite !shift_shift !addn0 !shiftnn => /eqP -> /tcn_betat.
-      rewrite orbF -/beta => /andP [] /eqP <-.
-      elim: t1 t4 t2 IH2 IH1.
-      + move=> m [] // ? t1 t2 ? _.
-        rewrite orbF => /andP [] /eqP <- _ H.
-        suff: false by [].
-        elim: n m t1 H => // n IHn m t1.
-        rewrite tcSn => [][] c [].
-        by case: c => []//[]// => [??? /tcn_betat /betat_app_var [] ? [] //|] []//[]//[]//[]// ??? /(IHn _ _).
-      + move=> t IHt [].
-       - case: t IHt => // r _ s ? ? ? /eqP rs /tcn_betat /id_peel_var <-.
-         rewrite -rs.
-         by apply beta_betat, betaE.
-       - by move=> ? ? _ _ ? /tcn_betat /id_peel_abs.
-       - move=> t1 t4 t2 IH2 IH.
-         case/orP; last first.
-          move/eqP <-.
-          case: t IHt IH.
-          + case=> [_ _|? _ _ /tcn_betat /id_peel_var <-]; last by apply beta_betat => /=.
-            rewrite /= shift_shift shiftnn => /tcn_betat.
-          + by move=> ? _ _ /= /tcn_betat /id_peel_abs.
-          + move=> t11 t12 IHt IH H.
-            apply: betat_trans.
-             apply beta_betat.
-             apply betaE.
-            rewrite /=.
-            rewrite /= in H.
-            
-            apply betatApC => //.
-             rewrite /=.
-            
-            rewrite addn0 subn1.
-            rewrite /= addn0 .
-           move=> ? /=.
-      (* + Focus 2. *)
-      (*   move=> t t1 IH1. *)
-      (*   case: t4 => //. *)
-      (*   case: n => // n. *)
-      (*   case=> //. *)
-    
-    
-    rewrite /=.
-    move=> t ?.
-    case: t => []//[]//.
-    
-    rewrite /=.
-    rewrite /= !orbF.
-    
-    rewrite -betatAC.
-    case=> //.
-    case=> //.
-    move/IHn.
-   case: c => //.
-    move=> ?.
-    rewrite /= addn0 subn0 addn1 subn1 => /eqP [] <-.
-    case: n IHn => //.
-    apply IHn.
-    rewrite tcSn.
-    exists (Var t1); split => //.
-    apply Hn.
-  
+  case: t1.
+  * by move=> ? /id_peel_var ->.
+  * by move=> ? /id_peel_abs.
+  * by move=> ? ? /id_peel_app.
+Qed.
 
 Lemma subprf_CR t11 t12 c1 :
   match t11 with
