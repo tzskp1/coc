@@ -19,12 +19,9 @@ Definition tc r a b := exists n, @tcn r n a b.
 
 Lemma ltn_wf : well_founded (fun x y => x < y).
 Proof.
-  move=> x.
-  elim:(lt_wf x) => {x} x0 H IH.
-  constructor.
-  move=> y H0.
-  apply IH.
-  by apply/ltP.
+  elim => [//|? IHn]; constructor => y.
+  rewrite ltnS leq_eqVlt => /orP [/eqP -> //|].
+  by case: IHn => H /H.
 Qed.
 
 Lemma tcnS n f a b :
