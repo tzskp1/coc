@@ -94,6 +94,35 @@ Proof.
   by apply.
 Qed.
 
+Hint Resolve tc_refl : core.
+
+Lemma tc_eq f g :
+  bijective f -> (forall x y, g (f x) (f y) = g x y) ->
+  forall x y, tc g x y <-> tc g (f x) (f y).
+Proof.
+  move=> bif H x y.
+  split.
+  case=> [][-> //|] n.
+  elim: n x y.
+   move=> ? ? /=.
+   by rewrite -H => ?; exists 1.
+  move=> n IHn x y.
+  rewrite tcnS => [][] c [] /(IHn _ _).
+  by rewrite -H => /tc_trans H' ?; apply H'; exists 1.
+  case=> [][/(bij_inj bif) -> //|n].
+  rewrite tcnS => [][] z [].
+  elim: n x y z.
+   move=> ? ? ? /= <-.
+   by rewrite H => ?; exists 1.
+  move=> n IHn x y c'.
+  case: bif => f' ff' f'f.
+  have<-: f (f' c') = c' by rewrite f'f.
+  rewrite H tcnS => [][] c [].
+  move/(IHn _ _ _) => H' /H'.
+  move=> /tc_trans H'' ?.
+  by apply H''; exists 1.
+Qed.
+
 Lemma undup_nilp (a : seq T) : (undup (undup a)) = undup a.
 Proof. by rewrite /= undup_id // undup_uniq. Qed.
   
