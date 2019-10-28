@@ -1845,65 +1845,48 @@ Proof.
    by rewrite !eqxx !orbT.
 Qed.
 
+Lemma shift_pres_betat u u' i j :
+  betat u u' -> betat (shift u i 0 j) (shift u' i 0 j).
+Proof.
+  case=> [] x.
+  elim: x u u' i j => [???? -> //|x IHx u u' i j].
+  rewrite tcnS => [][] c [] /IHx IH H.
+  by apply/(betat_trans (IH _ _))/beta_betat/shift_pres_beta.
+Qed.
+
 Lemma shift_subst_shift_pres_beta' u u' t i :
   betat u u' -> betat (shift (subst t i (shift u i.+1 0 0)) 0 1 i) (shift (subst t i (shift u' i.+1 0 0)) 0 1 i).
 Proof.
-  elim: (wf_wfr_term u) u' t i => {u} u _ IH u' t i.
-  case: u IH => [?? /betat_var -> //| |].
-  + move=> u IH /betat_abs [] u'' [] -> H.
-    
-    case: t => /=.
-     move=> ?.
-     case: ifP => //= ?.
-     rewrite -betatAC.
-     case: u IH H => //.
-     + by move=> /= ? ? /betat_var ->.
-     + move=> t IH /betat_abs [] ? [] -> /= /IH H.
-       rewrite -betatAC.
-       apply H.
-       apply.
-        
-      rbb
-     
-     rewrite -[i.+1]add0n.
-     rewrite -shiftnC.
-     rewrite addn0.
-     case: u IH H => //.
-     : forall (q : term) (n s r c t i : nat), i < c -> t <= s -> shift (shift q n t (c + s)) r s i = shift (shift q r s i) n t (c + r)
-     Check shiftnC.
-     move: (fun x => shift_shift_pred_level x i.+1).
-     rewrite add0n => H'.
-     rewrite shift_shift.
-     rewrite !H'.
-     h
-     shift_pres_beta
-     Check shift_shift01'.
-     shift_shift shiftnn.
-  rewrite /=.
-  case: u' => //.
-    rewrite /=.
-   rewrite /=.
-   apply.
-   rewrite /=.
+  elim: (wf_wfr_term t) u u' i => {t} t _ IH u u' i.
+  case: t IH => //=.
+  + move=> ? IH ?.
+    case: ifP => // ?.
+    rewrite !shift_shift_pred_level.
+    by apply/shift_pres_betat.
+  + move=> ? IH H.
+    rewrite -betatAC /= !shiftnS //.
+    by apply IH.
+  + move=> ? ? IH ?.
+    by apply/betatApC; apply/IH.
+Qed.
+
+Lemma shift_subst_shift_pres_betat' u u' t i :
+  betat u u' -> betat (shift (subst u i (shift t i.+1 0 0)) 0 1 i) (shift (subst u' i (shift t i.+1 0 0)) 0 1 i).
+Proof.
+  case=> [] x.
+  elim: x u u' t i => [???? -> //|x IHx u u' t i].
+  rewrite tcnS => [][] c [] /IHx IH H.
+  by apply/(betat_trans (IH _ _))/beta_betat/shift_subst_shift_pres_beta.
+Qed.
 
 Lemma shift_subst_shift_pres_betat u u' s t i :
   betat s t -> betat u u' -> betat (shift (subst u i (shift s i.+1 0 0)) 0 1 i) (shift (subst u' i (shift t i.+1 0 0)) 0 1 i).
 Proof.
-  have uu: forall u u' t i, betat u u' -> betat (shift (subst u i (shift t i.+1 0 0)) 0 1 i) (shift (subst u' i (shift t i.+1 0 0)) 0 1 i).
-   move=> u0 u'0 i0 t' [] n.
-   elim: n u0 u'0 i0 t' => [???? -> //|] n IH ????.
-   rewrite tcnS => [][] c [] /IH H cu.
-   apply/betat_trans; last first.
-    apply/beta_betat/shift_subst_shift_pres_beta/cu.
-   apply H.
-  move=> st uu'.
+  move=> H1 H2.
   apply/betat_trans.
-   apply/uu/uu'.
-   rewrite -/betat.
-   apply/beta_betat/shift_subst_shift_pres_beta.
-  case => [][->|].
-   
-  
+   apply/shift_subst_shift_pres_betat'/H2.
+  apply/shift_subst_shift_pres_beta'/H1.
+Qed.
 
 Lemma pararell_betat t s : pararell t s -> betat t s.
 Proof.
@@ -1919,11 +1902,25 @@ Proof.
   - move=> ? ? IH /= ? [] s1 [] s2 [] -> [] /IH H1 /IH H2.
     apply/betat_trans.
      apply/beta_betat/betaE.
-     
-    apply/beta_betat.
-    apply shift_subst_shift_pres_beta.
-  
-
+    by apply/shift_subst_shift_pres_betat; auto.
+  - move=> t ? ? IH [] //= t' ? [].
+    case: t IH => //.
+  + move=> ? IH.
+    case: t' => // t' ? [].
+    case: t' => //= ? /eqP <- ? ?.
+    apply/betatApC; auto.
+    apply/betatApC; auto.
+  + move=> ? IH [] ? [] ? [] -> [] H1 H2 H3.
+    apply/betatApC; auto.
+    apply/betat_trans.
+     apply/beta_betat/betaE.
+    by apply/shift_subst_shift_pres_betat; auto.
+  + move=> ? ? IH.
+    case: t' => // ? ? [] ? ? ?.
+    apply/betatApC; auto.
+    apply/betatApC; auto.
+Qed.
+    
 Lemma shift_pres_betat s t i j :
   betat s t -> betat (shift s (i + j) 0 j) (shift t (i + j) 0 j).
 Proof.
