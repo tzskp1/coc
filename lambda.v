@@ -563,9 +563,9 @@ Fixpoint compute_parallel t :=
 Inductive parallel_spec : term -> term -> Prop :=
 | VarVar : forall x y, x = y -> parallel_spec (Var x) (Var y)
 | AbsAbs : forall x y, parallel_spec x y -> parallel_spec (Abs x) (Abs y)
-| AppApp: forall t1 t2 s1 s2, parallel_spec t1 s1 -> parallel_spec t2 s2
+| AppApp : forall t1 t2 s1 s2, parallel_spec t1 s1 -> parallel_spec t2 s2
                          -> parallel_spec (App t1 t2) (App s1 s2)
-| AppAbs: forall t1 t2 s1 s2, parallel_spec t1 s1 -> parallel_spec t2 s2
+| AppAbs : forall t1 t2 s1 s2, parallel_spec t1 s1 -> parallel_spec t2 s2
                          -> parallel_spec (App (Abs t1) t2) (subst s1 0 s2).
 
 Definition parallel t s := s \in compute_parallel t.
