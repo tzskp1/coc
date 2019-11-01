@@ -570,37 +570,15 @@ Inductive parallel_spec : term -> term -> Prop :=
 
 Definition parallel t s := s \in compute_parallel t.
 
-(* Lemma paralleltt t : parallel t t. *)
-(* Proof. *)
-(*   elim: (wf_wfr_term t) => {t} t _ IHt. *)
-(*   case: t IHt => /=. *)
-(*    move=> ? IH. *)
-(*    by rewrite /parallel mem_seq1. *)
-(*    move=> ? IH. *)
-(*    rewrite /=. *)
-(*   case=> //; auto. *)
-(* Qed. *)
-
-Lemma in_abs s1 ts :
-  s1 \in [seq Abs i | i <- ts] -> exists s0, s1 = Abs s0 /\ s0 \in ts.
+Local Lemma inf (T : eqType) (s1 : T) f ts :
+  s1 \in [seq f s2 | s2 <- ts] ->
+  exists s2 : term, s1 = f s2 /\ s2 \in ts.
 Proof.
   elim: ts => // a ts IH.
   rewrite /= !in_cons.
   case/orP => [/eqP ->|/IH [] b [] -> b0].
   exists a; by rewrite in_cons eqxx.
   exists b; by rewrite in_cons b0 orbT.
-Qed.
-
-Lemma in_app p f g t1 :
-  p \in compute_parallel t1 ->
-  App (f p) (g p) \in [seq App (f x) (g x) | x <- compute_parallel t1].
-Proof.
-  elim: (compute_parallel t1) p => // ? ? IH ?.
-  rewrite in_cons.
-  case/orP => [/eqP ->|/IH].
-   by rewrite in_cons eqxx.
-  rewrite in_cons => ->.
-  by rewrite orbT.
 Qed.
 
 Local Lemma inj_app x : injective (App x).
@@ -620,6 +598,16 @@ Proof.
   by rewrite ?eqxx ?orbT.
 Qed.
 
+Lemma parallelt0 t : compute_parallel t == [::] = false.
+Proof.
+  elim: t => //= [t <-| t1 IH1 t2 IH2].
+  by elim: (compute_parallel t).
+  case: (compute_parallel t2) IH2 => //= ?? _.
+  case: t1 IH1 => // [t <- /=| t1 t1' <-].
+   by elim: (compute_parallel t).
+  by elim: (compute_parallel (App t1 t1')).
+Qed.
+
 Lemma parallelE t s : parallel_spec t s <-> parallel t s.
 Proof.
 split.
@@ -631,7 +619,7 @@ split.
       by rewrite /= cats0 mem_map.
     + rewrite /parallel mem_cat.
       apply/orP; right; apply/flatten_mapP.
-      case/in_abs: H1 => s1' [] -> b0.
+      case/inf: H1 => s1' [] -> b0.
       apply/ex_intro2; first apply b0.
       by rewrite mem_map.
     + apply/flatten_mapP/(ex_intro2 _ _ s1).
@@ -641,73 +629,24 @@ split.
     apply/orP; left; apply/flatten_mapP.
     by apply/(ex_intro2 _ _ s1)/subst_in.
 * elim: (wf_wfr_term t) s => {t} t _ IH.
-  case: t IH => //.
-   move=> ? ? []// ?.
-   rewrite /parallel mem_seq1 => /eqP ->.
-   by constructor.
+  case: t IH => [?? []// ?|? IH ? /inf [] s [] -> /IH|[????|????|?????]].
+  - rewrite /parallel mem_seq1 => /eqP ->.
+    by constructor.
+  - by constructor; auto.
+  - rewrite /parallel /= cats0 => /inf [] ? [] -> ?.
+    by repeat constructor; auto.
+  - rewrite /parallel /= mem_cat => /orP [] /flatten_mapP [] ?? /inf []?[]->?;
+    by repeat constructor; auto.
+  - case/flatten_mapP => [] ? [] ? /inf [] ? [] -> ?.
+    by repeat constructor; auto.
+Qed.
 
-   move=> ? IH ? /in_abs [] s [] -> /IH.
-   by constructor; auto.
-
-   move=> t t' IH.
-   case.
-    rewrite /parallel /=.
-    case: t IH.
-     move=> ? IH ?.
-     rewrite /= cats0 => H.
-     suff: false by [].
-     by elim: (compute_parallel t') H.
-     move=> ? IH n.
-     rewrite mem_cat => /orP [].
-      case/flatten_mapP => x Hx.
-      move Ht: (compute_parallel t') => t''.
-      elim: t'' t' Ht IH => // ?? H' t' Ht IH.
-      rewrite in_cons => /orP [/eqP H|].
-       rewrite H; constructor; auto.
-       apply: IH => //.
-       by rewrite /parallel Ht in_cons eqxx.
-      case: t' Ht IH.
-       by move=> ? [] ? <-.
-       case: x Hx H' => //.
-        rewrite /=.
-       move=> t /= H _ C.
-       
-       suff: false by [].
-       elim: (compute_parallel t) H C => // ? [_ [] ? <- //|] ?? H [] He Hc.
-       move: He Hc H => <- <- H.
-       move/H.
-       move: He H => <- H.
-       rewrite /=.
-       
-        rewrite /=.
-       ?? [].
-       
-       auto.
-       rewrite /=.
-       
-       auto.
-       
-      rewrite 
-      apply.
-      auto.
-       by constructor.
-      elim: t' IH.
-       move=> ? ?.
-       rewrite mem_seq1 => /eqP ->.
-       constructor; auto.
-       by constructor.
-
-       rewrite /= map_comp.
-       move=> *.
-       rewrite /=.
-       auto.
-       apply 
-       rewrite /=.
-      rewrite /=.
-      
-     
-   
-  
+Lemma paralleltt t : parallel t t.
+Proof.
+  apply/parallelE.
+  elim: (wf_wfr_term t) => {t} t _ IHt.
+  by case: t IHt => *; constructor; auto.
+Qed.
 
 Fixpoint parallel t s : Prop :=
   match t, s with
