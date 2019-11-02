@@ -422,42 +422,25 @@ Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t) == subst (subst t1 i t2) 
 Compute vars (Abs (Abs t)).
 
 Lemma subst_subst t1 t2 s t i :
- max_var t1 <= i ->
+ max_var t1 < i ->
  subst (subst t1 (s + i).+1 t) i (subst t2 s t) = subst (subst t1 i t2) (s + i) t.
 Proof.
-  elim: t1 t2 s t i.
-  Focus 2.
-  move=> t0 H t3 s0 t4 i0 /= H0.
-  rewrite -addnS H //.
-  by case: (max_var t0) H0.
-
-  Focus 2.
-  move=> ? IH1 ? IH2 ???? /= H.
-  by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_maxr, leq_maxl).
-
-  rewrite /= in H0.
-  elim: i H.
-   rewrite /= addn0 addn1.
-   elim: (vars _) => // ? ? IH'.
-   rewrite /= !in_cons.
-   
-   move/orP.
-   case: (_.-1) => //.
-    rewrite /=.
-   
-  rewrite /= in H.
-(*   Focus 2. *)
-(*   move=> ? IH1 ? IH2 ????. *)
-(*   by rewrite /= IH1 IH2. *)
-  
-(*   move=> n t2 s t i. *)
-(*   rewrite ni. *)
-(*   case: ifP => [/eqP nsi|]. *)
-(*    rewrite nsi -addSn -[i in _ == i]add0n eqn_add2r /= addSn subn1 eqxx. *)
-(*     rewrite nsi addnS. *)
-(*     move *)
-(*    rewrite /=. *)
-(*    rewrite /= nsi -addnS ltn_addl // subn1 addnS eqxx. *)
+  elim: t1 t2 s t i => /= [????? H|t H ???? H0|? IH1 ? IH2 ???? H].
+  * case: ifP => [/eqP ni|].
+     rewrite ni addnC in H.
+     by move/ltnW/ltn_wl: H; rewrite ltnn.
+    rewrite ltnNge -addnS ltnW ?ltn_addl ?leqW //= subn0.
+    case: ifP => [/eqP ni|].
+     by rewrite ni ltnn in H.
+    rewrite ltnNge ltnW //= !subn0.
+    case: ifP => [/eqP ni|] //.
+     rewrite ni addnC in H.
+     by move/ltn_wl: H; rewrite ltnn.
+    by rewrite ltnNge ltnW ?ltn_addl // subn0.
+  * rewrite -addnS H //.
+    by case: (max_var t) H0.
+  * by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_maxr, leq_maxl).
+Qed.
 
 Lemma subst_pres_parallel u u' s t t' :
   parallel t t' -> parallel u u' -> parallel (subst u s t) (subst u' s t').
@@ -465,6 +448,7 @@ Proof.
 move/parallelE => H /parallelE I; apply/parallelE.
 elim: I t t' s H => [?? -> */=|*/=|*/=|];try constructor;auto;first by case:ifP.
 move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
+rewrite /=.
 case: t1 t1s1 IH1.
 + move=> t1 /parallelE.
   rewrite /parallel mem_seq1 => /eqP -> /= IH1.
