@@ -388,59 +388,53 @@ case => [?? IH [] //?? /orP[]// /andP[]/eqP <- /IH ?|t1 t2 ? s /=|??? IH []// ??
   by constructor; auto.
 Qed.
 
-Fixpoint min_var t :=
+Fixpoint max_var t :=
   match t with
   | Var v => v
-  | App s s' => maxn (min_var s) (min_var s')
-  | Abs s => predn (min_var s)
+  | App s s' => maxn (max_var s) (max_var s')
+  | Abs s => predn (max_var s)
   end.
 
-Lemma subst0 t s i :
-  min_var t < i -> subst t i s = t.
+Lemma subst0 t s i : max_var t < i -> subst t i s = t.
 Proof.
-  elim: t i s => //.
-   move=> ??? /= ni.
-   case: ifP => [/eqP ni'|].
-    by rewrite ni' ltnn in ni.
-   by rewrite ltnNge ltnW // subn0.
-
-   move=> t IH i ? /=.
-   case: (min_var t) IH => [IH ?|? IH ?] /=; by rewrite IH.
-
-   move=> ? IH1 ? IH2 ?? /= H.
-   rewrite /= IH1.
-   rewrite /= IH2 //.
-   apply: (leq_trans _ H).
-   rewrite ltnS leq_maxr //.
-   apply: (leq_trans _ H).
-   rewrite ltnS leq_maxl //.
+elim: t i s => /= [??? ni|t IH i ?|? IH1 ? IH2 ?? H].
+* case: ifP => [/eqP ni'|].
+   by rewrite ni' ltnn in ni.
+  by rewrite ltnNge ltnW // subn0.
+* by case: (max_var t) IH => [IH ?|? IH ?]; rewrite IH.
+* by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_maxr, leq_maxl).
 Qed.
 
 Definition s := 0.
-Definition t1 := Var 3.
+Definition t1 := Var 1.
 Definition t2 := (App (Abs (App (Var 0) (Var 0)))
                       (App (Abs (Var 0)) (Var 2))).
-Definition t := Var 344.
+Definition t := Var 0.
 Definition i := 0.
 Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t).
      (* = App (Abs (App (Var 0) (Var 0))) (App (Abs (Var 0)) (Var 1)) *)
 Compute subst (subst t1 i t2) (s + i) t.
      (* = Var 2 *)
-Compute i \in vars t1 == ((s + i).+1 \in vars t1).
+Compute max_var t1 <= i.
+(* -> max_var t1 < s + i.+1. *)
+(* Compute i \in vars t1 == ((s + i).+1 \in vars t1). *)
 Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t) == subst (subst t1 i t2) (s + i) t.
 Compute vars (Abs (Abs t)).
 
 Lemma subst_subst t1 t2 s t i :
- i \in vars t1 == ((s + i).+1 \in vars t1) ->
+ max_var t1 <= i ->
  subst (subst t1 (s + i).+1 t) i (subst t2 s t) = subst (subst t1 i t2) (s + i) t.
 Proof.
   elim: t1 t2 s t i.
   Focus 2.
-  move=> t0 H t3 s0 t4 i0 H0.
-  case i0t0: (i0.+1 \in vars t0 == ((s0 + i0.+1).+1 \in vars t0)).
-   by rewrite /= -addnS H.
-  case i0st0: (i0.+1 \in vars t0).
-   rewrite i0st0 /= in i0t0.
+  move=> t0 H t3 s0 t4 i0 /= H0.
+  rewrite -addnS H //.
+  by case: (max_var t0) H0.
+
+  Focus 2.
+  move=> ? IH1 ? IH2 ???? /= H.
+  by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_maxr, leq_maxl).
+
   rewrite /= in H0.
   elim: i H.
    rewrite /= addn0 addn1.
