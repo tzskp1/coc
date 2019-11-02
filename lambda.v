@@ -4,10 +4,6 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Local Notation ett := leq_ltn_trans.
-Local Notation tt := ltn_trans.
-Local Notation et := leq_trans.
-
 Inductive term :=
 | Var of nat | Abs of term | App of term & term.
 
@@ -35,10 +31,16 @@ Canonical t_eqType := Eval hnf in EqType _ t_eqMixin.
 
 Fixpoint shift t n c :=
   match t with
-  | Var v =>
-    if v < c then Var v else Var (v + n)
+  | Var v => Var (if v < c then v else v + n)
   | Abs t1 => Abs (shift t1 n c.+1)
   | App t1 t2 => App (shift t1 n c) (shift t2 n c)
+  end.
+
+Fixpoint vars t :=
+  match t with
+  | Var v => [:: v]
+  | Abs t1 => map predn (vars t1)
+  | App t1 t2 => vars t1 ++ vars t2
   end.
 
 Fixpoint subst t b r :=
@@ -83,8 +85,7 @@ Proof. elim: t => // ? IH *; by rewrite addn_eq0 IH. Qed.
 
 Lemma shift_pres_size t n s : sizeu (shift t n s) = sizeu t.
 Proof.
-  elim: t n s => //= *; auto.
-  by case: ifP.
+  by elim: t n s => //= *; auto.
 Qed.
 
 Local Lemma subpattern x y :
@@ -155,8 +156,9 @@ Lemma shift_shift t n n' c : shift (shift t n c) n' c = shift t (n + n') c.
 Proof.
 elim: t n c => //= [?|? IH|? IH ? IH'] *;
 rewrite ?IH ?IH' // addnA.
-case: ifP => /= [->|] //.
-by case: ifP => // /ltn_wl ->.
+case: ifP => /=.
+ by case: ifP => //= + /ltn_wl => ->.
+by case: ifP => //= ->.
 Qed.
 
 Lemma betaE t1 t2 : beta (App (Abs t1) t2) (subst t1 0 t2).
@@ -193,236 +195,6 @@ Hint Resolve wfr_term_t_abst wfr_term_t_appl
       wfr_term_t_app_app_abs wfr_term_t_app_app
       wfr_term_t_app_app_app wfr_term_t_appr wfr_term_t_app_abs
       beta_betat betat_refl betaE beta_id : core.
-
-(* Lemma shift_subst_shift2 t s i : *)
-(*   shift (subst (shift t 2 0 i) i (shift s i.+1 0 0)) 0 1 i = shift t 1 0 i. *)
-(* Proof. *)
-(* elim: t s i => //= [??|? IH|? IH1 ? IH2] *. *)
-(* * case: ifP => //= H. *)
-(*    move: (H); rewrite ltn_neqAle => /andP [] /negPf -> _. *)
-(*    by rewrite /= H. *)
-(*   rewrite addn1 subn0 addn2. *)
-(*   case: ifP => [/eqP ni|]; first by rewrite -ni ltnS leqnSn in H. *)
-(*   by rewrite /= 2!ltn_neqAle H !andbF addn0 subn1 subn0. *)
-(* * by rewrite /= !shiftnS // IH. *)
-(* * by rewrite IH1 // IH2. *)
-(* Qed. *)
-
-(* Lemma shift_subst_shift3 t s i : *)
-(*   shift (subst (shift t 2 0 i) i.+1 (shift s i.+2 0 0)) 0 1 i.+1 = shift t 1 0 i. *)
-(* Proof. *)
-(*   elim: (wf_wfr_term t) i s => {t} t _ IH i s. *)
-  
-(*   case: i t s IH => // [[??|?? IH|??? IH]|? [?? IH|?? IH|??? IH]] //=. *)
-(*   * by rewrite addn2 subn0 /= addn0 subn1 subn0 addn1. *)
-(*   * rewrite shiftnS //; congr Abs; apply: IH => //. *)
-(*     by rewrite /wfr_term /= ltnS leqnSn. *)
-(*   * congr App; apply: IH => //. *)
-(*      by rewrite /wfr_term /= -addSn ltn_addr. *)
-(*     by rewrite /wfr_term /= -addnS ltn_addl. *)
-(*   * case: ifP => /=. *)
-(*      case: ifP => [/eqP -> /ltnW|/= ? ?]; first by rewrite ltnn. *)
-(*      by rewrite ltnW. *)
-(*     rewrite addn2 subn0 !eqSS. *)
-(*     case: ifP => [/eqP ->|]; first by rewrite ltnSn. *)
-(*     rewrite /= addn0 subn1 !ltnS addn1 subn0 leq_eqVlt orbC. *)
-(*     by case: ifP => // /ltnW ->. *)
-(*   * rewrite !shiftnS //; congr Abs; apply: IH => //. *)
-(*     by rewrite /wfr_term /= ltnS leqnSn. *)
-(*   * by congr App; apply: IH => //; *)
-(*     rewrite /wfr_term /= ltnS ?leq_addr ?leq_addl. *)
-(* Qed. *)
-
-(* Lemma shift_add u m s t i : *)
-(*   t < s -> m < s -> *)
-(*   shift (shift u s 0 i) 0 m (t + i) = shift u s m i. *)
-(* Proof. *)
-(*   elim: u m s t i => // [????? H1 H2 /=|? IH|? IH1 ? IH2] *. *)
-(*   case: ifP => /= [?|/negP/negP]; first by rewrite ltn_addl. *)
-(*   rewrite !subn0 addn0 -ltnNge ltnS. *)
-(*   move/(fun x => leq_add x H1). *)
-(*   rewrite addnS addnC => C. *)
-(*   by rewrite ltnNge ltnW. *)
-  
-(*   rewrite /= -addnS IH //. *)
-
-(*   rewrite /= IH1 // IH2 //. *)
-(* Qed. *)
-
-(* Lemma shift_shift01' t s : *)
-(* shift (shift t s.+1 0 0) 0 1 s = shift t s 0 0. *)
-(* Proof. *)
-(*   elim: t s => // [? ? /=|? IH s|? IH1 ? IH2] *. *)
-(*   by rewrite ltnNge subn0 ltnW ?ltn_addl //= addn0 subn1 subn0 addnS. *)
-(*   case: s => [|s]. *)
-(*    by rewrite shift_shift addn0 shiftSS. *)
-(*   by rewrite /= -addn1 shift_add // ?addn1 // shiftSS. *)
-(*   by rewrite /= IH1 IH2. *)
-(* Qed. *)
-
-(* Lemma shift_shift10 t i j : *)
-(*   shift (shift t i 0 j) 1 0 (i + j) = shift t i.+1 0 j. *)
-(* Proof. *)
-(*   elim: t i j => //. *)
-(*    move=> ? ? ? /=. *)
-(*    case: ifP => /= H; first by rewrite ltn_addl. *)
-(*    by rewrite subn0 addnC ltn_add2l H addn1 -addSn !subn0 addnC. *)
-(*    move=> t IH i ? /=. *)
-(*    by rewrite -addnS IH. *)
-
-(*    move=> ? IH1 ? IH2 ? ? /=. *)
-(*    by rewrite IH1 IH2. *)
-(* Qed. *)
-
-(* Lemma shift_shiftn t j s i :  *)
-(*   shift (shift t j 0 i) s 0 (j + i) = shift t (j + s) 0 i. *)
-(* Proof. *)
-(*   elim: t j s i => //; last first. *)
-(*   move=> ? IH1 ? IH2 *. *)
-(*   by rewrite /= IH1 IH2. *)
-
-(*   move=> ? IH *. *)
-(*   by rewrite /= -addnS IH. *)
-
-(*   move=> ? ? ? ? /=. *)
-(*   case: ifP => //= H; first by rewrite ltn_addl. *)
-(*   by rewrite subn0 addnC ltn_add2l H !subn0 addnCA addnA. *)
-(* Qed. *)
-
-(* Lemma shift_substC u t s i : *)
-(*   shift (subst u (s + i) (shift t i 0 0)) 1 0 i = subst (shift u 1 0 i) (i + s.+1) (shift t i.+1 0 0). *)
-(* Proof. *)
-(*   elim: (wf_wfr_term u) t s i => {u} u _ IH. *)
-(*   case: u IH => //. *)
-(*    move=> ? IH t ? ?. *)
-(*    rewrite /= addn1 subn0. *)
-(*    case: ifP => [/eqP ->|]. *)
-(*     rewrite ltnNge leq_addl /= -addSn addnC eqxx /=. *)
-(*     by rewrite -[RHS]shift_shift10 addn0. *)
-(*    case: ifP => /=. *)
-(*     case: ifP => //. *)
-(*     case: ifP => // /eqP -> /ltn_wl. *)
-(*     by rewrite ltnn. *)
-(*    case: ifP => //. *)
-(*    case: ifP => /=; first by rewrite addnS eqSS addnC => ->. *)
-(*    by rewrite addn1 subn0. *)
-
-(*    move=> ? IH ? ? ?. *)
-(*    by rewrite /= -addnS !shiftnS // IH. *)
-
-(*    move=> ? ? IH ? ? ?. *)
-(*    by rewrite /= !IH. *)
-(* Qed. *)
-
-(* Lemma shift_substC' j u t s i : *)
-(*   shift (subst u (i + j) (shift t j 0 0)) s.+1 0 j = subst (shift u s.+1 0 j) (i + j + s.+1) (shift t (j + s.+1) 0 0). *)
-(* Proof. *)
-(*   elim: u t s i j => //; last first. *)
-(*   move=> ? IH1 ? IH2 *. *)
-(*   by rewrite /= IH1 IH2. *)
-
-(*   move=> ? IH * /=. *)
-(*   rewrite !shift_shift -addnS addn1 IH. *)
-(*   by rewrite !addnS !addSn addn0 /=. *)
-  
-(*   move=> ? ? ? ? ? /=. *)
-(*   case: ifP => [/eqP ->|]. *)
-(*    by rewrite ltnNge leq_addl /= subn0 eqxx -shift_shiftn addn0. *)
-(*   case: ifP => /=. *)
-(*    case: ifP => //=. *)
-(*    case: ifP => //= /eqP -> /ltn_wl. *)
-(*    rewrite addnC => /ltn_wl. *)
-(*    by rewrite ltnn. *)
-(*   move=> H b. *)
-(*   by rewrite H subn0 eqn_add2r b. *)
-(* Qed. *)
-
-(* Lemma shift_subst_shift_subst q t p i : *)
-(*   shift (subst (shift p q.+2 0 i) (i + q.+1) (shift t (i + q.+2) 0 0)) 0 1 (i + q.+1) = shift p q.+1 0 i. *)
-(* Proof. *)
-(*   elim: (wf_wfr_term p) q t i => {p} p _ IH. *)
-(*   case: p IH => //; last first. *)
-(*   move=> ? ? IH * /=. *)
-(*   rewrite !IH //. *)
-
-(*   move=> ? IH * /=. *)
-(*   by rewrite -addSn shiftnS // -addSn IH. *)
-
-(*   move=> ? IH * /=. *)
-(*   case: ifP => //=. *)
-(*    case: ifP => /= [/eqP -> /ltn_wl|? ?]. *)
-(*     by rewrite ltnn. *)
-(*    by rewrite ltn_addr. *)
-(*   case: ifP => /=. *)
-(*    rewrite subn0 addnS -addSn eqn_add2r => /eqP <-. *)
-(*    by rewrite ltnS leqnn. *)
-(*   case: ifP => /=. *)
-(*    by rewrite subn0 addnS -addSn ltn_add2r => /ltnW ->. *)
-(*   by rewrite !subn0 !addn0 !subn1 addnS. *)
-(* Qed. *)
-
-(* Lemma subst_shift_subst t0 u2 s t i : *)
-(*   subst (shift (subst t0 i.+1 (shift u2 i.+2 0 0)) 0 1 i.+1) (s.+1 + i) (shift t i.+1 0 0) *)
-(* = shift (subst (subst t0 (s.+2 +i) (shift t i.+2 0 0)) i.+1 (shift (subst u2 s t) i.+2 0 0)) 0 1 i.+1. *)
-(* Proof. *)
-(*   have C: forall s i, i == s.+1 + i = false. *)
-(*    move=> s' i'. *)
-(*    by rewrite -[i']add0n [X in _ == _ + X]add0n eqn_add2r. *)
-(*   elim: t0 u2 s t i => //. *)
-(*    move=> n t s p q /=. *)
-(*    case: ifP => /= [/eqP ->|] /=. *)
-(*     rewrite !shift_shift01' !addSn -addnS -addSn C /= eqxx shift_shift01'. *)
-(*     move: (@shift_substC' 0 t p q s). *)
-(*     by rewrite shiftnn !addn0 add0n => ->. *)
-(*    case: ifP => /=. *)
-(*     case: ifP => /= [/eqP ->|]. *)
-(*      rewrite addSn -addnS addnC => /ltn_wl. *)
-(*      by rewrite ltnn. *)
-(*     case: ifP => /= [/eqP -> ?|]. *)
-(*      rewrite addSn -addnS addnC => /ltn_wl. *)
-(*      by rewrite ltnn. *)
-(*     by case: ifP => //=; case: ifP => //=. *)
-(*    rewrite addn0 subn1. *)
-(*    case: ifP => /=. *)
-(*     case: ifP => /= [/eqP ->|]. *)
-(*      move=> ? ? ?. *)
-(*      by rewrite shift_subst_shift_subst. *)
-(*     case: ifP => //. *)
-(*     case: n => //= n. *)
-(*     case: ifP => // ? ? HC /eqP H. *)
-(*     move: H HC => ->. *)
-(*     by rewrite -addSn eqxx. *)
-(*    case: ifP => /= [/eqP ->|]. *)
-(*     by rewrite addSn /= eqxx. *)
-(*    case: ifP => //=. *)
-(*    case: ifP => //=. *)
-(*    by rewrite addn0 subn1. *)
-
-(*    move=>? IH ? ?  ? ?. *)
-(*    rewrite /= -addnS. *)
-(*    rewrite !shiftnS //. *)
-(*    by rewrite IH !addnS. *)
-
-(*    move=> ? IH1 ? IH2 *. *)
-(*    by rewrite /= IH1 IH2. *)
-(* Qed. *)
-
-(* Lemma subst_shift t s i : subst (shift t 1 i) i s = t. *)
-(* Proof. *)
-(* elim: t s i => /= [??|? IH|? IH ? IH'] *; rewrite ?IH ?IH' //. *)
-(* case: ifP => /= [H|]. *)
-(*  move: (H); rewrite ltn_neqAle => /andP [] /negPf -> _. *)
-(*  by rewrite ltnNge ltnW // subn0. *)
-(* case: ifP => [/eqP <-|_ /negP/negP]; *)
-(* rewrite !addn1 ?leqnn // -ltnNge => ->. *)
-(* by rewrite subn1. *)
-(* Qed. *)
-
-(* Lemma beta_shift1 t s : beta (App (Abs (shift t 1 0)) s) t. *)
-(* Proof. *)
-(* case: t => /= *; *)
-(* by rewrite ?(addn1, subn1) // !subst_shift !eqxx ?orbT. *)
-(* Qed. *)
 
 Lemma betat_abs M N : betat (Abs M) N -> exists M', N = Abs M' /\ betat M M'.
 Proof.
@@ -477,59 +249,6 @@ Qed.
 Example beta_app_omega : beta (App omega omega) (App omega omega).
 Proof. by []. Qed.
 
-(* Lemma abs_in_vars s t : s.+1 \in t -> s \in [seq i.-1 | i <- t]. *)
-(* Proof. *)
-(*   elim: t s => // ? t IH s. *)
-(*   rewrite in_cons => /orP [/eqP <-|?]; first by rewrite in_cons eqxx. *)
-(*   by rewrite in_cons IH // orbT. *)
-(* Qed. *)
-
-(* Lemma subst0 s r t : s \notin vars t -> subst t s r = t. *)
-(* Proof. *)
-(*   elim: t s r => //= [???|? IH ?? H|? IH1 ? IH2 ??]. *)
-(*   * by rewrite mem_seq1 eq_sym /= => /negPf ->. *)
-(*   * by rewrite /= IH //; move: H; apply contra, abs_in_vars. *)
-(*   * rewrite /= mem_cat negb_or => /andP [] ? ?. *)
-(*     by rewrite IH1 // IH2. *)
-(* Qed. *)
-
-(* Lemma shift_subst_subst_shift_subst u11 s t u2 i : *)
-(*   shift (subst (subst u11 (i + s.+1) (shift t i.+1 0 0)) i (shift (subst u2 s t) i.+1 0 0)) 0 1 i = subst (shift (subst u11 i (shift u2 i.+1 0 0)) 0 1 i) (i + s) (shift t i 0 0). *)
-(* Proof. *)
-(*   have C: forall s i, i + s.+1 == i = false. *)
-(*    move=> s' i'. *)
-(*    by rewrite -[i']addn0 [X in X + _ == _]addn0 eqn_add2l. *)
-(*   elim: u11 s t u2 i => //. *)
-(*   move=> n p t q s /=. *)
-(*    case: ifP => /= [/eqP ->|]. *)
-(*     rewrite C /= ltnNge leq_addr /= addn0 subn1 addnS eqxx. *)
-(*     case: s => //. *)
-(*      by rewrite shift_subst_shift shiftnn. *)
-(*     move=> s. *)
-(*     move: (shift_subst_shift_subst s (subst q p t) t 0). *)
-(*     by rewrite !add0n. *)
-(*    case: ifP => /= [/eqP ->|]. *)
-(*     case: s => /=. *)
-(*      by rewrite !shift_shift !addn0 !add0n !shiftnn. *)
-(*     move=> s ?. *)
-(*     rewrite !shift_shift01'. *)
-(*     move: (shift_substC' 0 q t s p). *)
-(*     by rewrite addn0 add0n addnC shiftnn => ->. *)
-(*    case: ifP => /=. *)
-(*     case: ifP => //= /eqP -> /ltn_wl. *)
-(*     by rewrite ltnn. *)
-(*    rewrite addn0 subn1. *)
-(*    case: n => /= [|n]; first by case: s. *)
-(*    case: ifP => // /eqP ->. *)
-(*    by rewrite addnS eqxx. *)
-   
-(*   move=> ? IH ? ? ? ? /=. *)
-(*   by rewrite -addSn !shiftnS //= IH !addSn. *)
-
-(*   move=> ? IH1 ? IH2 * /=. *)
-(*   by rewrite IH1 IH2. *)
-(* Qed. *)
-
 Fixpoint compute_parallel t :=
   match t with
   | Var x => [:: t]
@@ -570,7 +289,33 @@ Proof. by move=> ? ? []. Qed.
 Local Lemma inj_abs : injective Abs.
 Proof. by move=> ? ? []. Qed.
 
-Local Hint Resolve inj_abs inj_app : core.
+Local Lemma pat1 s n : (s < n) <= n.
+Proof.
+  case sn : (s < n) => //.
+  case: s sn => // s.
+  by apply/ltn_trans.
+Qed.
+
+Local Lemma pat2 s : s == s.+1 = false.
+Proof. by elim: s. Qed.
+
+Fixpoint min_var t :=
+  match t with
+  | Var v => v
+  | App s s' => minn (min_var s) (min_var s')
+  | Abs s => predn (min_var s)
+  end.
+
+Lemma min_var_abs t i : i < min_var (Abs t) -> i.+1 < min_var t.
+Proof. by rewrite /=; case: (min_var t). Qed.
+
+Lemma min_var_appl t s i : i < min_var (App t s) -> i < min_var t.
+Proof. by move/leq_trans; apply; apply/geq_minl. Qed.
+
+Lemma min_var_appr t s i : i < min_var (App t s) -> i < min_var s.
+Proof. by move/leq_trans; apply; apply/geq_minr. Qed.
+
+Hint Resolve inj_abs inj_app pat1 : core.
 
 Lemma subst_in s1 s2 t2 i :
   s2 \in t2 ->
@@ -651,455 +396,44 @@ case => [?? IH [] //?? /orP[]// /andP[]/eqP <- /IH ?|t1 t2 ? s /=|??? IH []// ??
   by constructor; auto.
 Qed.
 
-(* Lemma subst_subst t1 t2 s t : *)
-(*  subst (subst t1 s.+1 t) 0 (subst t2 s t) = subst (subst t1 0 t2) s t. *)
-(* Proof. *)
-(* elim: t1 t2 s t. *)
-(*  move=> n t2 s t. *)
-(*  case: n => // n. *)
-(*  rewrite /= eqSS subn1 ltnS. *)
-(*  case: ifP => //=. *)
+(* Definition s := 0. *)
+(* Definition t1 := Var 3. *)
+(* Definition t2 := (App (Abs (App (Var 0) (Var 0))) *)
+(*                       (App (Abs (Var 0)) (Var 2))). *)
+(* Definition t := Var 2. *)
+(* Definition i := 1. *)
+(* Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t) == subst (subst t1 i t2) (s + i) t. *)
+
+Lemma subst_subst t1 t2 s t i :
+ i < min_var t1 ->
+ subst (subst t1 (s + i).+1 t) i (subst t2 s t) = subst (subst t1 i t2) (s + i) t.
+Proof.
+  elim: t1 t2 s t i.
+  Focus 2.
+  move=> ? IH ???? /min_var_abs ?.
+  by rewrite /= -addnS IH.
+  Focus 2.
+  move=> ? IH1 ? IH2 ???? H.
+  rewrite /= IH1; last by apply/min_var_appl/H.
+  by rewrite IH2 //; apply/min_var_appr/H.
+  
+  move=> n t2 s t i /= ni.
+  rewrite ni.
+  case: ifP => [/eqP nsi|].
+   rewrite nsi -addSn -[i in _ == i]add0n eqn_add2r /= addSn subn1 eqxx.
+    rewrite nsi addnS.
+    move
+   rewrite /=.
+   rewrite /= nsi -addnS ltn_addl // subn1 addnS eqxx.
+  
 
 Lemma subst_pres_parallel u u' s t t' :
   parallel t t' -> parallel u u' -> parallel (subst u s t) (subst u' s t').
 Proof.
 move/parallelE => H /parallelE I; apply/parallelE.
-elim: (wf_wfr_term u) u' t t' s H I => {u} u _ IH.
-case: u IH.
- move=> u _ ????? /parallelE.
- rewrite /parallel mem_seq1 => /eqP -> /=.
- by case: ifP.
- move=> u IH ????? /parallelE /inf [] ? [] -> /parallelE ? /=.
- by constructor; auto.
-case=> //.
-move=> ?? IH ????? /parallelE.
-rewrite /parallel /= cats0 => /inf [] ? [] -> /= /parallelE ?.
-by case: ifP => ?; constructor; auto.
-
-move=> t t0 IH u' t1 t' s H /parallelE.
-rewrite /parallel /= mem_cat
-=> /orP[]/flatten_mapP[] x /parallelE I /inf[] y []->/parallelE J;
-   last by repeat constructor; auto.
-
-case: t I IH.
- move=> ? /parallelE.
- rewrite /parallel mem_seq1 => /eqP -> IH /=.
- case: ifP.
-  move/eqP ->.
-  rewrite /= subn1 eqxx.
-  case: t0 J IH => //.
-   rewrite /=.
-  
- rewrite /=.
- rewrite /=.
-
-apply/parallelE.
-rewrite /parallel /= mem_cat.
-apply/orP; left; apply/flatten_mapP/ex_intro2.
- by apply/parallelE; auto.
- 
- parallel (subst t0 s t1) s2
- subst (subst t s.+1 t1) 0 s2
-constructor.
+elim: I t t' s H => [?? -> */=|*/=|*/=|];try constructor;auto;first by case:ifP.
+move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
 rewrite /=.
-move=> ?? IH ????? /parallelE.
- 
-    elim: (wf_wfr_term t) t' s H  => {t} t _ IH t' s.
-    case: t IH.
-     move=> t _ /parallelE.
-     by rewrite /parallel mem_seq1 => /eqP ->.
-     move=> ? IH /parallelE /inf [] t [] -> /parallelE H /=.
-     by case: ifP => // ?; constructor.
-     case.
-      move=> ? ? IH /parallelE.
-      rewrite /parallel /= mem_cat orbC /= => /inf [] ? [] -> /parallelE ?.
-      by case: ifP => // ?; constructor.
-      move=> ?? IH /parallelE.
-      rewrite /parallel /= mem_cat => /orP [] /flatten_mapP [] ? /parallelE ? /inf [] ? [] -> /parallelE ?.
-      case: ifP => //.
-       
-
-    move=> ? IH /parallelE /inf [] ? [] -> /parallelE /IH ?.
-    by constructor; auto.
-
-    move=> t1 t2 IH /parallelE.
-    rewrite /parallel /=.
-    case: t1 IH.
-     move=> ? IH /flatten_mapP [] ?.
-     rewrite mem_seq1 => /eqP -> /inf [] ? [] -> /parallelE ?.
-     by constructor; auto.
-     
-move ut : (u, t) => J.
-elim: (wf_dict wf_wfr_term wf_wfr_term J) u t ut t' u' s H I => {J}[][] u t _ IH.
-case: u IH.
- move=> u IH ?? [] -> -> ??? ? /parallelE.
- rewrite /parallel mem_seq1 => /eqP -> /=.
- by case: ifP.
- 
- move=> u IH ?? [] -> -> ???? /parallelE /inf [] ? [] -> /parallelE ? /=.
- constructor; auto.
- apply: IH => //.
- by rewrite /dict_order /= wfr_term_t_abst.
-
- move=> ?? IH ?? [] -> -> ???.
-
-     Focus 2.
-     move=> ? ? IH /flatten_mapP [] ? /parallelE ? /inf [] ? [] -> /parallelE ?;
-     by constructor; auto.
-
-     move=> t1 IH.
-     rewrite mem_cat => /orP [].
-      move=> /flatten_mapP [] x /parallelE H' /inf [] x1 [] -> /parallelE H /=.
-      
-      case: t1 H' IH.
-       move=> ? /parallelE.
-       rewrite /parallel mem_seq1 => /eqP -> IH /=.
-       case: ifP => /=.
-        move/eqP ->.
-        rewrite /= subn1 eqxx.
-        apply/parallelE.
-        rewrite /parallel /= mem_cat.
-        case: t => //.
-         case.
-          rewrite /=.
-          case: t2 H IH => //.
-           rewrite /=.
-        case: t.
-         case.
-          apply/parallelE.
-          rewrite /parallel /= !mem_cat !orbF.
-          case: t2 H IH.
-           rewrite /=.
-         rewrite /=.
-       rewrite /=.
-      move/IH: H H' => // H /IH H'.
-      case: x H'.
-       case => /= [H'|].
-        rewrite /=.
-       rewrite /=.
-      apply/parallelE.
-      rewrite /parallel /= mem_cat.
-      apply betaE.
-      
-      case: t1 H H' IH.
-       rewrite /=.
-      constructor.
-      rewrite /=.
-      apply/parallelE.
-      rewrite /parallel mem_cat; apply/orP; left.
-      apply/flatten_mapP.
-      rewrite -/compute_parallel.
-      apply: ex_intro2.
-       by apply/parallelE/IH.
-       by apply/parallelE/parallelE/paralleltt.
-       
-      rewrite /=.
-      elim: t2 H IH.
-       rewrite -/compute_parallel.
-       move=> ? /parallelE.
-       rewrite /parallel mem_seq1 => /eqP -> IH /=.
-       case: ifP.
-        move/eqP ->.
-        apply: ex_intro2.
-         by apply/parallelE/IH.
-        apply mem_map.
-       
-       move=> ? /
-      
-      apply: ex_intro2.
-       by apply/parallelE/IH.
-        rewrite /=.
-       rewrite /=.
-       rewrite /=.
-      have: parallel_spec (subst t2 s t) (subst x1 s t).
-       apply: (IH _ _ _ t s H) => //.
-      move/parallelE.
-      rewrite /parallel /=.
-      apply/parallelE: (IH _ _ _ _ s H).
-      apply/parallelE.
-      
-      auto.
-      rewrite /=.
-      
-       
-     
-     rewrite /=.
-     constructor.
-     rewrite /=.
-     
-    
-     
-     
-     rewrite /=.
-     rewrite 
-    /inf.
-     /= mem_cat.
-    case: u' => //.
-    
-    rewrite /=.
-    rewrite /parallel /=.
-  u u' H => // {t} t _ IH u u'.
-  case: t IH.
-   
-   rewrite /=.
-  elim: H s t => //.
-   move=> ?? -> //.
-   move=> ?? H IH ?? /=.
-   constructor; auto.
-   
-   move=> ???? H IH H2 IH2 ?? /=.
-   constructor; auto.
-
-   move=> t1 t2 s1 s2 /parallelE H1 IH1 /parallelE H2 IH2 s t.
-   case: t1 H1 IH1.
-    move=> t1.
-    rewrite /parallel mem_seq1 /= => /eqP -> IH1.
-     apply/parallelE/beta_parallel.
-     case: t1 IH1 => /=.
-     
-      case: s2 H2 IH2.
-      
-       rewrite /=.
-      
-      rewrite 
-     rewrite /=.
-    
-    
-    case: ifP.
-     move/eqP ->.
-     rewrite /= subn1 eqxx.
-     apply/parallelE.
-     rewrite /parallel /= mem_cat; apply/orP; left.
-     apply/flatten_mapP.
-     rewrite 
-     rewrite /parallel /= mem_cat.
-     rewrite /=.
-     
-     
-    rewrite /= in IH1.
-   case: s1 H1 IH1 => //.
-    move=> s1 H1 IH1.
-    apply/parallelE.
-    rewrite /= /parallel /= mem_cat; apply/orP; left.
-    apply/flatten_mapP.
-    case: ifP => [/eqP s10|].
-     apply ex_intro2 with (subst (Var s1) s.+1 t).
-      by apply/parallelE.
-     rewrite s10 /= map_id.
-     by apply/parallelE.
-    case: s1 H1 IH1 => // s1 H1 IH1 _ /=.
-    case: ifP => [/eqP <-|].
-     rewrite subn1 /=.
-    apply ex_intro2 with (Abs (Var s)); last first.
-    rewrite /=.
-     apply/parallelE.
-     
-         (subst t1 s1.+1 t).
-    rewrite /=.
-    rewrite /= subn1 eqSS ltnS.
-    case: ifP => [/eqP <-|].
-     rewrite /=.
-     rewrite mem_map.
-     rewrite /=.
-     
-     rewrite -map_comp.
-     rewrite mem_map.
-     Set Printing All.
-     rewrite filter_map.
-     rewrite /=.
-     rewrite mem_filter.
-     rewrite mem_map.
-     rewrite -map_comp.
-     auto.
-    
-    rewrite /=.
-   apply/parallelE.
-   rewrite /= /parallel /= mem_cat; apply/orP; right.
-   apply/flatten_mapP.
-   apply ex_intro2 with (subst s1 s.+1 t).
-    by apply/parallelE.
-   
-   
-   elim: s1 H1 IH1.
-    move=> ?.
-    rewrite /parallel mem_seq1 => /eqP -> _ /=.
-    case: ifP => [/eqP ->|].
-     rewrite /= subn1 eqxx.
-     apply ex_intro2 with t.
-      by apply/parallelE.
-     rewrite /=.
-     done.
-             ; last first.
-    rewrite /=.
-    inversion H.
-   constructor.
-   
-    
-   rewrite 
-   
-   rewrite /=.
-   apply: beta_parallel.
-   rewrite /=.
-   apply betaE.
-   rewrite 
-   rewrite mem_map.
-   rewrite 
-   apply/parallelE.
-   constructor.
-   apply/parallelE.
-   auto.
-   
-   
-   rewrite /=.
-   apply 
-   
-   rewrite /=.
-  case.
-  elim: (wf_wfr_term u) u' s t => {u} u _ IH.
-  
-  case: u IH => //.
-   move=> *.
-   rewrite /=.
-  [? IH [] //= *|u1 u2 IH u' s t]; first by apply IH.
-  case: u1 IH => //.
-   case: u' => //.
-   move=> ? t' n IH.
-   case/orP => // /andP [] /eqP <- /IH.
-   Eval simpl in (subst (App (Var n) ) s t).
-   
-     = App (if n == s then t else Var (n - (s < n))) (subst u2 s t)
-     = App (if n == s then t else Var (n - (s < n))) (subst u2 s t)
-   apply.
-   rewrite -/beta.
-   rewrite /=.
-  case: u' IH.
-  * case: u1 => // u1.
-    case: u1 => []//[??|n ? IH]  /eqP [] <-.
-     rewrite /= eqxx.
-     by case: (subst _ _ _) => // *; rewrite orbT.
-    rewrite /= subn1 !ltnS !eqSS.
-    case: ifP => /=.
-     case: t => //.
-      case=> //=.
-       
-      rewrite /=.
-    
-    move: (beta_shift1 (Var n) u2).
-    move/IH.
-    rewrite 
-     rewrite /=.
-    rewrite /= subn1 !ltnS !eqSS.
-    
-     case: t => //.
-     
-    
-    beta (subst (App (Abs (Var n.+1)) u2) s t) (subst (Var n) s t)
-     rewrite /=.
-    have->: (App (Abs (Var n.+1)) = App (Abs (shift (Var n) 1 0))).
-     by rewrite /= addn1.
-     
-    rewrite subn1 /= !addn1 
-     
-     rewrite /= => H.
-      rewrite /= H.
-    case: a
-    set T := 
-    subst T.
-    rewrite /= !addn1 
-     rewrite /=.
-     case: t => //=.
-    apply.
-    move=> ->.
-     rewrite /=.
-     have->: (subst (App (Abs (shift (Var n) 1 0)) u2) s t = App (Abs (subst (shift (Var n) 1 0) s t)) u2).
-     rewrite /=.
-      case: ifP => /=.
-       move/eqP ->.
-       case: ifP => H.
-        suff: false by [].
-        by elim: s H => //.
-       rewrite /= ltnS leqnn subn1 /=.
-       
-        
-       
-        
-       case: ifP => /=.
-        elim: s => // ??.
-        rewrite eqSS; auto.
-       t
-        case: s
-       rewrite /=.
-       rewrite /=.
-     by rewrite /= addn1.
-    rewrite subn1.
-    apply beta_shift1.
-     (subst (App (Abs (Var n.+1)) u2) s t)
-    rewrite /=.
-     
-    rewrite /= subn1 !eqSS.
-    case: ifP => [/eqP ->|].
-    case: ifP => [/eqP ->|].
-     
-    case: n => //= ? ? ? ?.
-    rewrite subn1 eqSS ltnS => /eqP [] <-.
-    case: ifP => [/eqP <-|?].
-    
-     case: t => /=.
-     case=> //=.
-      rewrite
-      rewrite /=.
-     by apply beta_shift1.
-    by rewrite /= addn0 subn1.
-  * move=> t'.
-    case: u1 =>//[][]// => [/= ??|?].
-     case: ifP => // /eqP -> /=.
-     by rewrite !shift_shift !addn0 !shiftnn => /eqP ->.
-    move=> t0 /eqP [] <-.
-    by rewrite /= !shiftnS // -[s.+2]addn0 -subst_shift_subst addn0.
-  * move=> t1 t2 IH H.
-    case: u1 IH H => //.
-     
-     move=> ? IH /orP [] // /andP [] /eqP <- ? /=.
-     case: ifP => /= [/eqP ns|].
-      rewrite eqxx /= IH // !orbT.
-      by case: t.
-     by rewrite eqxx /= IH // !orbT.
-
-     move=> u1 IH /orP [].
-      case: t1 => //= t1.
-      case/orP => [/orP [/andP [] ??|/andP [] /eqP [] -> ?]|/andP [] ? /eqP <-].
-      * by rewrite !IH // /wfr_term /= -addnS ltn_addr.
-      * by rewrite !eqxx !(IH u2) // !orbT.
-      * by rewrite !eqxx !(IH u1) ?orbT // /wfr_term /= -addnS ltn_addr.
-     move=> H.
-     have Hs: (shift (subst (subst u1 s.+1 (shift t 1 0 0)) 0 (shift (subst u2 s t) 1 0 0)) 0 1 0 == App (subst t1 s t) (subst t2 s t)).
-      move=> {IH}.
-      apply/eqP.
-      case: u1 H => //=.
-       move=> ?.
-       case: ifP => // /eqP ->.
-       by rewrite !shift_shift !addn0 !shiftnn => /eqP -> /=.
-      move=> u11 u12 /eqP [] H1 H2.
-      rewrite -H1 -H2.
-      congr App;
-      by rewrite shift_subst_subst_shift_subst !add0n !shiftnn.
-     by rewrite /= Hs orbT. 
-
-     move=> t3 t4 IH H.
-     have: ((beta (App t3 t4) t1) && beta u2 t2) || ((App t3 t4 == t1) && beta u2 t2) || ((beta (App t3 t4) t1) && (u2 == t2)).
-      move: H => {IH}.
-      case: t1 => //=; case: t3 => //=.
-    case/orP.
-     case/orP => /andP [] H1 H2.
-      rewrite /= !(IH u2) //=.
-      by move: (fun x => IH (App t3 t4) x t1 s t) => /= -> //.
-      rewrite /= !(IH u2) //=.
-      move/eqP: H1 => <-.
-      by rewrite /= !eqxx !orbT.
-    case/andP => H1 /eqP H2.
-    move: H2 H => <- H2.
-    move: (fun x => IH (App t3 t4) x t1 s t) => /= -> //.
-    by rewrite eqxx !orbT.
 Qed.
 
 Definition head t :=
