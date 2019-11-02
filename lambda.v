@@ -368,7 +368,34 @@ Proof.
   by case: t IHt => *; constructor; auto.
 Qed.
 
-Hint Resolve paralleltt (fun t => iffRL (parallelE t t) (paralleltt t)) : core.
+Lemma parallel_id t s :
+  parallel t s -> parallel (App (Abs (Var 0)) t) s.
+Proof.
+elim: t s => [??|? IH ? /inf [] ? [] -> H|t IH1 ? IH2 ?].
+* rewrite /parallel mem_seq1 => /eqP ->.
+  by rewrite /parallel in_cons /= eqxx.
+* rewrite /parallel /= map_id !cats0 mem_cat; apply/orP; left.
+  by rewrite mem_map.
+* case: t IH1 => [??|??|???].
++ rewrite /parallel /= cats0 => /inf [] ? [] -> H.
+  rewrite map_id !cats0 !mem_cat; apply/orP; left.
+  by rewrite mem_map.
++ rewrite /parallel /= map_id !cats0 !mem_cat
+   => /orP [] /flatten_mapP [] ? p /inf []?[] -> ?.
+   apply/orP; left; apply/orP; left.
+   by apply/flatten_mapP/ex_intro2/subst_in.
+  apply/orP; left; apply/orP; right.
+  apply/flatten_mapP/ex_intro2; first by apply/p.
+  by rewrite mem_map.
++ rewrite /parallel /= !cats0 map_id mem_cat
+   => /flatten_mapP [] ? p /inf []?[] -> ?.
+  apply/orP; left.
+  apply/flatten_mapP/ex_intro2; first by apply/p.
+  by rewrite mem_map.
+Qed.
+
+Hint Resolve paralleltt (fun t => iffRL (parallelE t t) (paralleltt t))
+     parallel_id : core.
 
 Lemma beta_parallel t s : beta t s -> parallel t s.
 Proof.
@@ -405,86 +432,204 @@ elim: t i s => /= [??? ni|t IH i ?|? IH1 ? IH2 ?? H].
 * by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_maxr, leq_maxl).
 Qed.
 
-Definition s := 0.
-Definition t1 := Var 0.
-Definition t2 := (App (Abs (App (Var 0) (Var 0)))
-                      (App (Abs (Var 0)) (Var 2))).
-Definition t := Var 0.
-Definition i := 0.
-Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t).
-     (* = App (Abs (App (Var 0) (Var 0))) (App (Abs (Var 0)) (Var 1)) *)
-Compute subst (subst t1 i t2) (s + i) t.
-     (* = Var 2 *)
-Compute max_var t1 <= i.
-(* -> max_var t1 < s + i.+1. *)
-(* Compute i \in vars t1 == ((s + i).+1 \in vars t1). *)
-Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t) == subst (subst t1 i t2) (s + i) t.
-Compute vars (Abs (Abs t)).
-
-Lemma parallel_id t s :
-  parallel t s -> parallel (App (Abs (Var 0)) t) s.
-Proof.
-elim: t s => [??|? IH ? /inf [] ? [] -> H|t IH1 ? IH2 ?].
-* rewrite /parallel mem_seq1 => /eqP ->.
-  by rewrite /parallel in_cons /= eqxx.
-* rewrite /parallel /= map_id !cats0 mem_cat; apply/orP; left.
-  by rewrite mem_map.
-* case: t IH1 => [??|??|???].
-+ rewrite /parallel /= cats0 => /inf [] ? [] -> H.
-  rewrite map_id !cats0 !mem_cat; apply/orP; left.
-  by rewrite mem_map.
-+ rewrite /parallel /= map_id !cats0 !mem_cat
-   => /orP [] /flatten_mapP [] ? p /inf []?[] -> ?.
-   apply/orP; left; apply/orP; left.
-   by apply/flatten_mapP/ex_intro2/subst_in.
-  apply/orP; left; apply/orP; right.
-  apply/flatten_mapP/ex_intro2; first by apply/p.
-  by rewrite mem_map.
-+ rewrite /parallel /= !cats0 map_id mem_cat
-   => /flatten_mapP [] ? p /inf []?[] -> ?.
-  apply/orP; left.
-  apply/flatten_mapP/ex_intro2; first by apply/p.
-  by rewrite mem_map.
-Qed.
+(* Definition s := 0. *)
+(* Definition t1 := Var 0. *)
+(* Definition t2 := (App (Abs (App (Var 0) (Var 0))) *)
+(*                       (App (Abs (Var 0)) (Var 2))). *)
+(* Definition t := Var 0. *)
+(* Definition i := 0. *)
+(* Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t). *)
+(*      (* = App (Abs (App (Var 0) (Var 0))) (App (Abs (Var 0)) (Var 1)) *) *)
+(* Compute subst (subst t1 i t2) (s + i) t. *)
+(*      (* = Var 2 *) *)
+(* Compute max_var t1 <= i. *)
+(* (* -> max_var t1 < s + i.+1. *) *)
+(* (* Compute i \in vars t1 == ((s + i).+1 \in vars t1). *) *)
+(* Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t) == subst (subst t1 i t2) (s + i) t. *)
+(* Compute vars (Abs (Abs t)). *)
 
 Lemma subst_subst i t1 t2 s t :
- max_var t1 <= i -> max_var t2 < s ->
+ max_var t1 + max_var t2 < s + i ->
  subst (subst t1 (s + i).+1 t) i (subst t2 s t) = subst (subst t1 i t2) (s + i) t.
 Proof.
-  elim: t1 t2 s t i => /= [????? H|t H ???? H0 ?|? IH1 ? IH2 ???? H ?].
-  * case: ifP => [/eqP ni|_ H2].
-     rewrite ni addnC in H.
-     by move/ltn_wl: H; rewrite ltnn.
-    rewrite ltnNge -addnS ltnW ?ltn_addl //= subn0.
-    case: ifP => [/eqP ni|].
-     by rewrite !subst0 // ltn_addr.
-    rewrite ltnNge H !subn0 /=.
-    case: ifP => [/eqP ni ni'|].
-     move: ni ni' H => ->.
-     rewrite leq_eqVlt => -> /=.
-     rewrite addnC => /ltn_wl.
+  elim: t1 t2 s t i => /= [n t2 s t i H|t H ???? H0|? IH1 ? IH2 ???? H].
+  * case: ifP => [/eqP ni|_].
+     rewrite ni in H.
+     move/ltnW/ltn_wl: H.
      by rewrite ltnn.
-    by rewrite ltnNge (leq_trans H) ?leq_addl // subn0.
-  * rewrite -addnS H //.
-    by case: (max_var t) H0.
-  * by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_maxr, leq_maxl).
+    rewrite ltnNge ltnW ?ltnS ?(leq_trans _ (ltnW H)) ?leq_addr //= subn0.
+    case: ifP => [/eqP ni|/=].
+     rewrite ni addnC ltn_add2r in H.
+     by rewrite !subst0 // ltn_addr.
+    case: ifP => [/eqP ni|ni ?].
+     move: ni H => <- H.
+     suff: false by [].
+     case: (i < n) H => /ltn_wl.
+      by rewrite subn1 ltnpredn.
+     by rewrite subn0 ltnn.
+    by rewrite [s + i < _]ltnNge [_ <= s + i]leq_eqVlt ni
+     ?(leq_trans _ H, ltnS, leq_trans _ (leq_addr _ _), leq_subr) // subn0.
+  * rewrite -addnS H // addnS ltnS.
+    by case: (max_var t) H0 => // /ltnW.
+  * by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_add2r, leq_maxr, leq_maxl).
 Qed.
 
 Lemma subst_pres_parallel u u' s t t' :
   parallel t t' -> parallel u u' -> parallel (subst u s t) (subst u' s t').
 Proof.
+(* elim: (wf_wfr_term u) u' t t' s => {u} u _ IH. *)
+(* case: u IH. *)
+(*  move=> ? ??????. *)
+(*  rewrite /parallel mem_seq1 => /eqP -> /=. *)
+(*  case: ifP => //= ?. *)
+(*  by rewrite mem_seq1. *)
+
+(*  move=> ? IH ????? /inf []?[] -> ? /=. *)
+(*  by apply/parallelE; constructor; apply/parallelE; auto. *)
+
+(*  move=> t t0 IH u' t1 t' s. *)
+(*  case: t IH. *)
+(*   move=> t H ? /flatten_mapP [] ?. *)
+(*   rewrite mem_seq1 => /eqP -> /inf [] ? [] -> ? /=. *)
+(*   by case: ifP => ?; apply/parallelE; constructor; apply/parallelE; auto. *)
+
+(*   Focus 2. *)
+(*   move=> t t'' IH ? /flatten_mapP [] x p /inf []?[]-> ?. *)
+(*   apply/parallelE; repeat constructor; apply/parallelE; auto. *)
+(*   by apply: (IH (App t t'') _ x _ t'). *)
+
+(*   move=> t IH t1t'. *)
+(*   rewrite /parallel mem_cat -/compute_parallel *)
+(*    => /orP [] /flatten_mapP [] x p /inf [] y []-> q; *)
+(*    last by apply/parallelE; repeat constructor; apply/parallelE; auto. *)
+(*   case: t p IH. *)
+(*    move=> t. *)
+(*    rewrite mem_seq1 => /eqP -> IH /=. *)
+(*    case: ifP => [/eqP ->|]. *)
+(*     rewrite /= !cats0 map_id mem_cat; apply/orP; left. *)
+(*     by apply IH. *)
+(*    case: t IH => // t IH _. *)
+(*    rewrite /= subn1 eqSS. *)
+(*    case: ifP => [/eqP <-|]; last first. *)
+(*     rewrite /= ltnS subn_eq0 [t < _]ltnNge pat1 /=. *)
+(*     case cp: (compute_parallel _). *)
+(*      by move/eqP: cp; rewrite parallelt0. *)
+(*     have->: (0 < t.+1 - (s < t)). *)
+(*      by rewrite ltnNge leqn0 subn_eq0 -ltnNge ltnS pat1. *)
+(*     by rewrite !cats0 subn1 subSn // in_cons eqxx. *)
+
+(*    Focus 2. *)
+(*     move=> ? /inf [] x' [] -> ? IH. *)
+(*     rewrite /= mem_cat; apply/orP; left. *)
+(*     apply/flatten_mapP. *)
+(*     apply ex_intro2 with (subst (Abs x') s.+1 t'). *)
+(*     rewrite /= mem_map //. *)
+(*     apply: IH; auto. *)
+(*     by rewrite /wfr_term /= -addnS addSn -addnS ltn_addr // ltnW. *)
+(*     case x'1: (max_var x' < 1). *)
+(*      rewrite -[s.+1]addn1 -subst_subst' //= addn1 map_comp mem_map //. *)
+(*      apply/subst_in/IH; auto. *)
+(*     rewrite /=. *)
+  
 move/parallelE => H /parallelE I; apply/parallelE.
-elim: I t t' s H => [?? -> */=|*/=|*/=|];try constructor;auto;first by case:ifP.
+elim: u u'/ I t t' s H => [?? -> */=|*/=|*/=|];
+ try constructor;auto;first by case:ifP.
 move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
+case ms : (max_var s1 + max_var s2 < s).
+ rewrite -[s]addn0 in ms.
+  move: (@subst_subst 0 _ _ _ t' ms).
+  by rewrite addn0 => <-; constructor; auto.
+move/negP/negP: ms; rewrite -ltnNge ltnS => ms.
+ elim: t1 s1 t1s1 IH1 ms1.
+ + move=> t1 ? /parallelE.
+  rewrite /parallel mem_seq1 => /eqP -> _.
+  case: t1 => // t1 _.
+  rewrite /= subn1 eqSS /=.
+  case t1s: (t1 == s); last first.
+   rewrite /= ltnS subSn //.
+   apply/parallelE/beta_parallel.
+   by rewrite /= subn1.
+  rewrite subst0 //.
+(* apply/parallelE. *)
+(* rewrite /parallel /=. *)
+  rewrite 
+  elim: t H.
+   case=> //.
+   move=> /parallelE.
+   rewrite /parallel mem_seq1 => /eqP ->.
+  apply/parallelE/parallel_id.
+  
+  rewrite /parallel /=.
+   
+  elim: t2 t2s2 IH2.
+   move=> ? /parallelE.
+   rewrite /parallel mem_seq1 => /eqP -> IH2 /=.
+   case: ifP => //.
+   rewrite /=.
+  rewrite /=.
+  case: ifP
+   rewrite /=.
+  case: ifP => [/eqP|?] /=; last first.
+   apply/orP; left.
+   rewrite /= subn_eq0 ltnS [t1 < _]ltnNge pat1 /= cats0.
+   case cp: (compute_parallel _).
+    by move/eqP: cp; rewrite parallelt0.
+   have->: (0 < t1.+1 - (s < t1)).
+    by rewrite ltnNge leqn0 subn_eq0 -ltnNge ltnS pat1.
+   by rewrite subn1 subSn // in_cons eqxx.
+  rewrite /=.
+  elim: t H.
+  - move=> t /parallelE.
+    rewrite /parallel mem_seq1 => /eqP ->.
+    rewrite /=.
+    case: t.
+     rewrite /= !cats0 map_id.
+     case: t2 t2s2 IH2.
+     move=> ? /parallelE.
+     rewrite /parallel mem_seq1 => /eqP -> IH2 /=.
+     case: ifP => [/eqP |] //.
+     rewrite /=.
+     rewrite /=.
+     rewrite /=.
+   rewrite 
+  rewrite /=.
+   apply: ex_intro2; first apply paralleltt.
+   apply/parallelE.
+apply/orP; left; apply/flatten_mapP.
+   
+  rewrite /= leqn0 => /eqP -> /= ?.
+   by apply/parallelE/parallel_id/parallelE; auto.
+ rewrite /=.
+apply ex_intro2 with (subst s1 s.+1 t).
+ by apply/parallelE; auto.
+apply subst_in.
+
 case ms1 : (max_var s1 <= 0).
  case ms2 : (max_var s2 < s).
   move: (@subst_subst 0 _ _ _ t' ms1 ms2).
   by rewrite addn0 => <-; constructor; auto.
- move/negP/negP: ms2; rewrite -ltnNge ltnS.
+ move/negP/negP: ms2; rewrite -ltnNge ltnS => ms2.
+ rewrite /=.
+
+ (* case: t2 t2s2 ms2 IH2. *)
+ (* + move=> ? /parallelE. *)
+ (*   rewrite /parallel mem_seq1 => /eqP -> /= sn IH2. *)
+ (*   case: ifP => [/eqP ->|]. *)
+ (*    rewrite /=. *)
+   
+ (*    rewrite /=. *)
+ (*   rewrite /=. *)
  case: t1 t1s1 ms1 IH1.
  + move=> ? /parallelE.
    rewrite /parallel mem_seq1 => /eqP ->.
-   rewrite /= leqn0 => /eqP -> /= _.
+   rewrite /= leqn0 => /eqP -> /= ?.
+   by apply/parallelE/parallel_id/parallelE; auto.
+ + move=> ? /parallelE /inf [] x []-> /parallelE /= ? H' IH1.
+   apply/parallelE.
+   rewrite /parallel /=.
+   rewrite /=.
+   rewrite leqn0.
+   rewrite /=.
   
  rewrite /=.
  rewrite /=.
