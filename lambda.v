@@ -454,41 +454,24 @@ Qed.
 Lemma betatApC p2 p2' p1 p1' : 
   betat p1 p1' -> betat p2 p2' -> betat (App p1 p2) (App p1' p2').
 Proof.
-  move=> H1.
-  case => x H2.
+  move=> H1; case => x H2.
   elim: (ltn_wf x) p2 p2' p1 p1' H2 H1 => {x} x _ IH p2 p2' p1 p1' H2 H1.
-  case: x H2 IH => /= [-> IH|].
-   case: H1 => // y H1 {IH}.
-   elim: y p1 p1' p2 p2' H1 => [? ? ? ? ->|y IH p1 p1' p2 p2' H].
-    apply betat_refl.
-   case: y H IH => // [H IH|y H IH].
-   apply: beta_betat.
-   have H0: beta p1 p1' && beta p2' p2' || (p1 == p1') && beta p2' p2' || beta p1 p1' && (p2' == p2').
-    by rewrite H eqxx !orbT.
-   rewrite /= !H0.
-   by case: p1 H H0.
-   case: y H IH => /= [[] x [] H1 H2 IH|].
-    apply: betat_trans.
-    apply: (_ : betat _ (App x p2')).
-     by apply (IH p1 x p2').
-    by apply (IH x p1' p2').
-   move=> y H IH.
-    case: H => c [] H H1.
-    apply: betat_trans; last first.
-     apply: (_ : betat (App c p2') _).
-      by exists 1; rewrite /= !eqxx !H1 !orbT; case: c H1 H => // *; rewrite !orbT.
-    apply: (IH p1 c c).
-    apply H.
-   case => [H IH|n H IH].
-    apply: betat_trans.
-    apply: (_ : betat _ (App p1 p2')).
-     exists 1; rewrite /= !eqxx !H !orbT; case: p1 H1 => // *; by rewrite !orbT.
-    apply: (IH 0) => //.
-   case: H => c [] H ?.
-   apply: betat_trans.
-   apply: (_ : betat _ (App p1' c)).
-    apply: (IH n.+1) => //.
-   apply: (IH 1) => //.
+  case: x H2 IH => /= [-> _|[H |n [c [] H ?]] IH].
+  + case: H1 => // y H1.
+    elim: y p1 p1' p2 p2' H1 => [???? ->//|y IH p1 ?? p2' H].
+    case: y H IH => [H _|[[] x [] ?? IH|y [] c [] H H1 IH]].
+    * by apply: beta_betat; rewrite /= H eqxx !orbT; case: p1 H.
+    * by apply/(betat_trans (IH p1 x p2' _ _))/IH.
+    * apply: betat_trans; first by apply/(IH p1 c c)/H.
+      by apply/beta_betat; rewrite /= !eqxx !H1 !orbT;
+         case: c H1 H => // *; rewrite !orbT.
+  + apply: betat_trans.
+     apply/(_ : betat _ (App p1 p2'))/beta_betat.
+     by rewrite /= !eqxx !H !orbT; case: p1 H1 => // *; rewrite !orbT.
+    by apply/(IH 0).
+  + apply: betat_trans.
+     by apply/(_ : betat _ (App p1' c))/(IH n.+1).
+    by apply/(IH 1).
 Qed.
 
 Example beta_app_omega : beta (App omega omega) (App omega omega).
@@ -648,27 +631,336 @@ Proof.
   by case: t IHt => *; constructor; auto.
 Qed.
 
-Fixpoint parallel t s : Prop :=
-  match t, s with
-  | Var x, Var y => x == y
-  | Abs M, Abs N => parallel M N
-  | App (Abs t1 as T1) t2, App s1 s2 =>
-    (exists s1 s2,
-    s = shift (subst s1 0 (shift s2 1 0 0)) 0 1 0 /\ pararell t1 s1 /\ pararell t2 s2)
-  \/ pararell T1 s1 /\ pararell t2 s2
-  | App t1 t2, App s1 s2 =>
-    pararell t1 s1 /\ pararell t2 s2
-  | App (Abs t1) t2, _ =>
-    exists s1 s2,
-    s = shift (subst s1 0 (shift s2 1 0 0)) 0 1 0 /\ pararell t1 s1 /\ pararell t2 s2
-  | _, _ => false
-  end.
+Hint Resolve paralleltt (fun t => iffRL (parallelE t t) (paralleltt t)) : core.
 
-Lemma subst_pres_beta u u' s t :
-  beta u u' -> beta (subst u s t) (subst u' s t).
+Lemma beta_parallel t s : beta t s -> parallel t s.
 Proof.
+move=> H; apply/parallelE.
+elim: (wf_wfr_term t) s H => {t} t _ IHt.
+case: t IHt => // [? ? [] //= ? ?|];
+first by constructor; auto.
+case => [?? IH [] //?? /orP[]// /andP[]/eqP <- /IH ?|t1 t2 ? s /=|??? IH []// ??].
+* by constructor; auto.
+* case t12s: (subst t1 0 t2 == s).
+   move/eqP: t12s => <- ?.
+   by constructor; auto.
+  case: s t12s => []//[]// ?? _ /orP []//.
+  case/orP => [/orP []|] /andP [] => [??|/eqP <- ?|? /eqP <-];
+  by constructor; auto.
+* case/orP => [/orP []|] /andP [] => [??|/eqP <- ?|? /eqP <-];
+  by constructor; auto.
+Qed.
+
+(* Lemma subst_subst t1 t2 s t : *)
+(*  subst (subst t1 s.+1 t) 0 (subst t2 s t) = subst (subst t1 0 t2) s t. *)
+(* Proof. *)
+(* elim: t1 t2 s t. *)
+(*  move=> n t2 s t. *)
+(*  case: n => // n. *)
+(*  rewrite /= eqSS subn1 ltnS. *)
+(*  case: ifP => //=. *)
+
+Lemma subst_pres_parallel u u' s t t' :
+  parallel t t' -> parallel u u' -> parallel (subst u s t) (subst u' s t').
+Proof.
+move/parallelE => H /parallelE I; apply/parallelE.
+elim: (wf_wfr_term u) u' t t' s H I => {u} u _ IH.
+case: u IH.
+ move=> u _ ????? /parallelE.
+ rewrite /parallel mem_seq1 => /eqP -> /=.
+ by case: ifP.
+ move=> u IH ????? /parallelE /inf [] ? [] -> /parallelE ? /=.
+ by constructor; auto.
+case=> //.
+move=> ?? IH ????? /parallelE.
+rewrite /parallel /= cats0 => /inf [] ? [] -> /= /parallelE ?.
+by case: ifP => ?; constructor; auto.
+
+move=> t t0 IH u' t1 t' s H /parallelE.
+rewrite /parallel /= mem_cat
+=> /orP[]/flatten_mapP[] x /parallelE I /inf[] y []->/parallelE J;
+   last by repeat constructor; auto.
+
+case: t I IH.
+ move=> ? /parallelE.
+ rewrite /parallel mem_seq1 => /eqP -> IH /=.
+ case: ifP.
+  move/eqP ->.
+  rewrite /= subn1 eqxx.
+  case: t0 J IH => //.
+   rewrite /=.
+  
+ rewrite /=.
+ rewrite /=.
+
+apply/parallelE.
+rewrite /parallel /= mem_cat.
+apply/orP; left; apply/flatten_mapP/ex_intro2.
+ by apply/parallelE; auto.
+ 
+ parallel (subst t0 s t1) s2
+ subst (subst t s.+1 t1) 0 s2
+constructor.
+rewrite /=.
+move=> ?? IH ????? /parallelE.
+ 
+    elim: (wf_wfr_term t) t' s H  => {t} t _ IH t' s.
+    case: t IH.
+     move=> t _ /parallelE.
+     by rewrite /parallel mem_seq1 => /eqP ->.
+     move=> ? IH /parallelE /inf [] t [] -> /parallelE H /=.
+     by case: ifP => // ?; constructor.
+     case.
+      move=> ? ? IH /parallelE.
+      rewrite /parallel /= mem_cat orbC /= => /inf [] ? [] -> /parallelE ?.
+      by case: ifP => // ?; constructor.
+      move=> ?? IH /parallelE.
+      rewrite /parallel /= mem_cat => /orP [] /flatten_mapP [] ? /parallelE ? /inf [] ? [] -> /parallelE ?.
+      case: ifP => //.
+       
+
+    move=> ? IH /parallelE /inf [] ? [] -> /parallelE /IH ?.
+    by constructor; auto.
+
+    move=> t1 t2 IH /parallelE.
+    rewrite /parallel /=.
+    case: t1 IH.
+     move=> ? IH /flatten_mapP [] ?.
+     rewrite mem_seq1 => /eqP -> /inf [] ? [] -> /parallelE ?.
+     by constructor; auto.
+     
+move ut : (u, t) => J.
+elim: (wf_dict wf_wfr_term wf_wfr_term J) u t ut t' u' s H I => {J}[][] u t _ IH.
+case: u IH.
+ move=> u IH ?? [] -> -> ??? ? /parallelE.
+ rewrite /parallel mem_seq1 => /eqP -> /=.
+ by case: ifP.
+ 
+ move=> u IH ?? [] -> -> ???? /parallelE /inf [] ? [] -> /parallelE ? /=.
+ constructor; auto.
+ apply: IH => //.
+ by rewrite /dict_order /= wfr_term_t_abst.
+
+ move=> ?? IH ?? [] -> -> ???.
+
+     Focus 2.
+     move=> ? ? IH /flatten_mapP [] ? /parallelE ? /inf [] ? [] -> /parallelE ?;
+     by constructor; auto.
+
+     move=> t1 IH.
+     rewrite mem_cat => /orP [].
+      move=> /flatten_mapP [] x /parallelE H' /inf [] x1 [] -> /parallelE H /=.
+      
+      case: t1 H' IH.
+       move=> ? /parallelE.
+       rewrite /parallel mem_seq1 => /eqP -> IH /=.
+       case: ifP => /=.
+        move/eqP ->.
+        rewrite /= subn1 eqxx.
+        apply/parallelE.
+        rewrite /parallel /= mem_cat.
+        case: t => //.
+         case.
+          rewrite /=.
+          case: t2 H IH => //.
+           rewrite /=.
+        case: t.
+         case.
+          apply/parallelE.
+          rewrite /parallel /= !mem_cat !orbF.
+          case: t2 H IH.
+           rewrite /=.
+         rewrite /=.
+       rewrite /=.
+      move/IH: H H' => // H /IH H'.
+      case: x H'.
+       case => /= [H'|].
+        rewrite /=.
+       rewrite /=.
+      apply/parallelE.
+      rewrite /parallel /= mem_cat.
+      apply betaE.
+      
+      case: t1 H H' IH.
+       rewrite /=.
+      constructor.
+      rewrite /=.
+      apply/parallelE.
+      rewrite /parallel mem_cat; apply/orP; left.
+      apply/flatten_mapP.
+      rewrite -/compute_parallel.
+      apply: ex_intro2.
+       by apply/parallelE/IH.
+       by apply/parallelE/parallelE/paralleltt.
+       
+      rewrite /=.
+      elim: t2 H IH.
+       rewrite -/compute_parallel.
+       move=> ? /parallelE.
+       rewrite /parallel mem_seq1 => /eqP -> IH /=.
+       case: ifP.
+        move/eqP ->.
+        apply: ex_intro2.
+         by apply/parallelE/IH.
+        apply mem_map.
+       
+       move=> ? /
+      
+      apply: ex_intro2.
+       by apply/parallelE/IH.
+        rewrite /=.
+       rewrite /=.
+       rewrite /=.
+      have: parallel_spec (subst t2 s t) (subst x1 s t).
+       apply: (IH _ _ _ t s H) => //.
+      move/parallelE.
+      rewrite /parallel /=.
+      apply/parallelE: (IH _ _ _ _ s H).
+      apply/parallelE.
+      
+      auto.
+      rewrite /=.
+      
+       
+     
+     rewrite /=.
+     constructor.
+     rewrite /=.
+     
+    
+     
+     
+     rewrite /=.
+     rewrite 
+    /inf.
+     /= mem_cat.
+    case: u' => //.
+    
+    rewrite /=.
+    rewrite /parallel /=.
+  u u' H => // {t} t _ IH u u'.
+  case: t IH.
+   
+   rewrite /=.
+  elim: H s t => //.
+   move=> ?? -> //.
+   move=> ?? H IH ?? /=.
+   constructor; auto.
+   
+   move=> ???? H IH H2 IH2 ?? /=.
+   constructor; auto.
+
+   move=> t1 t2 s1 s2 /parallelE H1 IH1 /parallelE H2 IH2 s t.
+   case: t1 H1 IH1.
+    move=> t1.
+    rewrite /parallel mem_seq1 /= => /eqP -> IH1.
+     apply/parallelE/beta_parallel.
+     case: t1 IH1 => /=.
+     
+      case: s2 H2 IH2.
+      
+       rewrite /=.
+      
+      rewrite 
+     rewrite /=.
+    
+    
+    case: ifP.
+     move/eqP ->.
+     rewrite /= subn1 eqxx.
+     apply/parallelE.
+     rewrite /parallel /= mem_cat; apply/orP; left.
+     apply/flatten_mapP.
+     rewrite 
+     rewrite /parallel /= mem_cat.
+     rewrite /=.
+     
+     
+    rewrite /= in IH1.
+   case: s1 H1 IH1 => //.
+    move=> s1 H1 IH1.
+    apply/parallelE.
+    rewrite /= /parallel /= mem_cat; apply/orP; left.
+    apply/flatten_mapP.
+    case: ifP => [/eqP s10|].
+     apply ex_intro2 with (subst (Var s1) s.+1 t).
+      by apply/parallelE.
+     rewrite s10 /= map_id.
+     by apply/parallelE.
+    case: s1 H1 IH1 => // s1 H1 IH1 _ /=.
+    case: ifP => [/eqP <-|].
+     rewrite subn1 /=.
+    apply ex_intro2 with (Abs (Var s)); last first.
+    rewrite /=.
+     apply/parallelE.
+     
+         (subst t1 s1.+1 t).
+    rewrite /=.
+    rewrite /= subn1 eqSS ltnS.
+    case: ifP => [/eqP <-|].
+     rewrite /=.
+     rewrite mem_map.
+     rewrite /=.
+     
+     rewrite -map_comp.
+     rewrite mem_map.
+     Set Printing All.
+     rewrite filter_map.
+     rewrite /=.
+     rewrite mem_filter.
+     rewrite mem_map.
+     rewrite -map_comp.
+     auto.
+    
+    rewrite /=.
+   apply/parallelE.
+   rewrite /= /parallel /= mem_cat; apply/orP; right.
+   apply/flatten_mapP.
+   apply ex_intro2 with (subst s1 s.+1 t).
+    by apply/parallelE.
+   
+   
+   elim: s1 H1 IH1.
+    move=> ?.
+    rewrite /parallel mem_seq1 => /eqP -> _ /=.
+    case: ifP => [/eqP ->|].
+     rewrite /= subn1 eqxx.
+     apply ex_intro2 with t.
+      by apply/parallelE.
+     rewrite /=.
+     done.
+             ; last first.
+    rewrite /=.
+    inversion H.
+   constructor.
+   
+    
+   rewrite 
+   
+   rewrite /=.
+   apply: beta_parallel.
+   rewrite /=.
+   apply betaE.
+   rewrite 
+   rewrite mem_map.
+   rewrite 
+   apply/parallelE.
+   constructor.
+   apply/parallelE.
+   auto.
+   
+   
+   rewrite /=.
+   apply 
+   
+   rewrite /=.
+  case.
   elim: (wf_wfr_term u) u' s t => {u} u _ IH.
-  case: u IH => // [? IH [] //= *|u1 u2 IH u' s t]; first by apply IH.
+  
+  case: u IH => //.
+   move=> *.
+   rewrite /=.
+  [? IH [] //= *|u1 u2 IH u' s t]; first by apply IH.
   case: u1 IH => //.
    case: u' => //.
    move=> ? t' n IH.
