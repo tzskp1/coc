@@ -475,353 +475,433 @@ Proof.
   case: a H => // a.
   by rewrite subSS !ltn_subRL !addn0 => /ltnW.
 Qed.
+
+(* Lemma max_var_posE s i : *)
+(*   i < max_var s <-> exists x, x \in vars s -> x > i %% (2 ^ i). *)
+(* Proof. *)
   
-Lemma vars_max_var t s : 
-  (forall x, x \in vars t -> x \in vars s) ->
-  max_var t <= max_var s.
-Proof.
-  suff: (forall x k, x \in [seq (i - k) | i <- vars t]
-        -> exists y, x + y \in vars s) -> max_var t <= max_var s.
-   move=> H H'; apply/H => x k.
-   elim: k x => [x H1|k IHk x].
-    exists 0; rewrite addn0; apply/H'.
-    move: H1; elim: (vars t) => // ?? IH.
-    by rewrite !in_cons subn0 => /orP [/eqP ->|/IH ->];
-    rewrite ?eqxx ?orbT.
-   case: (vars t) IHk H' => // a varst IHk H'.
-    case ak: (a >= k.+1).
-     rewrite /= in_cons => /orP [/eqP ->|H''].
-      exists k.+1.
-      rewrite subnK //.
-      move: (H' a).
-      by rewrite in_cons eqxx /=; apply.
-     case: (IHk (a - k)).
-      by rewrite in_cons eqxx.
-     move=> x0 H'''.
-     case xak0: (x <= a - k + x0).
-      exists (a - k + x0 - x).
-      by rewrite addnBA // addnC addnK.
-     move/negP/negP: xak0.
-     rewrite -ltnNge => xak.
-     move: (IHk x.+1).
-     have ?: (0 < x).
-      apply/(ltn_trans _ xak)/ltn_addr.
-      by rewrite ltn_subRL addn0.
-     rewrite /= in_cons seq_predn_in' // orbT.
-     case=> // y.
-     rewrite addSn -addnS => ?.
-     by exists y.+1.
-    move/negP/negP: ak.
-    rewrite -ltnNge ltnS => ak.
-    move: (IHk 0).
-    rewrite /= in_cons eq_sym subn_eq0 ak /=.
-    case=> // y Hy.
-    move/leqW: (ak); rewrite /leq => /eqP ak'.
-    rewrite in_cons ak' => /orP [/eqP ->|].
-     by exists y.
-    case xy: (x <= y).
-     exists (y - x).
-     by rewrite addnBA // addnC addnK.
-    move/negP/negP: xy; rewrite -ltnNge => yx Hx.
-    have ?: (0 < x) by apply: (leq_trans _ yx).
-    case: (IHk x.+1).
-     by rewrite /= in_cons seq_predn_in' // orbT.
-    move=> y0.
-    rewrite addSn -addnS => ?.
-    by exists y0.+1.
-  elim: t s.
-   move=> x ? /(_ x 0).
-   rewrite /= mem_seq1 subn0 eqxx.
-   case => // ? /vars_leq_max_var.
-   by apply/leq_trans/leq_addr.
+(* Lemma vars_max_var t s :  *)
+(*   (forall x, x \in vars t -> x \in vars s) -> *)
+(*   max_var t <= max_var s. *)
+(* Proof. *)
+(*   suff: (forall x k, x \in [seq (i - k) | i <- vars t] *)
+(*         -> exists y, x + y \in vars s /\ (y == 0 <-> k == 0)) -> max_var t <= max_var s. *)
+(*    move=> H H'. *)
+(*    case ms0: (max_var s > 0). *)
+(*    apply/H => x k. *)
+(*    elim: k x => [x H1|k IHk x]. *)
+(*     exists 0; rewrite addn0; repeat split; apply/H'. *)
+(*     move: H1; elim: (vars t) => // ?? IH. *)
+(*     by rewrite !in_cons subn0 => /orP [/eqP ->|/IH ->]; *)
+(*     rewrite ?eqxx ?orbT. *)
+(*    case: (vars t) IHk H' => // a varst IHk H'. *)
+(*     case ak: (a >= k.+1). *)
+(*      rewrite /= in_cons => /orP [/eqP ->|H'']. *)
+(*       exists k.+1. *)
+(*       rewrite subnK //. *)
+(*       move: (H' a). *)
+(*       by rewrite in_cons eqxx /=; repeat split; auto. *)
+(*      case: (IHk (a - k)). *)
+(*       by rewrite in_cons eqxx. *)
+(*      move=> x0 [] H''' H''''. *)
+(*      case xak0: (x <= a - k). *)
+(*       case x00: (x0 > 0). *)
+(*        exists (a - k + x0 - x). *)
+(*        rewrite addnBA //; last first. *)
+(*         by apply/(leq_trans xak0)/leq_addr. *)
+(*        rewrite addnC addnK; split; auto. *)
+(*        suff->: a - k + x0 - x == 0 = false by []. *)
+(*        case: x0 x00 H''' H'''' => // x0 _ _ _. *)
+(*        rewrite addnC addnBA; last by apply/ltnW. *)
+(*        rewrite subn_eq0 addSn subSn. *)
+(*        apply/negP/negP; rewrite -ltnNge ltnS. *)
+(*        rewrite -addnBA; last by apply/ltnW. *)
+(*        apply/(leq_trans xak0)/leq_addl. *)
+(*        apply/(leq_trans (ltnW ak))/leq_addl. *)
+(*       case: x0 x00 H'''' H''' => // _ [] /implyP. *)
+(*       rewrite eqxx /= => /eqP k0. *)
+(*       move: k0 xak0 ak H'' IHk => ->. *)
+(*       rewrite !subn0 !addn0 => xa a0 H'' IHk. *)
+(*       rewrite leq_eqVlt in xa. *)
+(*       case/orP: xa => [/eqP xa|xa _ sa]. *)
+(*        rewrite xa in IHk, H', H''. *)
+(*        case: (IHk a.+1). *)
+(*         rewrite in_cons. *)
+(*         move=> {IHk H'}. *)
+(*         rewrite subn0 eq_sym pat2 /=. *)
+(*         elim: varst H'' => // a' ? IHv. *)
+(*         rewrite !in_cons subn1 subn0. *)
+(*         case/orP => [/eqP aa|/IHv ->]. *)
+(*          have?: a' > 0 by case: a' aa a0 => //= ->. *)
+(*          by rewrite aa prednK // eqxx. *)
+(*         by rewrite orbT. *)
+(*        move=> ? [] aS [] _. *)
+(*        rewrite xa eqxx => /implyP /= /eqP x0 _. *)
+(*        move: x0 aS => -> aS sa. *)
+(*        exists 1; split => //. *)
+(*        rewrite addn1. *)
+(*        by rewrite addn0 in aS. *)
+(*       exists (a - x). *)
+(*       rewrite addnBA; last by apply/ltnW. *)
+(*       rewrite addnC addnK; split; auto. *)
+(*       by rewrite subn_eq0 leqNgt xa. *)
+(*      move/negP/negP: xak0. *)
+(*      rewrite -ltnNge => xak. *)
+(*      move: (IHk x.+1). *)
+(*      have ?: (0 < x). *)
+(*       by apply/(leq_trans _ xak). *)
+(*      rewrite /= in_cons seq_predn_in' // orbT. *)
+(*      case=> // y. *)
+(*      rewrite addSn -addnS => [][] ? ?. *)
+(*      exists y.+1; split; auto; split; auto. *)
+(*     move/negP/negP: ak. *)
+(*     rewrite -ltnNge ltnS => ak. *)
+(*     move: (IHk 0). *)
+(*     rewrite /= in_cons eq_sym subn_eq0 ak /=. *)
+(*     case=> // y [] Hy yk. *)
+(*     move/leqW: (ak); rewrite /leq => /eqP ak'. *)
+(*     rewrite in_cons ak' => /orP [/eqP ->|]. *)
+(*     case y0: (y > 0). *)
+(*      exists y; split => //. *)
+(*      by case: y y0 Hy yk. *)
+(*     case: y y0 Hy yk => // _. *)
+(*     rewrite addn0 eqxx => s0 [] /implyP /= /eqP k0 _. *)
+(*     move: k0 ak IHk H' ak' => ->. *)
+(*     case: a => // _ IHk H' _. *)
+(*     move=> {H IHk H' s0}. *)
+(*     suff: exists y, y \in vars s /\ y > 0. *)
+(*     case => y [] p q. *)
+(*     exists y; split; first by rewrite add0n. *)
+(*     by case: y q p. *)
     
-   move=> t IH s H /=.
-   have ->: max_var s = (max_var s).+1.-1 by [].
-   apply/leq_subSS/leqW/IH => x j H'.
-   case x0: (x > 0); last first.
-    case: x x0 H' => // _ H'.
-    apply: (H 0 j).
-    rewrite /= -map_comp /comp.
-    elim: (vars t) H' => // a ? IHt.
-    rewrite !in_cons => /orP [/eqP aj|/IHt ->]; last by rewrite orbT.
-    have->: a.-1 - j = 0.
-     apply/eqP.
-     rewrite subn_eq0.
-     case: a aj => // a /esym /eqP.
-     by rewrite subn_eq0 => /ltnW.
-    by rewrite eqxx.
-   case: (H x.-1 j).
-    case: x x0 H' => //= x _.
-    elim: (vars t) => // a vt IHt.
-    rewrite !in_cons => /orP [/eqP aj|/IHt ->//]; last by rewrite orbT.
-    have aj' : a > j.
-     rewrite ltnNge.
-     apply/negP.
-     rewrite /leq => /eqP aj'.
-     by move: aj' aj => ->.
-    case: a aj aj' => // a /= xaj aj.
-    rewrite subSn // in xaj.
-    case: xaj => ->.
-    by rewrite eqxx.
-   move=> y Hy.
-   case y0: (y > 0).
-    exists y.-1.
-    case: y y0 Hy => // y _.
-    case: x x0 H' => // x _.
-    by rewrite addnS addSn.
-   case: y y0 Hy => // _ Hy.
-   
+(*     elim: s ms0 => //. *)
+(*      move=> /= n H. *)
+(*      exists n; split => //. *)
+(*      by rewrite mem_seq1. *)
 
-
-
-
-
-
-
-   
-   case: (H x j.+1).
-    case: x x0 H' Hy => //= x _ + _.
-    elim: (vars t) => // a vt IHt.
-    rewrite !in_cons => /orP [/eqP aj|/IHt ->//]; last by rewrite orbT.
-    have aj' : a > j.
-     rewrite ltnNge.
-     apply/negP.
-     rewrite /leq => /eqP aj'.
-     by move: aj' aj => ->.
-    case: a aj aj' => // a /= xaj aj.
-    rewrite subSn // in xaj.
-    case: xaj => ->.
-    rewrite subnS in xaj.
-    rewrite subnS.
-    rewrite subnS.
-    by rewrite eqxx.
-   rewrite /=.
-   case: x x0 H' Hy => // x _ H'.
-   rewrite /=.
-   rewrite /=.
-   move=> y.
-   
-   apply (H _ j.-1).
-   rewrite /comp.
-   rewrite mem_map.
-   Check subSS.
-   apply/H'.
-   rewrite mem_map.
-   rewrite mem_filter.
-   rewrite /= in H.
-   
-   rewrite /= in H.
-   rewrite /=.
-   
-   case=> // x ? /(_ x x).
-   case: x => //.
-   subn0. => [][]// ? 
-   
-   move=> t /= IH s H.
-   move xite: [seq x <- vars t | x \notin [seq i.-1 | i <- vars t]] => xit.
-   case xitn: (xit == [::]).
-    case: xit xite xitn => // xite _.
-    have ->: max_var s = (max_var s).+1.-1 by [].
-    apply/leq_subSS/leqW/IH.
-    move=> x xt'.
-    case xt: (x \in [seq i.-1 | i <- vars t]).
-     by case/H: xt => x0 *; exists x0.
-    have: x \in [seq x <- vars t | x \notin [seq i.-1 | i <- vars t]].
-     by rewrite mem_filter xt' xt.
-    by rewrite xite.
-   move=> {IH}.
-   elim: xit t s H xite xitn => // a xit IHx t.
-   case: t.
-    move=> n s /= H + _.
-    case: ifP => // nnp na.
-    move: (H n.-1); rewrite !mem_seq1 eqxx.
-    case=> // y /vars_leq_max_var.
-    by apply/leq_trans/leq_addr.
-
-    move=> t s H.
-    rewrite /= -map_comp.
+(*      move=> s IH /= H. *)
+(*      case: IH => //. *)
+(*       apply: (leq_trans H). *)
+(*       by rewrite -subn1 leq_subr. *)
+(*      move=> y [] Hy [] y0. *)
+(*      have ys0: (y.-1 > 0). *)
+(*       move: (vars_leq_max_var Hy). *)
+(*       case: (max_var s) H => // s'. *)
+(*       rewrite /=. *)
+      
+(*       exists y.-1; split => //. *)
+(*       by case: y Hy y0 ys0 => // y /seq_predn_in ->. *)
+(*       case: y => //. *)
+(*       rewrite /=. *)
+(*      rewrite /=. *)
+(*      apply/IH. *)
+     
+(*     move: (IHk 1). *)
+(*     rewrite /= in_cons. *)
     
-   (* move varste: (vars t) => varst. *)
-   (* case: varst varste => //. *)
+(*     case xy: (x <= y). *)
+(*      exists (y - x). *)
+(*      by rewrite addnBA // addnC addnK. *)
+(*     move/negP/negP: xy; rewrite -ltnNge => yx Hx. *)
+(*     have ?: (0 < x) by apply: (leq_trans _ yx). *)
+(*     case: (IHk x.+1). *)
+(*      by rewrite /= in_cons seq_predn_in' // orbT. *)
+(*     move=> y0. *)
+(*     rewrite addSn -addnS => ?. *)
+(*     by exists y0.+1. *)
+(*   elim: t s. *)
+(*    move=> x ? /(_ x 0). *)
+(*    rewrite /= mem_seq1 subn0 eqxx. *)
+(*    case => // ? /vars_leq_max_var. *)
+(*    by apply/leq_trans/leq_addr. *)
+    
+(*    move=> t IH s H /=. *)
+(*    have ->: max_var s = (max_var s).+1.-1 by []. *)
+(*    apply/leq_subSS/leqW/IH => x j H'. *)
+(*    case x0: (x > 0); last first. *)
+(*     case: x x0 H' => // _ H'. *)
+(*     apply: (H 0 j). *)
+(*     rewrite /= -map_comp /comp. *)
+(*     elim: (vars t) H' => // a ? IHt. *)
+(*     rewrite !in_cons => /orP [/eqP aj|/IHt ->]; last by rewrite orbT. *)
+(*     have->: a.-1 - j = 0. *)
+(*      apply/eqP. *)
+(*      rewrite subn_eq0. *)
+(*      case: a aj => // a /esym /eqP. *)
+(*      by rewrite subn_eq0 => /ltnW. *)
+(*     by rewrite eqxx. *)
+(*    case: (H x.-1 j). *)
+(*     case: x x0 H' => //= x _. *)
+(*     elim: (vars t) => // a vt IHt. *)
+(*     rewrite !in_cons => /orP [/eqP aj|/IHt ->//]; last by rewrite orbT. *)
+(*     have aj' : a > j. *)
+(*      rewrite ltnNge. *)
+(*      apply/negP. *)
+(*      rewrite /leq => /eqP aj'. *)
+(*      by move: aj' aj => ->. *)
+(*     case: a aj aj' => // a /= xaj aj. *)
+(*     rewrite subSn // in xaj. *)
+(*     case: xaj => ->. *)
+(*     by rewrite eqxx. *)
+(*    move=> y Hy. *)
+(*    case y0: (y > 0). *)
+(*     exists y.-1. *)
+(*     case: y y0 Hy => // y _. *)
+(*     case: x x0 H' => // x _. *)
+(*     by rewrite addnS addSn. *)
+(*    case: y y0 Hy => // _ Hy. *)
+   
 
-    move=> t s H IH xite.
-    apply: (IHx (Abs t) s).
-    move=> x /=.
-    rewrite /=.
+
+
+
+
+
+
+   
+(*    case: (H x j.+1). *)
+(*     case: x x0 H' Hy => //= x _ + _. *)
+(*     elim: (vars t) => // a vt IHt. *)
+(*     rewrite !in_cons => /orP [/eqP aj|/IHt ->//]; last by rewrite orbT. *)
+(*     have aj' : a > j. *)
+(*      rewrite ltnNge. *)
+(*      apply/negP. *)
+(*      rewrite /leq => /eqP aj'. *)
+(*      by move: aj' aj => ->. *)
+(*     case: a aj aj' => // a /= xaj aj. *)
+(*     rewrite subSn // in xaj. *)
+(*     case: xaj => ->. *)
+(*     rewrite subnS in xaj. *)
+(*     rewrite subnS. *)
+(*     rewrite subnS. *)
+(*     by rewrite eqxx. *)
+(*    rewrite /=. *)
+(*    case: x x0 H' Hy => // x _ H'. *)
+(*    rewrite /=. *)
+(*    rewrite /=. *)
+(*    move=> y. *)
+   
+(*    apply (H _ j.-1). *)
+(*    rewrite /comp. *)
+(*    rewrite mem_map. *)
+(*    Check subSS. *)
+(*    apply/H'. *)
+(*    rewrite mem_map. *)
+(*    rewrite mem_filter. *)
+(*    rewrite /= in H. *)
+   
+(*    rewrite /= in H. *)
+(*    rewrite /=. *)
+   
+(*    case=> // x ? /(_ x x). *)
+(*    case: x => //. *)
+(*    subn0. => [][]// ?  *)
+   
+(*    move=> t /= IH s H. *)
+(*    move xite: [seq x <- vars t | x \notin [seq i.-1 | i <- vars t]] => xit. *)
+(*    case xitn: (xit == [::]). *)
+(*     case: xit xite xitn => // xite _. *)
+(*     have ->: max_var s = (max_var s).+1.-1 by []. *)
+(*     apply/leq_subSS/leqW/IH. *)
+(*     move=> x xt'. *)
+(*     case xt: (x \in [seq i.-1 | i <- vars t]). *)
+(*      by case/H: xt => x0 *; exists x0. *)
+(*     have: x \in [seq x <- vars t | x \notin [seq i.-1 | i <- vars t]]. *)
+(*      by rewrite mem_filter xt' xt. *)
+(*     by rewrite xite. *)
+(*    move=> {IH}. *)
+(*    elim: xit t s H xite xitn => // a xit IHx t. *)
+(*    case: t. *)
+(*     move=> n s /= H + _. *)
+(*     case: ifP => // nnp na. *)
+(*     move: (H n.-1); rewrite !mem_seq1 eqxx. *)
+(*     case=> // y /vars_leq_max_var. *)
+(*     by apply/leq_trans/leq_addr. *)
+
+(*     move=> t s H. *)
+(*     rewrite /= -map_comp. *)
     
-    move=> t a' l vat H IH.
-    rewrite /= in_cons negb_or eqnpredn.
-    case: ifP.
-     move=> a'0  [] aa xite.
-    apply IHx.
-    /= IH xite.
-    rewrite /=.
+(*    (* move varste: (vars t) => varst. *) *)
+(*    (* case: varst varste => //. *) *)
+
+(*     move=> t s H IH xite. *)
+(*     apply: (IHx (Abs t) s). *)
+(*     move=> x /=. *)
+(*     rewrite /=. *)
     
-    apply: (leq_trans _ (IH _ _)).
-     by rewrite -subn1 leq_subr.
-    move=> x /=.
-    move: (H n.-1); rewrite !mem_seq1 eqxx.
-    case=> // y Hy /eqP ->.
-    exists y.-1.
-    rewrite /=.
-    apply IH.
-    move=> ?.
-    rewrite mem_seq1 => /eqP ->.
-    rewrite /=.
-    case: ifP => //= ? [] //.
-    rewrite /=.
-    t H IH xite.
+(*     move=> t a' l vat H IH. *)
+(*     rewrite /= in_cons negb_or eqnpredn. *)
+(*     case: ifP. *)
+(*      move=> a'0  [] aa xite. *)
+(*     apply IHx. *)
+(*     /= IH xite. *)
+(*     rewrite /=. *)
+    
+(*     apply: (leq_trans _ (IH _ _)). *)
+(*      by rewrite -subn1 leq_subr. *)
+(*     move=> x /=. *)
+(*     move: (H n.-1); rewrite !mem_seq1 eqxx. *)
+(*     case=> // y Hy /eqP ->. *)
+(*     exists y.-1. *)
+(*     rewrite /=. *)
+(*     apply IH. *)
+(*     move=> ?. *)
+(*     rewrite mem_seq1 => /eqP ->. *)
+(*     rewrite /=. *)
+(*     case: ifP => //= ? [] //. *)
+(*     rewrite /=. *)
+(*     t H IH xite. *)
          
-   elim: [seq x <- [seq i.-1 | i <- vars t] | x \notin vars t] xit .
-   elim: t / 
-   Check filter (fun x => x \notin vars t) [seq i.-1 | i <- vars t].
-   Check [seq x | x <-  , x <- vars t].
-   Check [seq i.-1 | i <- vars t].
-   case: t xt H IH.
-    move=> n xt /(_ n.-1) /= H _.
-    rewrite mem_seq1 => /eqP ->.
-    case: H; first by rewrite mem_seq1.
-    move=> y Hy.
-    case y0: (0 < y).
-     case n0: (n > 0).
-      exists y.-1.
-      case: n n0 xt Hy => // n _ ? ?.
-      by rewrite addSn -addnS prednK.
-     case: n n0 Hy xt => // _ Hy ?.
-     by exists y.
+(*    elim: [seq x <- [seq i.-1 | i <- vars t] | x \notin vars t] xit . *)
+(*    elim: t /  *)
+(*    Check filter (fun x => x \notin vars t) [seq i.-1 | i <- vars t]. *)
+(*    Check [seq x | x <-  , x <- vars t]. *)
+(*    Check [seq i.-1 | i <- vars t]. *)
+(*    case: t xt H IH. *)
+(*     move=> n xt /(_ n.-1) /= H _. *)
+(*     rewrite mem_seq1 => /eqP ->. *)
+(*     case: H; first by rewrite mem_seq1. *)
+(*     move=> y Hy. *)
+(*     case y0: (0 < y). *)
+(*      case n0: (n > 0). *)
+(*       exists y.-1. *)
+(*       case: n n0 xt Hy => // n _ ? ?. *)
+(*       by rewrite addSn -addnS prednK. *)
+(*      case: n n0 Hy xt => // _ Hy ?. *)
+(*      by exists y. *)
      
-     Search (_.-1 + _).
-     rewrite subnS.
-     rewrite subSn.
-    rewrite /=.
-   elim: t s H.
-    move=> x ? /(_ x.-1).
-    rewrite /= mem_seq1 => /implyP.
-    by rewrite eqxx => /vars_leq_max_var.
-    move=> ? IH.
-    rewrite /=.
+(*      Search (_.-1 + _). *)
+(*      rewrite subnS. *)
+(*      rewrite subSn. *)
+(*     rewrite /=. *)
+(*    elim: t s H. *)
+(*     move=> x ? /(_ x.-1). *)
+(*     rewrite /= mem_seq1 => /implyP. *)
+(*     by rewrite eqxx => /vars_leq_max_var. *)
+(*     move=> ? IH. *)
+(*     rewrite /=. *)
    
-  elim: (wf_wfr_term t) s => {t} t _ IH.
-  case: t IH.
-   move=> x _ t /(_ x).
+(*   elim: (wf_wfr_term t) s => {t} t _ IH. *)
+(*   case: t IH. *)
+(*    move=> x _ t /(_ x). *)
 
-   move=> t IH /= s H.
-   rewrite leqNgt.
+(*    move=> t IH /= s H. *)
+(*    rewrite leqNgt. *)
    
-   Search (_ < _.-1 ).
-   max_var s <= max_var t
-   max_var s < x <= max_var t
-             ?
-   x \in vars t && x \notin [seq i.-1 | i <- vars t] -> x \in vars s.
+(*    Search (_ < _.-1 ). *)
+(*    max_var s <= max_var t *)
+(*    max_var s < x <= max_var t *)
+(*              ? *)
+(*    x \in vars t && x \notin [seq i.-1 | i <- vars t] -> x \in vars s. *)
    
    
-   (forall x : nat_eqType, x \in vars y -> x \in vars s)
-   case t0: (max_var t > 0); last first.
-    move/negP/negP: t0.
-    rewrite -ltnNge /leq subSS subn0 => /eqP ->.
-    by rewrite sub0n.
-   case s0 : (0 \in vars s); last first.
-    case t0': (0 \in [seq i.-1 | i <- vars t]).
-     by move/H: t0' s0 => ->.
-    apply: leq_trans; last apply IH => //.
-    by rewrite -subn1 leq_subr.
-    move=> x.
-    case x0: (x > 0); last first.
-     case: x x0 => // _.
-     move=> t0''.
-     suff: false by [].
-     have: (0 \in [seq i.-1 | i <- vars t]).
-      elim: (vars t) t0'' => // a ? H''.
-      rewrite /= !in_cons => /orP [/eqP <-|/H'' ->];
-      by rewrite ?eqxx ?orbT.
-     by rewrite t0'.
-    move=> Hx.
-    apply/H.
-    apply/seq_predn_in.
-     move: (H x.-1.+1).
+(*    (forall x : nat_eqType, x \in vars y -> x \in vars s) *)
+(*    case t0: (max_var t > 0); last first. *)
+(*     move/negP/negP: t0. *)
+(*     rewrite -ltnNge /leq subSS subn0 => /eqP ->. *)
+(*     by rewrite sub0n. *)
+(*    case s0 : (0 \in vars s); last first. *)
+(*     case t0': (0 \in [seq i.-1 | i <- vars t]). *)
+(*      by move/H: t0' s0 => ->. *)
+(*     apply: leq_trans; last apply IH => //. *)
+(*     by rewrite -subn1 leq_subr. *)
+(*     move=> x. *)
+(*     case x0: (x > 0); last first. *)
+(*      case: x x0 => // _. *)
+(*      move=> t0''. *)
+(*      suff: false by []. *)
+(*      have: (0 \in [seq i.-1 | i <- vars t]). *)
+(*       elim: (vars t) t0'' => // a ? H''. *)
+(*       rewrite /= !in_cons => /orP [/eqP <-|/H'' ->]; *)
+(*       by rewrite ?eqxx ?orbT. *)
+(*      by rewrite t0'. *)
+(*     move=> Hx. *)
+(*     apply/H. *)
+(*     apply/seq_predn_in. *)
+(*      move: (H x.-1.+1). *)
     
-     move=> x.
-     case x0: (x > 0).
-      have->: x = x.-1.+1.
-       by rewrite prednK.
-      move=> /seq_predn_in/H.
-      case: x x0 => //.
-     case=> // x Hx.
-     apply/H.
-     apply/
-     case: x => //.
-     move=> x xt.
-     apply/H.
-   move: (IH t).
-   rewrite /=.
+(*      move=> x. *)
+(*      case x0: (x > 0). *)
+(*       have->: x = x.-1.+1. *)
+(*        by rewrite prednK. *)
+(*       move=> /seq_predn_in/H. *)
+(*       case: x x0 => //. *)
+(*      case=> // x Hx. *)
+(*      apply/H. *)
+(*      apply/ *)
+(*      case: x => //. *)
+(*      move=> x xt. *)
+(*      apply/H. *)
+(*    move: (IH t). *)
+(*    rewrite /=. *)
    
-   rewrite /=.
-   elim: t => /=.
-   + move=> n /(_ n).
-     by rewrite /= !mem_seq1 eqxx => /implyP /= /eqP ->.
-   + move=> t IH H.
-     have->: (x = x.+1.-1) by [].
-     case x0 : (x > 0).
-      apply/leq_subSS.
-      rewrite leq_eqVlt.
-      case tx :(max_var t == x.+1) => //=.
-      apply/IH.
+(*    rewrite /=. *)
+(*    elim: t => /=. *)
+(*    + move=> n /(_ n). *)
+(*      by rewrite /= !mem_seq1 eqxx => /implyP /= /eqP ->. *)
+(*    + move=> t IH H. *)
+(*      have->: (x = x.+1.-1) by []. *)
+(*      case x0 : (x > 0). *)
+(*       apply/leq_subSS. *)
+(*       rewrite leq_eqVlt. *)
+(*       case tx :(max_var t == x.+1) => //=. *)
+(*       apply/IH. *)
       
-      move=> x0.
-     case t0: (max_var t > 0).
-      rewrite /=.
-      rewrite /=.
+(*       move=> x0. *)
+(*      case t0: (max_var t > 0). *)
+(*       rewrite /=. *)
+(*       rewrite /=. *)
       
-     move/negP/negP: tx.
-     rewrite -ltnNge /=.
-     case tx: ((max_var t).-1 == x).
-      case: (max_var t) IH tx => //= ??.
-      rewrite ltnS leqNgt => tx /negPf nx.
-      by rewrite leq_eqVlt nx orbF.
+(*      move/negP/negP: tx. *)
+(*      rewrite -ltnNge /=. *)
+(*      case tx: ((max_var t).-1 == x). *)
+(*       case: (max_var t) IH tx => //= ??. *)
+(*       rewrite ltnS leqNgt => tx /negPf nx. *)
+(*       by rewrite leq_eqVlt nx orbF. *)
      
-     move=> xt.
-     rewrite leq_eqVlt tx /=.
-     rewrite ltnNge.
-     apply/negP => xt'.
-     move: xt.
+(*      move=> xt. *)
+(*      rewrite leq_eqVlt tx /=. *)
+(*      rewrite ltnNge. *)
+(*      apply/negP => xt'. *)
+(*      move: xt. *)
      
-     rewrite ltnNge.
+(*      rewrite ltnNge. *)
      
-      rewrite ltn_neqAle tx /=.
-     have tp: (max_var t).-1.+1 = (max_var t).
-      by rewrite prednK // t0.
-     rewrite -tp in t0, xt.
-     case: t0 => <- tx.
-     rewrite ltnS leq_eqVlt eq_sym tx /= in xt.
-     rewrite ltnNge /= ltnW //= -tx.
+(*       rewrite ltn_neqAle tx /=. *)
+(*      have tp: (max_var t).-1.+1 = (max_var t). *)
+(*       by rewrite prednK // t0. *)
+(*      rewrite -tp in t0, xt. *)
+(*      case: t0 => <- tx. *)
+(*      rewrite ltnS leq_eqVlt eq_sym tx /= in xt. *)
+(*      rewrite ltnNge /= ltnW //= -tx. *)
      
-     rewrite -mem_seq1.
-     apply/H.
-     rewrite /= mem_map.
-     rewrite /=.
-     rewrite /=.
-     rewrite /=.
-     rewrite 
-     rewrite /=.
-      rewrite /=.
-     rewrite t0 in tx.
-     case: (max_var t) IH tx => //= ??.
-     rewrite ltnNge.
-     Check seq_predn_in.
-     rewrite mem_seq1.
-     apply/negP => /negP.
-     apply/negP.
-     move/vars_leq_max_var: (H').
-     rewrite leq_eqVlt.
-     rewrite -ltnS ltn_neqAle.
-     rewrite mem_seq1.
-     apply/H.
+(*      rewrite -mem_seq1. *)
+(*      apply/H. *)
+(*      rewrite /= mem_map. *)
+(*      rewrite /=. *)
+(*      rewrite /=. *)
+(*      rewrite /=. *)
+(*      rewrite  *)
+(*      rewrite /=. *)
+(*       rewrite /=. *)
+(*      rewrite t0 in tx. *)
+(*      case: (max_var t) IH tx => //= ??. *)
+(*      rewrite ltnNge. *)
+(*      Check seq_predn_in. *)
+(*      rewrite mem_seq1. *)
+(*      apply/negP => /negP. *)
+(*      apply/negP. *)
+(*      move/vars_leq_max_var: (H'). *)
+(*      rewrite leq_eqVlt. *)
+(*      rewrite -ltnS ltn_neqAle. *)
+(*      rewrite mem_seq1. *)
+(*      apply/H. *)
 
-    move=> ? /= IH.
-    rewrite /=.
-    rewrite /=.
-   rewrite /=.
-  move=> H.
+(*     move=> ? /= IH. *)
+(*     rewrite /=. *)
+(*     rewrite /=. *)
+(*    rewrite /=. *)
+(*   move=> H. *)
   
 
 (* Definition s := 0. *)
@@ -897,9 +977,33 @@ elim: t1 s1 H H0.
  rewrite /parallel mem_seq1 => /eqP ->.
  case: t1 => //= t1.
  by rewrite subn1 leq_addr.
-
- move=> t IH ? /parallelE /inf []?[]-> /parallelE/IH /=.
- case: (max_var t).
+ move=> t IH ? /parallelE /inf [] x []-> /parallelE/IH /=.
+ case t0: ((max_var t).-1 > 0); last first.
+  move=> IHt H.
+  have->: (max_var t).-2 + max_var t2 = ((max_var t).-1 + max_var t2).-1.
+   have->: (max_var t).-1 = (max_var t).-2.+1 by rewrite prednK.
+   by rewrite addSn.
+  apply/leq_subSS.
+  apply/(leq_trans _ (IHt _)); last first.
+   case: (max_var x) H => [|? /leq_ltn_trans].
+    by case: (max_var t) t0.
+   by apply; case: (max_var t) t0.
+  
+ case x0: (max_var x > 0).
+   move/negP/negP: t0.
+   rewrite -ltnNge /leq subn1 /=.
+   rewrite /=.
+   rewrite subnS.
+  rewrite subSn.
+  
+  have t0: ((max_var t).-1 > 0).
+   case: (max_var x) x0 H => //= x' _.
+   case: (max_var t) => //.
+    x't.
+   
+   apply: leq_trans.
+   apply: (leq0n x').
+ 
   move=> IH' H'.
   apply: (leq_trans _ (IH' _)).
    done.
