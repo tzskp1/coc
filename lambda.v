@@ -39,7 +39,7 @@ Fixpoint shift t n c :=
 Fixpoint vars t :=
   match t with
   | Var v => [:: v]
-  | Abs t1 => vars t1
+  | Abs t1 => map predn (vars t1)
   | App t1 t2 => vars t1 ++ vars t2
   end.
 
@@ -418,9 +418,15 @@ Qed.
 Fixpoint max_var t :=
   match t with
   | Var v => v
-  | App s s' => maxn (max_var s) (max_var s')
+  | App s s' => max_var s + max_var s'
   | Abs s => predn (max_var s)
   end.
+
+Lemma pat3 n s : n <= n.-1 + s.+1.
+Proof.
+  case: n => //= n.
+  by rewrite addnS -addSn ltn_addr.
+Qed.
 
 Lemma subst0 t s i : max_var t < i -> subst t i s = t.
 Proof.
@@ -429,8 +435,58 @@ elim: t i s => /= [??? ni|t IH i ?|? IH1 ? IH2 ?? H].
    by rewrite ni' ltnn in ni.
   by rewrite ltnNge ltnW // subn0.
 * by case: (max_var t) IH => [IH ?|? IH ?]; rewrite IH.
-* by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_maxr, leq_maxl).
+* by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, addnS, leqW, leq_addr, leq_addl).
 Qed.
+
+Lemma leq_subSS n m : n <= m -> n.-1 <= m.-1.
+Proof. by case: n => // n; case: m => // m. Qed.
+
+Lemma vars_leq_max_var x t : x \in vars t -> x <= max_var t.
+Proof.
+  elim: t x.
+   move=> ? ?.
+   by rewrite mem_seq1 => /eqP ->.
+
+   move=> t IH x /= H.
+   case x0: (x > 0).
+    have->: (x = x.+1.-1) by [].
+    apply/leq_subSS/IH.
+    elim: (vars _) H => // a ? H.
+    rewrite !in_cons => /orP [/eqP xa|/H ->].
+     move: xa x0 H => -> a0 H.
+     rewrite prednK ?eqxx //.
+     by case: a a0 H.
+    by rewrite orbT.
+   by case: x x0 H.
+
+   move=> ? IH1 ? IH2 x.
+   rewrite /= mem_cat => /orP [/IH1|/IH2] /leq_trans; apply.
+    apply/leq_addr.
+   apply/leq_addl.
+Qed.
+
+Lemma vars_max_var t s : 
+  (forall x, x \in vars t -> x \in vars s) ->
+  max_var t <= max_var s.
+Proof.
+  elim: (wf_wfr_term s) t => {s} s _ IH.
+  case: s IH.
+   move=> ? _ t /= H.
+   rewrite /=.
+   move=> s t /= H.
+   rewrite /=.
+  rewrite /=.
+   move=> s.
+   case: t.
+    move=> n /(_ n).
+    by rewrite /= !mem_seq1 eqxx => /implyP /= /eqP ->.
+
+    move=> ? /= IH.
+    rewrite /=.
+    rewrite /=.
+   rewrite /=.
+  move=> H.
+  
 
 (* Definition s := 0. *)
 (* Definition t1 := Var 0. *)
@@ -449,100 +505,108 @@ Qed.
 (* Compute vars (Abs (Abs t)). *)
 
 Lemma subst_subst i t1 t2 s t :
- max_var t1 + max_var t2 < s + i ->
+ max_var (App t1 t2) < s + i ->
  subst (subst t1 (s + i).+1 t) i (subst t2 s t) = subst (subst t1 i t2) (s + i) t.
 Proof.
-  elim: t1 t2 s t i => /= [n t2 s t i H|t H ???? H0|? IH1 ? IH2 ???? H].
+  elim: t1 t2 s t i => /= [n ? s ? i H|t H ???? H0|? IH1 ? IH2 ???? H].
   * case: ifP => [/eqP ni|_].
-     rewrite ni in H.
+     rewrite ni !addSn in H.
      move/ltnW/ltn_wl: H.
      by rewrite ltnn.
-    rewrite ltnNge ltnW ?ltnS ?(leq_trans _ (ltnW H)) ?leq_addr //= subn0.
+    rewrite ltnNge ltnW ?ltnS
+             ?(leq_trans _ H, addnS, leqW, leq_addr) //= subn0.
     case: ifP => [/eqP ni|/=].
-     rewrite ni addnC ltn_add2r in H.
+     move: ni H => ->.
+     rewrite addnC ltn_add2r => H.
      by rewrite !subst0 // ltn_addr.
-    case: ifP => [/eqP ni|ni ?].
+    case: ifP => [/eqP ni|ni ?] //.
      move: ni H => <- H.
      suff: false by [].
      case: (i < n) H => /ltn_wl.
       by rewrite subn1 ltnpredn.
      by rewrite subn0 ltnn.
     by rewrite [s + i < _]ltnNge [_ <= s + i]leq_eqVlt ni
-     ?(leq_trans _ H, ltnS, leq_trans _ (leq_addr _ _), leq_subr) // subn0.
-  * rewrite -addnS H // addnS ltnS.
+               ?(leq_trans _ H, ltnS, addnS, subn0) //
+               ?(leq_trans _ (leq_addr _ _), leq_subr).
+  * rewrite -addnS H // !addnS ltnS.
     by case: (max_var t) H0 => // /ltnW.
-  * by rewrite ?(IH1, IH2, leq_trans _ H, ltnS, leq_add2r, leq_maxr, leq_maxl).
+  * by rewrite ?(IH1, IH2, leq_trans _ H, addSn, addnS,
+              ltnS, leqW, leq_add2r, leq_addr, leq_addl).
 Qed.
+
+(* Lemma max_var_substE s1 s2 : max_var (subst s1 0 s2) <= max_var s1 + max_var s2. *)
+(* Proof. *)
+(*   elim: s1 s2. *)
+(*   case=> // s1 s2. *)
+(*   by rewrite /= subn1 ltnW // ltn_addr. *)
+
+
+(* Lemma max_var_subst1 s1 s2 i : *)
+(*  max_var s1 = 0 -> *)
+(* (max_var (subst s1 i.+1 s2)).-1 <= max_var (subst s1 i s2). *)
+(* Proof. *)
+(*   elim: s1 s2 i. *)
+(*   case=> //. *)
+(*   move=> t IH ? /= i H. *)
+(*   case mt: (max_var _) H => n0. *)
+(*    apply/leq_subSS/(leq_trans _ (IH _ _ _)) => //. *)
+
+Lemma parallel_pres_max_var u u' : parallel u u' -> max_var u >= max_var u'.
+Proof.
+move/parallelE.
+elim => [?? ->|??? /leq_subSS|????? /leq_add H ? /H|] //.
+move=> t1 t2 s1 s2 H H0 H1 H2.
+elim: t1 s1 H H0.
+ move=> t1 s1 /parallelE.
+ rewrite /parallel mem_seq1 => /eqP ->.
+ case: t1 => //= t1.
+ by rewrite subn1 leq_addr.
+
+ move=> t IH ? /parallelE /inf []?[]-> /parallelE/IH /=.
+ case: (max_var t).
+  move=> IH' H'.
+  apply: (leq_trans _ (IH' _)).
+   done.
+  rewrite /=.
+  rewrite /=.
+  rewrite /=.
+ case: 
+ rewrite /=.
+ rewrite /=.
+ rewrite 
+ move/IH.
+ rewrite /=.
+ rewrite /=.
+ 
+ rewrite /= addSn add0n.
+ rewrite add0n.
+
+rewrite /=.
+rewrite /=.
+elim: u u'.
++ move=> u u'.
+  by rewrite /parallel mem_seq1 => /eqP ->.
++ by move=> ? IH ? /inf []?[]-> /IH /= ->.
++ move=> ? IH1 ? IH2.
+  rewrite /parallel /=.
 
 Lemma subst_pres_parallel u u' s t t' :
   parallel t t' -> parallel u u' -> parallel (subst u s t) (subst u' s t').
 Proof.
-(* elim: (wf_wfr_term u) u' t t' s => {u} u _ IH. *)
-(* case: u IH. *)
-(*  move=> ? ??????. *)
-(*  rewrite /parallel mem_seq1 => /eqP -> /=. *)
-(*  case: ifP => //= ?. *)
-(*  by rewrite mem_seq1. *)
-
-(*  move=> ? IH ????? /inf []?[] -> ? /=. *)
-(*  by apply/parallelE; constructor; apply/parallelE; auto. *)
-
-(*  move=> t t0 IH u' t1 t' s. *)
-(*  case: t IH. *)
-(*   move=> t H ? /flatten_mapP [] ?. *)
-(*   rewrite mem_seq1 => /eqP -> /inf [] ? [] -> ? /=. *)
-(*   by case: ifP => ?; apply/parallelE; constructor; apply/parallelE; auto. *)
-
-(*   Focus 2. *)
-(*   move=> t t'' IH ? /flatten_mapP [] x p /inf []?[]-> ?. *)
-(*   apply/parallelE; repeat constructor; apply/parallelE; auto. *)
-(*   by apply: (IH (App t t'') _ x _ t'). *)
-
-(*   move=> t IH t1t'. *)
-(*   rewrite /parallel mem_cat -/compute_parallel *)
-(*    => /orP [] /flatten_mapP [] x p /inf [] y []-> q; *)
-(*    last by apply/parallelE; repeat constructor; apply/parallelE; auto. *)
-(*   case: t p IH. *)
-(*    move=> t. *)
-(*    rewrite mem_seq1 => /eqP -> IH /=. *)
-(*    case: ifP => [/eqP ->|]. *)
-(*     rewrite /= !cats0 map_id mem_cat; apply/orP; left. *)
-(*     by apply IH. *)
-(*    case: t IH => // t IH _. *)
-(*    rewrite /= subn1 eqSS. *)
-(*    case: ifP => [/eqP <-|]; last first. *)
-(*     rewrite /= ltnS subn_eq0 [t < _]ltnNge pat1 /=. *)
-(*     case cp: (compute_parallel _). *)
-(*      by move/eqP: cp; rewrite parallelt0. *)
-(*     have->: (0 < t.+1 - (s < t)). *)
-(*      by rewrite ltnNge leqn0 subn_eq0 -ltnNge ltnS pat1. *)
-(*     by rewrite !cats0 subn1 subSn // in_cons eqxx. *)
-
-(*    Focus 2. *)
-(*     move=> ? /inf [] x' [] -> ? IH. *)
-(*     rewrite /= mem_cat; apply/orP; left. *)
-(*     apply/flatten_mapP. *)
-(*     apply ex_intro2 with (subst (Abs x') s.+1 t'). *)
-(*     rewrite /= mem_map //. *)
-(*     apply: IH; auto. *)
-(*     by rewrite /wfr_term /= -addnS addSn -addnS ltn_addr // ltnW. *)
-(*     case x'1: (max_var x' < 1). *)
-(*      rewrite -[s.+1]addn1 -subst_subst' //= addn1 map_comp mem_map //. *)
-(*      apply/subst_in/IH; auto. *)
-(*     rewrite /=. *)
-  
 move/parallelE => H /parallelE I; apply/parallelE.
 elim: u u'/ I t t' s H => [?? -> */=|*/=|*/=|];
  try constructor;auto;first by case:ifP.
 move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
-case ms : (max_var s1 + max_var s2 < s).
+case ms : (max_var (App s1 s2) <= s).
  rewrite -[s]addn0 in ms.
   move: (@subst_subst 0 _ _ _ t' ms).
   by rewrite addn0 => <-; constructor; auto.
-move/negP/negP: ms; rewrite -ltnNge ltnS => ms.
- elim: t1 s1 t1s1 IH1 ms1.
- + move=> t1 ? /parallelE.
-  rewrite /parallel mem_seq1 => /eqP -> _.
+move/negP/negP: ms; rewrite -ltnNge => ms.
+elim: t1 s1 t1s1 IH1 ms.
++ move=> t1 ? /parallelE.
+  rewrite /parallel mem_seq1 => /eqP -> _ /=.
+  case: ifP => [/eqP|].
+  rewrite /= subn1 eqxx.
   case: t1 => // t1 _.
   rewrite /= subn1 eqSS /=.
   case t1s: (t1 == s); last first.
