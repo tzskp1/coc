@@ -234,6 +234,12 @@ apply/IH/leq_trans; last apply H.
 by rewrite leq_add2l.
 Qed.
 
+Lemma ltn_wr v n c : v + n < c -> n < c.
+Proof. by rewrite addnC => /ltn_wl. Qed.
+
+Lemma leq_wr v n c : v + n <= c -> n <= c.
+Proof. by rewrite addnC => /leq_wl. Qed.
+
 Lemma addr_eq0 x y : x + y == x = (y == 0).
 Proof.
 case: y; first by rewrite addn0 !eqxx.
@@ -284,6 +290,6 @@ case: z => [|z xy yz]; first by rewrite ltn0.
 exact: (leq_trans xy yz).
 Qed.
 
-Lemma eqnpredn n : n != n.-1 = (n != 0).
-Proof. case: n => //= n. apply/negP => /eqP. by elim: n => // n IH []. Qed.
+Lemma eqnpredn n : n == n.-1 = (n == 0).
+Proof. case: n => //= n. by elim: n => // ++ []. Qed.
 End Generalities.
