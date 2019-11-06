@@ -1,4 +1,6 @@
-Require Import mathcomp.ssreflect.all_ssreflect generalities.
+Require Import generalities.
+From mathcomp Require Import ssreflect.all_ssreflect
+        algebra.all_algebra fingroup.all_fingroup.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -36,19 +38,54 @@ Fixpoint shift t n c :=
   | App t1 t2 => App (shift t1 n c) (shift t2 n c)
   end.
 
-Fixpoint vars t :=
+Fixpoint fvars_i t c :=
   match t with
-  | Var v => [:: v]
-  | Abs t1 => map predn (vars t1)
-  | App t1 t2 => vars t1 ++ vars t2
+  | Var v =>
+    if c <= v then [:: v] else [::]
+  | Abs t1 => (fvars_i t1 c.+1)
+  | App t1 t2 => fvars_i t1 c ++ fvars_i t2 c
   end.
+Definition fvars t := fvars_i t 0.
+
+Definition disjoint t u :=
+  forall x, (x \in fvars t) && (x \in fvars u) = false.
+
+Definition check_disjoint t u :=
+  ~~ has (fun x => x \in fvars t) (fvars u).
+
+Lemma disjointP t u : reflect (disjoint t u) (check_disjoint t u).
+Proof.
+  apply/(iffP idP).
+  * move=> H x; apply/negP => /andP [] H1 H2; move: H.
+    rewrite /check_disjoint /=.
+    elim: (fvars u) H2 => // ?? IH.
+    rewrite !in_cons => /orP [/eqP <-|/IH IH' H]; first by rewrite /= H1.
+    apply/IH'; move: H; apply contra => /= ->.
+    by rewrite orbT.
+  * rewrite /check_disjoint /disjoint => H.
+    elim: (fvars u) H => // a ? IH H.
+    rewrite /= (negPf (IH _)) ?orbF.
+     apply/negP => ta.
+     move: ta (H a) => ->.
+     by rewrite in_cons eqxx.
+    move=> x.
+    apply/negP/negP; move/negP/negP: (H x); apply contra.
+    by rewrite in_cons andb_orr orbC => ->.
+Qed.
+
+Lemma disjoint_sym t u : disjoint t u <-> disjoint u t.
+Proof.
+rewrite /disjoint.
+split => H x; by rewrite /= andbC.
+Qed.
+Arguments fvars / _.
 
 Fixpoint subst t b r :=
   match t with
   | Var v =>
     if v == b then r
-    else Var (v - (v < b))
-  | Abs M => Abs (subst M b.+1 r)
+    else Var (v - (v > b))
+  | Abs M => Abs (subst M b.+1 (shift r 1 0))
   | App M N => App (subst M b r) (subst N b r)
   end.
 
@@ -77,6 +114,253 @@ Fixpoint beta M1 M2 :=
 
 Definition omega := Abs (App (Var 0) (Var 0)).
 Definition K := Abs (Abs (Var 1)).
+
+Definition alpha x y :=
+  exists cs, foldl comp id (map (fun x z => subst z x.1 (Var x.2)) cs) x = y.
+
+Fixpoint perms n :=
+  match n with
+  | 0 => [:: [:: (0, 0)]]
+  | S m =>
+    foldl cat [::]
+    (map (fun f => map f (perms m))
+     (map (fun i => cons (n, i)) (rev (iota 1 n))))
+  end.
+
+Definition transposition (xy: nat * nat) z :=
+  if xy.1 == z then xy.2
+  else if xy.2 == z then xy.1
+  else z.
+
+Definition act_perm xs := foldl comp id (map transposition xs).
+
+Definition perm_seq (xs : seq nat) :=
+  map (fun p => map p xs) (map act_perm (perms (size xs))).
+
+Definition compute_alpha x y :=
+has (fun xs => foldl comp id
+ (map (fun x z => subst z x.1 (Var x.2)) (zip xs (undup (fvars y)))) x == y)
+(perm_seq (undup (fvars x))).
+
+Lemma transposition_id n x : transposition (n, n) x = x.
+Proof.
+  rewrite /transposition /=.
+  by case: ifP => [/eqP ->|->].
+Qed.
+
+Lemma rev_iota n i : rev (iota i n.+1) = n + i :: rev (iota i n).
+Proof.
+  elim : (ltn_wf n) i => {n} n _.
+  case: n => // n IH i.
+  by rewrite -addn1 iota_add rev_cat !IH //= add0n addnS addSn addnC.
+Qed.
+
+Lemma foldl_cat0 T (y : seq T) xs : y ++ foldl cat [::] xs = foldl cat y xs.
+Proof.
+  elim: xs y => [?|?? IH ?]; first by rewrite cats0.
+  by rewrite /= -IH -[in RHS]IH catA.
+Qed.
+
+Lemma foldl_comp0 T (y : T -> T) xs z :
+  (y \o foldl comp id xs) z = foldl comp y xs z.
+Proof.
+  elim: xs y => //= ?? IH ?.
+  by rewrite -IH -[RHS]IH.
+Qed.
+
+Lemma perms_id_in x :
+  map (fun x => (x, x)) (rev (iota 0 x.+1)) \in perms x.
+Proof.
+  elim: x => // x.
+  rewrite !rev_iota /perms -/perms rev_iota /= -foldl_cat0 mem_cat !addn0 => IH.
+  by rewrite addn1 mem_map ?IH // => ?? [].
+Qed.
+
+Lemma act_perm_id xs i :
+  act_perm (map (fun x => (x, x)) xs) i = i.
+Proof.
+  rewrite /act_perm.
+  elim: xs => // ? xs IH.
+  by rewrite /= -foldl_comp0 /= IH transposition_id.
+Qed.
+
+Lemma act_perm_cons_id s xs i :
+  act_perm (cons (s,s) xs) i = act_perm xs i.
+Proof.
+  rewrite /act_perm.
+  elim: xs s i => /= [*|?? IH ??].
+   by rewrite transposition_id.
+  by rewrite -!foldl_comp0 /= transposition_id.
+Qed.
+
+Lemma act_perm_seq_id xs ys :
+  [seq act_perm (map (fun x => (x, x)) xs) i | i <- ys] = ys.
+Proof.
+  elim: ys => //= ? ys IH.
+  by rewrite IH act_perm_id.
+Qed.
+
+Lemma act_perm_seq_cons_id s xs ys :
+  [seq act_perm (cons (s, s) xs) i | i <- ys] = [seq act_perm xs i | i <- ys].
+Proof.
+  elim: ys => //= ? ys IH.
+  by rewrite act_perm_cons_id IH.
+Qed.
+
+(* Lemma perm_seq_id_in x : x \in perm_seq x. *)
+(* Proof. *)
+(*   elim: x => //= a x. *)
+(*   rewrite /perm_seq /= !rev_iota /= -!map_comp *)
+(*   -foldl_cat0 map_cat mem_cat -!map_comp addn1 => IH. *)
+(*   apply/orP; left. *)
+(*   rewrite map_comp map_comp -[X in [seq _ | _ <- X]]map_comp. *)
+(*   have->: [seq H a :: [seq H i | i <- x] *)
+(*         | H <- [seq (act_perm \o cons ((size x).+1, (size x).+1)) i *)
+(*               | i <- perms (size x)]] *)
+(*       = [seq H a :: [seq H i | i <- x] *)
+(*         | H <- [seq act_perm i | i <- perms (size x)]]. *)
+(*    elim: (perms (size x)) => //= ?? H. *)
+(*    repeat congr cons. *)
+(*     by rewrite act_perm_cons_id. *)
+(*     by rewrite act_perm_seq_cons_id. *)
+(*    by rewrite H. *)
+(*   bool_congr. *)
+(*   elim: (perms (size x)) IH => //= ?? IH. *)
+(*   rewrite in_cons => /orP [/eqP H|]. *)
+(*    rewrite -!H. *)
+(*   rewrite /=. *)
+(*    rewrite  *)
+(*   rewrite /comp in IH. *)
+(*   rewrite in_cons. *)
+(*   rewrite map_cons. *)
+(*   rewrite -!map_comp. *)
+   
+(*   rewrite /= *)
+    
+(*    rewrite /=. *)
+(*    rewrite  *)
+(*    rewrite /=. *)
+(*    rewrite /=. *)
+(*    rewrite act_perm_seq_cons_id. *)
+(*    rewrite /= act_perm_seq_cons_id. *)
+(*    rewrite /=. *)
+(*   set H0 := (act_perm \o cons ((size x).+1, (size x).+1)) *)
+(*             (map (fun x => (x, x)) (rev (iota 0 (size x)))). *)
+(*   have H: a = H0 a. *)
+(*    by subst H0; rewrite /= act_perm_cons_id act_perm_id. *)
+(*   rewrite [X in X :: _ \in _]H. *)
+(*   have {H} H: x = [seq H0 i | i <- x]. *)
+(*    subst H0. *)
+(*    by rewrite /= act_perm_seq_cons_id act_perm_seq_id. *)
+(*   rewrite [X in _ :: X \in _]H. *)
+(*   rewrite mem_map. *)
+  
+(*    move=> {IH H}. *)
+(*    subst H0; elim: x => //= ?? H. *)
+(*    rewrite /=. *)
+(*     a = H0 a. *)
+(*   apply/esym. *)
+(*   apply act_perm_seq_id. *)
+(*   rewrite /= act_perm_seq_id. *)
+(*   have H: x = (map^~ x \o act_perm) (map (fun x => (x, x)) (rev (iota 0 (size x).+1))). *)
+(*   rewrite mem_map. *)
+(*   rewrite -map_comp. *)
+(*   elim: (size x) IH. *)
+(*    move=> _. *)
+(*    rewrite /= in_cons /act_perm /= !transposition_id; apply/orP; left. *)
+(*    apply/eqP; congr cons. *)
+(*    elim: x => //= ?? <-. *)
+(*    by rewrite !transposition_id. *)
+(*   move=> ? IH H. *)
+(*   rewrite /= !rev_iota /= -foldl_cat0 map_cat mem_cat -map_comp. *)
+(*   rewrite /=. *)
+(*    act_perm_seq_id. *)
+   
+(*   rewrite /=. *)
+(*   rewrite [X in X \in _]H. *)
+(*   rewrite mem_map ?perms_id_in //= => ??. *)
+(*   rewrite /=. *)
+(*   rewrite mem_map. *)
+(*   by rewrite act_perm_cons. *)
+(*    rewrite rev_iota /= -/size. *)
+(*    elim: x => //= ? x H. *)
+(*    congr cons. *)
+(*    rewrite !act_perm_id rev_cons /=. *)
+(*    rewrite !act_perm_cons /= H.  *)
+(*    congr cons; last first. *)
+(*    move: H. *)
+(*    rewrite rev_iota /=. *)
+(*    rewrite /=. *)
+(*    rewrite -rev_iota. *)
+(*    rewrite [LHS]H //=. *)
+(*    rewrite /=. *)
+(*     rewrite H /=. *)
+(*    rewrite -H. *)
+(*    rewrite /=. *)
+(*    rewrite  *)
+(*    rewrite rev_iota /=. *)
+(*    rewrite /=. *)
+  
+(*   elim: x => // ? x. *)
+(*   rewrite -map_comp. *)
+(*   rewrite /=. *)
+(*   elim: (size x) => /=. *)
+(*    elim: x => // ? x. *)
+(*    rewrite /= !in_cons => /orP []// /eqP H; apply/orP; left; apply/eqP. *)
+(*    by congr cons; rewrite // /act_perm /= transposition_id. *)
+(*   move=> n /= IH. *)
+(*   case: n IH => //. *)
+(*    move=> _. *)
+(*    rewrite /= /act_perm /= /comp /=. *)
+(*    elim: x => // ? x. *)
+(*    rewrite /= !in_cons => /orP []// /eqP H; apply/orP; left; apply/eqP. *)
+(*    by congr cons; rewrite // /act_perm /= !transposition_id. *)
+(*   move=> n IH . *)
+(*   rewrite -addn1 iota_add /= rev_cons rev_cat /=. *)
+(*   rewrite -!map_comp /=. *)
+(*   Search iota. *)
+(*   -map_comp !transposition_id. *)
+(*    rewrite /=. *)
+(*   rewrite rev_cons /=. *)
+(*   rewrite /=. *)
+(*   Search iota. *)
+(*   case: [seq [seq f i | i <- perms _] | f <- _].  *)
+(*    rewrite -!map_comp /=. *)
+(*    rewrite /=. *)
+(*   rewrite foldl_cat. *)
+   
+(*    rewrite /act_perm /= /comp map_comp. transposition_id. *)
+(*   elim: x => // ?? IH. *)
+(*   rewrite /=. *)
+(*   rewrite in_cons. *)
+(*   rewrite /= map_cat mem_cat -!map_comp. *)
+
+(* Lemma alphaP x y : reflect (alpha x y) (compute_alpha x y). *)
+(* Proof. *)
+(*   apply/(iffP idP). *)
+(*    by case/hasP => xs ? /eqP ?; exists (zip xs (undup (fvars y))). *)
+(*   case => xs <-. *)
+(*   apply/hasP. *)
+(*     rewrite /= /compute_alpha /=. *)
+
+
+(* (* Local Lemma compute_alphaxx x : compute_alpha x x. *) *)
+(* (* Proof. *) *)
+  
+(*   elim: x xs. *)
+(*    rewrite /=. *)
+(*    move=> ?. *)
+(*    elim => //. *)
+(*     by rewrite /act_perm /= !transposition_id ltnn subn0 !eqxx. *)
+(*    rewrite /=. *)
+(*    move=> ??. *)
+(*   rewrite /=. *)
+(*   apply H. *)
+(*   rewrite  *)
+(*    rewrite /compute_alpha /=. *)
+(*    Check hasP. *)
+(*   elim: x y => //. *)
+(*    move=> ? y. *)
 
 Definition wfr_term s t := sizeu s < sizeu t.
 
@@ -319,6 +603,39 @@ Proof.
   by rewrite ?eqxx ?orbT.
 Qed.
 
+Local Lemma fvars_i_Sin x i y :
+  y \in fvars_i x i.+1 -> y \in fvars_i x i.
+Proof.
+  elim: x i => /= [??||? IH1 ? IH2 ?]; auto.
+  * by case: ifP => // ?; rewrite ltnW.
+  * rewrite !mem_cat => /orP [/IH1|/IH2] -> //.
+    by rewrite orbT.
+Qed.
+
+Local Lemma fvars_i_inS x i y :
+  y < i -> y \in fvars_i x i -> y \in fvars_i x i.+1.
+Proof.
+  elim: x i => /= [??||? IH1 ? IH2 ??].
+  * case: ifP => //.
+    rewrite leq_eqVlt => /orP [/eqP ->|->] //.
+    rewrite mem_seq1 => + /eqP ny.
+    by rewrite ny ltnn.
+  * move=> ? IH i yi.
+    apply IH.
+    by rewrite ltnS ltnW.
+  * rewrite !mem_cat => /orP [/IH1|/IH2] -> //.
+    by rewrite orbT.
+Qed.
+
+Local Lemma fvars_i_lower y x i :
+  y \in fvars_i x i -> y >= i.
+Proof.
+  elim: x i y => /= [???||? IH1 ? IH2 ??]; auto.
+  * case: ifP => //.
+    by rewrite mem_seq1 => + /eqP ->.
+  * by rewrite mem_cat => /orP []; auto.
+Qed.
+
 Local Hint Resolve inj_abs inj_app pat1 pat3 pat4 pat5 : core.
 
 Lemma subst_in s1 s2 t2 i :
@@ -340,7 +657,7 @@ Proof.
   by elim: (compute_parallel (App t1 t1')).
 Qed.
 
-Lemma parallelE t s : parallel_spec t s <-> parallel t s.
+Lemma parallelP t s : parallel_spec t s <-> parallel t s.
 Proof.
 split.
 * elim => [?? ->|*| |?? s1 *].
@@ -375,7 +692,7 @@ Qed.
 
 Lemma paralleltt t : parallel t t.
 Proof.
-  apply/parallelE.
+  apply/parallelP.
   elim: (wf_wfr_term t) => {t} t _ IHt.
   by case: t IHt => *; constructor; auto.
 Qed.
@@ -406,12 +723,12 @@ elim: t s => [??|? IH ? /inf [] ? [] -> H|t IH1 ? IH2 ?].
   by rewrite mem_map.
 Qed.
 
-Hint Resolve paralleltt (fun t => iffRL (parallelE t t) (paralleltt t))
+Hint Resolve paralleltt (fun t => iffRL (parallelP t t) (paralleltt t))
      parallel_id : core.
 
 Lemma beta_parallel t s : beta t s -> parallel t s.
 Proof.
-move=> H; apply/parallelE.
+move=> H; apply/parallelP.
 elim: (wf_wfr_term t) s H => {t} t _ IHt.
 case: t IHt => // [? ? [] //= ? ?|];
 first by constructor; auto.
@@ -427,106 +744,50 @@ case => [?? IH [] //?? /orP[]// /andP[]/eqP <- /IH ?|t1 t2 ? s /=|??? IH []// ??
   by constructor; auto.
 Qed.
 
-Fixpoint max_var t :=
-  match t with
-  | Var v => v
-  | App s s' => maxn (max_var s) (max_var s')
-  | Abs s => predn (max_var s)
-  end.
-
-Local Lemma cleq a b c : a < b < c -> a < c.
-Proof. by case/andP; apply/ltn_trans. Qed.
-
-(* Lemma subst0 t s i j : j < (max_var t).+1 < i -> subst (shift t 1 j) (i + j) s = t. *)
-(* Proof. *)
-(* elim: t i s j => /= [????|t IH i s j|? IH1 ? IH2 ?? H]. *)
-(* * case: ifP => [+ /andP [] jn|]. *)
-(*    rewrite ltnNge -ltnS jn addn1 => /eqP -> /ltn_wl. *)
-(*    by rewrite ltnn. *)
-(*   case: ifP => _ _ /andP [] => [jn _|+ ni]. *)
-(*   by rewrite addn1 ltn_addr // subn1. *)
-(* * case jti : (j.+1 < (max_var t).+1 < i) => jti'; first by rewrite -addnS IH. *)
-(*   have: max_var t == 0. *)
-(*    move/negP/negP: jti jti'. *)
-(*    rewrite negb_and -!ltnNge !ltnS *)
-(*     => /orP [] a /andP [] => [/(leq_trans a)|]. *)
-(*     by rewrite ltnNge leq_eqVlt ltnpredn orbF eqnpredn. *)
-(*    case: (max_var t) a => //= t'. *)
-(*    rewrite leqNgt. *)
-   
-(* * case t0: (0 < max_var t). *)
-(*    rewrite prednK // -addnS => st. *)
-(* * case it : (i == (max_var t).+1). *)
-(*    case/andP: st => ->. *)
-(*    rewrite /=. *)
-(*   move/negP/negP: t0; rewrite -ltnNge ltnS leqn0 => {IH} /eqP t0. *)
-(*   rewrite t0 /=. *)
-(*   case: j => //. *)
-(*   case: i => // i. *)
-(*   elim: t t0. *)
-(*   + move=> /= t -> //. *)
-(*   + move=> t IH. *)
-(*     rewrite /=. *)
-(*    move=> ?? /eqP -> /=. *)
-(*    case: ifP. *)
-(*     case: ifP => [+ /eqP ni /cleq|]. *)
-(*      move: ni => -> /leq_trans => H /H /ltnW. *)
-(*      by rewrite ltnn. *)
-(*     rewrite /=. *)
-(*    rewrite /=. *)
-(*     rewrite /=. *)
-(*    rewrite /=. *)
-(*    rewrite /=. *)
-(*   rewrite prednK in ni1. *)
-(* * by case: (max_var t) IH => [IH ?|? IH ?]; rewrite IH. *)
-(* * rewrite ?(IH1, IH2, leq_trans H, leq_maxl, leq_maxr). *)
-(* Qed. *)
-
-Lemma leq_subSS n m : n <= m -> n.-1 <= m.-1.
-Proof. by case: n => // n; case: m => // m. Qed.
-
 (* counter example ! *)
-Definition s := 0.
-Definition t := Abs (Var s.+1).
-Definition t' := t.
-Definition u := App (Abs (Var s.+1)) (Var s).
-Definition u' := subst (Var s.+1) 0 (Var s).
-Compute parallel t t' ==> parallel u u' ==> parallel (subst u s t) (subst u' s t').
-(*                   *)
-
-(* Definition s := 3. *)
-(* Definition i := 3. *)
-(* Definition t1 := Var s. *)
-(* Definition t2 := Var s. *)
-(* Definition t := Abs (Var s). *)
-(* Compute subst (subst t1 (s + i).+1 t) i (subst t2 s t) == subst (subst t1 i t2) (s + i) t. *)
-(* Compute max_var t1 <= i. *)
-(* Compute max_var t2 <= s. *)
-
-(* Lemma subst_subst i t1 t2 s t : *)
-(*  max_var t1 <= i -> *)
-(*  subst (subst t1 (s + i).+1 t) i (subst t2 s t) = subst (subst t1 i t2) (s + i) t. *)
-(* Proof. *)
-(*   elim: t1 t2 s t i => /= [n ? s ? i|? H ???? ti|? IH1 ? IH2 ???? H]. *)
-(*   * case: ifP => [/eqP -> /ltn_wr|]; first by rewrite ltnn. *)
-(* Qed. *)
+(* Definition s := 0. *)
+(* Definition t := Abs (Var s.+1). *)
+(* Definition t' := t. *)
+(* Definition u := App (Abs (Var s.+1)) (Var s). *)
+(* Definition u' := subst (Var s.+1) 0 (Var s). *)
+(* Compute parallel t t' ==> parallel u u' ==> parallel (subst u s t) (subst u' s t'). *)
 
 Lemma subst_pres_parallel u u' s t t' :
-  parallel t t' -> parallel u u' -> parallel (subst u s t) (subst u' s t').
+  parallel t t' -> parallel u u' ->
+  parallel (subst u s t) (subst u' s t').
 Proof.
-move=> /parallelE H /parallelE I; apply/parallelE.
-elim: u u'/ I t t' s H => [?? -> */=|||];
+move=> tu /parallelP H /parallelP I; apply/parallelP.
+elim: u u'/ I t t' tu s H => [?? -> */=|||].
+ case: ifP => //.
+ intros x y H H0 t t' tu s H1.
+ case tx : (check_disjoint t x).
+  move/disjointP: tx => tx.
+  by constructor; auto.
+ rewrite /=.
+  
+ case x0 : (0 \notin fvars x).
+ case: t tu H1.
+ move=> n tu /parallelP.
+ rewrite /parallel mem_seq1 => /eqP ->.
+ case: n tu.
+  move/disjoint_sym/disjointP.
+  rewrite /check_disjoint /= orbF.
+  
+  rewrite /fvars /= orbF.
+ apply: H0.
+ rewrite /=.
+ 
  try constructor;eauto;first by case:ifP.
 move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
 elim: t1 s1 t1s1 IH1.
-+ move=> t1 ? /parallelE.
++ move=> t1 ? /parallelP.
   rewrite /parallel mem_seq1 => /eqP -> _ /=.
   case: ifP => [/eqP ->|].
    rewrite /= subn0 eq_sym pat2 ltnNge leqnSn subn0.
    case: t2 t2s2 IH2.
-   + move=> ? /parallelE.
+   + move=> ? /parallelP.
      rewrite /parallel mem_seq1 => /eqP -> _ /=.
-      apply/parallelE.
+      apply/parallelP.
       rewrite /parallel /=.
       
      case: ifP => [/eqP /=|].
@@ -535,13 +796,13 @@ elim: t1 s1 t1s1 IH1.
       rewrite /=.
      case: t H.
    case: t H.
-    move=> ? /parallelE.
+    move=> ? /parallelP.
     rewrite /parallel mem_seq1.
    rewrite /= subn1 eqxx.
-   apply/parallelE.
+   apply/parallelP.
    rewrite /parallel /= mem_cat; apply/orP; left.
    elim: t t' H.
-   + move=> t ? /parallelE.
+   + move=> t ? /parallelP.
      rewrite /parallel mem_seq1 => /eqP ->.
      rewrite /= cats0.
      case: t => //=.
@@ -550,22 +811,22 @@ elim: t1 s1 t1s1 IH1.
   rewrite /= subn1 eqSS /=.
   case t1s: (t1 == s); last first.
    rewrite /= ltnS subSn //.
-   apply/parallelE/beta_parallel.
+   apply/parallelP/beta_parallel.
    by rewrite /= subn1.
   rewrite subst0 //.
-(* apply/parallelE. *)
+(* apply/parallelP. *)
 (* rewrite /parallel /=. *)
   rewrite 
   elim: t H.
    case=> //.
-   move=> /parallelE.
+   move=> /parallelP.
    rewrite /parallel mem_seq1 => /eqP ->.
-  apply/parallelE/parallel_id.
+  apply/parallelP/parallel_id.
   
   rewrite /parallel /=.
    
   elim: t2 t2s2 IH2.
-   move=> ? /parallelE.
+   move=> ? /parallelP.
    rewrite /parallel mem_seq1 => /eqP -> IH2 /=.
    case: ifP => //.
    rewrite /=.
@@ -582,13 +843,13 @@ elim: t1 s1 t1s1 IH1.
    by rewrite subn1 subSn // in_cons eqxx.
   rewrite /=.
   elim: t H.
-  - move=> t /parallelE.
+  - move=> t /parallelP.
     rewrite /parallel mem_seq1 => /eqP ->.
     rewrite /=.
     case: t.
      rewrite /= !cats0 map_id.
      case: t2 t2s2 IH2.
-     move=> ? /parallelE.
+     move=> ? /parallelP.
      rewrite /parallel mem_seq1 => /eqP -> IH2 /=.
      case: ifP => [/eqP |] //.
      rewrite /=.
@@ -597,14 +858,14 @@ elim: t1 s1 t1s1 IH1.
    rewrite 
   rewrite /=.
    apply: ex_intro2; first apply paralleltt.
-   apply/parallelE.
+   apply/parallelP.
 apply/orP; left; apply/flatten_mapP.
    
   rewrite /= leqn0 => /eqP -> /= ?.
-   by apply/parallelE/parallel_id/parallelE; auto.
+   by apply/parallelP/parallel_id/parallelP; auto.
  rewrite /=.
 apply ex_intro2 with (subst s1 s.+1 t).
- by apply/parallelE; auto.
+ by apply/parallelP; auto.
 apply subst_in.
 
 case ms1 : (max_var s1 <= 0).
@@ -615,7 +876,7 @@ case ms1 : (max_var s1 <= 0).
  rewrite /=.
 
  (* case: t2 t2s2 ms2 IH2. *)
- (* + move=> ? /parallelE. *)
+ (* + move=> ? /parallelP. *)
  (*   rewrite /parallel mem_seq1 => /eqP -> /= sn IH2. *)
  (*   case: ifP => [/eqP ->|]. *)
  (*    rewrite /=. *)
@@ -623,12 +884,12 @@ case ms1 : (max_var s1 <= 0).
  (*    rewrite /=. *)
  (*   rewrite /=. *)
  case: t1 t1s1 ms1 IH1.
- + move=> ? /parallelE.
+ + move=> ? /parallelP.
    rewrite /parallel mem_seq1 => /eqP ->.
    rewrite /= leqn0 => /eqP -> /= ?.
-   by apply/parallelE/parallel_id/parallelE; auto.
- + move=> ? /parallelE /inf [] x []-> /parallelE /= ? H' IH1.
-   apply/parallelE.
+   by apply/parallelP/parallel_id/parallelP; auto.
+ + move=> ? /parallelP /inf [] x []-> /parallelP /= ? H' IH1.
+   apply/parallelP.
    rewrite /parallel /=.
    rewrite /=.
    rewrite leqn0.
@@ -638,27 +899,27 @@ case ms1 : (max_var s1 <= 0).
  rewrite /=.
  
 case: t1 t1s1 IH1.
-+ move=> t1 /parallelE.
++ move=> t1 /parallelP.
   rewrite /parallel mem_seq1 => /eqP -> /= IH1.
   case: ifP => [/eqP t1s|]; last first.
    case: ifP => [/eqP -> _|].
-    apply/parallelE.
+    apply/parallelP.
     rewrite subn0 /parallel /= !cats0 mem_cat.
-    by apply/orP; left; rewrite map_id; apply/parallelE; auto.
+    by apply/orP; left; rewrite map_id; apply/parallelP; auto.
    case: t1 IH1 => // t1 _ _.
    rewrite /= subn1 eqSS ltnS => t1s.
-   apply/parallelE.
+   apply/parallelP.
    rewrite t1s /= /parallel /= !cats0 mem_cat subn_eq0 [t1 < _]ltnNge pat1
            lt0n subn_eq0 -ltnNge ltnS pat1 subSn // subn1.
    case t2st: (compute_parallel (subst t2 s t)).
     by move/eqP: t2st; rewrite parallelt0.
    by rewrite in_cons eqxx.
   rewrite t1s /= subn1 eqxx.
-  apply/parallelE; rewrite /parallel /=.
+  apply/parallelP; rewrite /parallel /=.
   case: t2 t2s2 IH2.
    rewrite /=.
   case: t H.
-   move=> t /parallelE.
+   move=> t /parallelP.
    rewrite /parallel mem_seq1 => /eqP ->.
    rewrite /= !cats0.
    case: t; last first.
@@ -666,7 +927,7 @@ case: t1 t1s1 IH1.
    case: t.
     rewrite /= map_id.
     case: t2 t2s2 IH2.
-     move=> ? /parallelE.
+     move=> ? /parallelP.
      rewrite /parallel mem_seq1 => /eqP ->.
      rewrite /=.
      
@@ -674,7 +935,7 @@ case: t1 t1s1 IH1.
    case: t; last first.
     move=> t /=.
     rewrite subn1 /=.
-    apply/parallelE/beta_parallel.
+    apply/parallelP/beta_parallel.
     rewrite /=.
     constructor.
     rewrite /=.
