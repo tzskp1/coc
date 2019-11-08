@@ -525,13 +525,6 @@ Proof.
   by rewrite /= shift_substC'; auto.
 Qed.
 
-Fixpoint height t :=
-  match t with
-  | Abs s => (height s).+1
-  | App t1 t2 => maxn (height t1) (height t2)
-  | Var _ => 0
-  end.
-
 Lemma subst0 t s j k :
 subst (shift t j.+1 k) (j + k) s = shift t j k.
 Proof.
@@ -558,7 +551,7 @@ Proof.
   by rewrite /= IH1 IH2.
 Qed.
 
-Lemma subst_substC t1 t2 t s j :
+Lemma subst_substC j t1 t2 t s :
   subst (subst t1 j (shift t2 j 0)) (s + j) (shift t j 0) = subst (subst t1 (s + j).+1 (shift t j.+1 0)) j (subst (shift t2 j 0) (s + j) (shift t j 0)).
 Proof.
 elim: t1 t2 t s j.
@@ -625,210 +618,15 @@ apply/H0.
 by apply/parallelP/shift_pres_parallel/parallelP.
 
 repeat constructor; auto.
-(* move=> ???? ? IH1 ? IH2 ??? H /=. *)
 move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
-rewrite /=.
-subst (subst t1 0 t2) s t = subst (subst t1 s.+1 (shift t 1 0)) 0 (subst t2 s t).
-apply AppAbs.
-elim: t1 s1 t1s1 IH1.
-+ move=> t1 ? /parallelP.
-  rewrite /parallel mem_seq1 => /eqP -> _ /=.
-    apply/parallelP.
-    rewrite /parallel /=.
-  case: t1.
-   rewrite eqxx /= !cats0 mem_cat; apply/orP; left.
-   rewrite map_id.
-   apply/parallelP.
-   auto.
-  move=> t1 /=.
-  rewrite subn1 eqSS.
-  case: ifP.
-   rewrite /=.
-  rewrite /=.
-   Set Printing All.
-   rewrite 
-   rewrite mem_filter.
-   rewrite -map_comp.
-   rewrite 
-  case: ifP => [/eqP ->|].
-   rewrite /= subn1 eqxx.
-   case: t H => /=.
-   Focus 2.
-   move=> ? /parallelP /inf [] ? [] ->.
-   rewrite /=.
-    move=> ? /parallelP.
-    rewrite /parallel /= mem_seq1 => /eqP ->.
-    apply/parallelP.
-    rewrite /parallel addn1 /= subn1 !cats0 mem_cat.
-   rewrite /= subn0 eq_sym pat2 ltnNge leqnSn subn0.
-   case: t2 t2s2 IH2.
-   + move=> ? /parallelP.
-     rewrite /parallel mem_seq1 => /eqP -> _ /=.
-      apply/parallelP.
-      rewrite /parallel /=.
-      
-     case: ifP => [/eqP /=|].
-     case: t H => //.
-      move=> ?? ?.
-      rewrite /=.
-     case: t H.
-   case: t H.
-    move=> ? /parallelP.
-    rewrite /parallel mem_seq1.
-   rewrite /= subn1 eqxx.
-   apply/parallelP.
-   rewrite /parallel /= mem_cat; apply/orP; left.
-   elim: t t' H.
-   + move=> t ? /parallelP.
-     rewrite /parallel mem_seq1 => /eqP ->.
-     rewrite /= cats0.
-     case: t => //=.
-     case: ifP => //.
-  case: t1 => // t1 _.
-  rewrite /= subn1 eqSS /=.
-  case t1s: (t1 == s); last first.
-   rewrite /= ltnS subSn //.
-   apply/parallelP/beta_parallel.
-   by rewrite /= subn1.
-  rewrite subst0 //.
-(* apply/parallelP. *)
-(* rewrite /parallel /=. *)
-  rewrite 
-  elim: t H.
-   case=> //.
-   move=> /parallelP.
-   rewrite /parallel mem_seq1 => /eqP ->.
-  apply/parallelP/parallel_id.
-  
-  rewrite /parallel /=.
-   
-  elim: t2 t2s2 IH2.
-   move=> ? /parallelP.
-   rewrite /parallel mem_seq1 => /eqP -> IH2 /=.
-   case: ifP => //.
-   rewrite /=.
-  rewrite /=.
-  case: ifP
-   rewrite /=.
-  case: ifP => [/eqP|?] /=; last first.
-   apply/orP; left.
-   rewrite /= subn_eq0 ltnS [t1 < _]ltnNge pat1 /= cats0.
-   case cp: (compute_parallel _).
-    by move/eqP: cp; rewrite parallelt0.
-   have->: (0 < t1.+1 - (s < t1)).
-    by rewrite ltnNge leqn0 subn_eq0 -ltnNge ltnS pat1.
-   by rewrite subn1 subSn // in_cons eqxx.
-  rewrite /=.
-  elim: t H.
-  - move=> t /parallelP.
-    rewrite /parallel mem_seq1 => /eqP ->.
-    rewrite /=.
-    case: t.
-     rewrite /= !cats0 map_id.
-     case: t2 t2s2 IH2.
-     move=> ? /parallelP.
-     rewrite /parallel mem_seq1 => /eqP -> IH2 /=.
-     case: ifP => [/eqP |] //.
-     rewrite /=.
-     rewrite /=.
-     rewrite /=.
-   rewrite 
-  rewrite /=.
-   apply: ex_intro2; first apply paralleltt.
-   apply/parallelP.
-apply/orP; left; apply/flatten_mapP.
-   
-  rewrite /= leqn0 => /eqP -> /= ?.
-   by apply/parallelP/parallel_id/parallelP; auto.
- rewrite /=.
-apply ex_intro2 with (subst s1 s.+1 t).
- by apply/parallelP; auto.
-apply subst_in.
-
-case ms1 : (max_var s1 <= 0).
- case ms2 : (max_var s2 < s).
-  move: (@subst_subst 0 _ _ _ t' ms1 ms2).
-  by rewrite addn0 => <-; constructor; auto.
- move/negP/negP: ms2; rewrite -ltnNge ltnS => ms2.
- rewrite /=.
-
- (* case: t2 t2s2 ms2 IH2. *)
- (* + move=> ? /parallelP. *)
- (*   rewrite /parallel mem_seq1 => /eqP -> /= sn IH2. *)
- (*   case: ifP => [/eqP ->|]. *)
- (*    rewrite /=. *)
-   
- (*    rewrite /=. *)
- (*   rewrite /=. *)
- case: t1 t1s1 ms1 IH1.
- + move=> ? /parallelP.
-   rewrite /parallel mem_seq1 => /eqP ->.
-   rewrite /= leqn0 => /eqP -> /= ?.
-   by apply/parallelP/parallel_id/parallelP; auto.
- + move=> ? /parallelP /inf [] x []-> /parallelP /= ? H' IH1.
-   apply/parallelP.
-   rewrite /parallel /=.
-   rewrite /=.
-   rewrite leqn0.
-   rewrite /=.
-  
- rewrite /=.
- rewrite /=.
- 
-case: t1 t1s1 IH1.
-+ move=> t1 /parallelP.
-  rewrite /parallel mem_seq1 => /eqP -> /= IH1.
-  case: ifP => [/eqP t1s|]; last first.
-   case: ifP => [/eqP -> _|].
-    apply/parallelP.
-    rewrite subn0 /parallel /= !cats0 mem_cat.
-    by apply/orP; left; rewrite map_id; apply/parallelP; auto.
-   case: t1 IH1 => // t1 _ _.
-   rewrite /= subn1 eqSS ltnS => t1s.
-   apply/parallelP.
-   rewrite t1s /= /parallel /= !cats0 mem_cat subn_eq0 [t1 < _]ltnNge pat1
-           lt0n subn_eq0 -ltnNge ltnS pat1 subSn // subn1.
-   case t2st: (compute_parallel (subst t2 s t)).
-    by move/eqP: t2st; rewrite parallelt0.
-   by rewrite in_cons eqxx.
-  rewrite t1s /= subn1 eqxx.
-  apply/parallelP; rewrite /parallel /=.
-  case: t2 t2s2 IH2.
-   rewrite /=.
-  case: t H.
-   move=> t /parallelP.
-   rewrite /parallel mem_seq1 => /eqP ->.
-   rewrite /= !cats0.
-   case: t; last first.
-    rewrite /=.
-   case: t.
-    rewrite /= map_id.
-    case: t2 t2s2 IH2.
-     move=> ? /parallelP.
-     rewrite /parallel mem_seq1 => /eqP ->.
-     rewrite /=.
-     
-   case: ifP => //.
-   case: t; last first.
-    move=> t /=.
-    rewrite subn1 /=.
-    apply/parallelP/beta_parallel.
-    rewrite /=.
-    constructor.
-    rewrite /=.
-   rewrite /=.
-  
-
-rewrite /=.
-rewrite /=.
+move: (subst_substC 0 s1 s2 t' s).
+rewrite !addn0 !shiftt0 => ->.
+constructor; auto.
+rewrite -/subst.
+apply/IH1.
+by apply/parallelP/shift_pres_parallel/parallelP.
 Qed.
 
-Definition head t :=
-  match t with
-  | App (Var _) _ => true
-  | App _ _ => false
-  | _ => true
-  end.
 
 Lemma beta_pres_head t s : head t -> beta t s -> head s.
 Proof. by case: t s => // [t []|[]// ? ? []//[]]. Qed.
