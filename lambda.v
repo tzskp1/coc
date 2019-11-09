@@ -503,27 +503,18 @@ Qed.
 Lemma subst0 t s j k :
 subst (shift t j.+1 k) (j + k) s = shift t j k.
 Proof.
-  elim: t s j k => //.
-   move=> * /=.
-   case: ifP.
-    case: ifP.
-     move=> + /eqP nk.
-     rewrite nk addnC => /ltn_wl.
-     by rewrite ltnn.
-    rewrite addnS -addSn addnC eqn_add2l.
-    move=> + /eqP nk.
-    by rewrite -nk ltnSn.
-   case: ifP.
-    move=> H1 H2.
-    by rewrite ltnNge ltnW ?ltn_addl // subn0.
-   move/negP/negP.
-   rewrite -ltnNge => H ?.
-   by rewrite addnS -addSn addnC ltn_add2l H subn1 addnS addnC.
-  move=> ? H1 ???.
-  by rewrite /= -addnS H1.
-
-  move=> ? IH1 ? IH2 *.
-  by rewrite /= IH1 IH2.
+  elim: t s j k => [|? H1|? IH1 ? IH2] * /=.
+  * case: ifP.
+     case: ifP => [+ /eqP nk|].
+      rewrite nk addnC => /ltn_wl.
+      by rewrite ltnn.
+     rewrite addnS -addSn addnC eqn_add2l => + /eqP nk.
+     by rewrite -nk ltnSn.
+    case: ifP => [*|/negP/negP]; first by rewrite ltnNge ltnW ?ltn_addl // subn0.
+    rewrite -ltnNge => H ?.
+    by rewrite addnS -addSn addnC ltn_add2l H subn1 addnS addnC.
+  * by rewrite -addnS H1.
+  * by rewrite IH1 IH2.
 Qed.
 
 Lemma subst_substC j t1 t2 t s :
