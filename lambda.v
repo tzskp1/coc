@@ -1,6 +1,5 @@
 Require Import generalities.
-From mathcomp Require Import ssreflect.all_ssreflect
-        algebra.all_algebra fingroup.all_fingroup.
+From mathcomp Require Import ssreflect.all_ssreflect.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -77,11 +76,6 @@ Definition wfr_term s t := sizeu s < sizeu t.
 
 Local Lemma sizeu0 t : sizeu t == 0 = false.
 Proof. elim: t => // ? IH *; by rewrite addn_eq0 IH. Qed.
-
-Lemma shift_pres_size t n s : sizeu (shift t n s) = sizeu t.
-Proof.
-  by elim: t n s => //= *; auto.
-Qed.
 
 Local Lemma subpattern x y :
   (forall y : term, wfr_term y x -> Acc (fun s t : term => wfr_term s t) y) -> 

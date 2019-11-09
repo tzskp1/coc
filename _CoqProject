@@ -1,3 +1,4 @@
 -arg "-w -notation-overridden"
 generalities.v
+lambda.v
 -R . coc
