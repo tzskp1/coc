@@ -586,18 +586,14 @@ Lemma subst_pres_parallel u u' s t t' :
   parallel t t' -> parallel u u' -> parallel (subst u s t) (subst u' s t').
 Proof.
 move=> /parallelP H /parallelP I; apply/parallelP.
-elim: u u'/ I t t' s H => [?? -> * /=|||]; first by case: ifP.
-repeat constructor; auto.
-apply/H0.
-by apply/parallelP/shift_pres_parallel/parallelP.
-
-repeat constructor; auto.
-move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
-move: (subst_substC 0 s1 s2 t' s).
-rewrite !addn0 !shiftt0 => ->.
-constructor; auto.
-apply/IH1.
-by apply/parallelP/shift_pres_parallel/parallelP.
+elim: u u'/ I t t' s H => [?? -> * /=|??? H0 *||]; first by case: ifP.
+* by constructor; apply/H0/parallelP/shift_pres_parallel/parallelP.
+* by constructor; auto.
+* move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
+  move: (subst_substC 0 s1 s2 t' s).
+  rewrite !addn0 !shiftt0 => ->.
+  constructor; auto.
+  by apply/IH1/parallelP/shift_pres_parallel/parallelP.
 Qed.
 
 Lemma parallel_betat t s : parallel t s -> betat t s.
