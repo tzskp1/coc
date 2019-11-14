@@ -40,8 +40,7 @@ Fixpoint shift t n c :=
 Fixpoint subst t b r :=
   match t with
   | Var v =>
-    if v == b then r
-    else Var (v - (v > b))
+    if v == b then r else Var (v - (v > b))
   | Abs M => Abs (subst M b.+1 (shift r 1 0))
   | App M N => App (subst M b r) (subst N b r)
   end.
@@ -56,13 +55,11 @@ Fixpoint sizeu M :=
 Fixpoint beta M1 M2 :=
   match M1, M2 with
   | App (Abs M as M11) M12, App M21 M22 =>
-    (beta M11 M21) && (beta M12 M22)
-    || (M11 == M21) && (beta M12 M22)
+    (M11 == M21) && (beta M12 M22)
     || (beta M11 M21) && (M12 == M22)
     || (subst M 0 M12 == M2)
   | App M11 M12, App M21 M22 =>
-    (beta M11 M21) && (beta M12 M22)
-    || (M11 == M21) && (beta M12 M22)
+    (M11 == M21) && (beta M12 M22)
     || (beta M11 M21) && (M12 == M22)
   | Abs M1, Abs M2 => beta M1 M2
   | App (Abs M) N, _ => subst M 0 N == M2
@@ -247,7 +244,8 @@ Proof.
          case: c H1 H => // *; rewrite !orbT.
   + apply: betat_trans.
      apply/(_ : betat _ (App p1 p2'))/beta_betat.
-     by rewrite /= !eqxx !H !orbT; case: p1 H1 => // *; rewrite !orbT.
+     rewrite /= H eqxx.
+     by case: p1 H1.
     by apply/(IH 0).
   + apply: betat_trans.
      by apply/(_ : betat _ (App p1' c))/(IH n.+1).
@@ -413,10 +411,8 @@ case => [?? IH [] //?? /orP[]// /andP[]/eqP <- /IH ?|t1 t2 ? s /=|??? IH []// ??
    move/eqP: t12s => <- ?.
    by auto.
   case: s t12s => []//[]// ?? _ /orP []//.
-  case/orP => [/orP []|] /andP [] => [??|/eqP <- ?|? /eqP <-];
-  by auto.
-* case/orP => [/orP []|] /andP [] => [??|/eqP <- ?|? /eqP <-];
-  by auto.
+  case/orP => /andP [] => [/eqP <- ?|? /eqP <-]; by auto.
+* case/orP => /andP [] => [/eqP <- ?|? /eqP <-]; by auto.
 Qed.
 
 Lemma shift_substC s1 s2 s i j :
