@@ -507,6 +507,22 @@ Proof.
   * by rewrite IH1 IH2.
 Qed.
 
+Lemma subst0' z w i : subst (shift z 1 i) i w = z.
+Proof.
+elim: z w i => /= [n ? i|? IHt ??|? IHt1 ? IHt2 ??]; last first.
+* by rewrite IHt1 IHt2.
+* by rewrite IHt.
+* case ni: (n < i).
+  case: ifP => [/eqP ni'|].
+   move: ni' ni => ->.
+   by rewrite ltnn.
+  by rewrite ltnNge ltnW // subn0.
+  case: ifP => [/eqP ni'|].
+   move: ni' ni => <-.
+   by rewrite addn1 ltnS leqnn.
+  by rewrite addn1 ltnS leqNgt ni subn1.
+Qed.
+
 Lemma subst_substC j t1 t2 t s :
   subst (subst t1 j (shift t2 j 0)) (s + j) (shift t j 0)
 = subst (subst t1 (s + j).+1 (shift t j.+1 0))
