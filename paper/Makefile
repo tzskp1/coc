@@ -4,7 +4,7 @@ all: 321701183.pdf
 	cp $^ $@ 
 
 %.pdf: %.tex bib.bib
-	lualatex $<
-	pbibtex $<
-	lualatex $<
-	lualatex $<
+	lualatex $*
+	pbibtex $*
+	lualatex $*
+	lualatex $*

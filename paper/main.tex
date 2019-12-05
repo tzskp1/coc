@@ -141,7 +141,7 @@ BNFでの定義と同値なものが以下である.
  ただし, ここで$M[N/v]$とは代入と呼ばれる操作を表している. 代入とはラムダ項$M \in \Lambda$の中に表れる$v \in V$をすべてラムダ項$N \in \Lambda$に置きかえるということである.
 \end{defn}
 
-ここで述べた代入という操作を正確に述べるために, de brujin indexとよばれるものを導入する.
+ここで述べた代入という操作を正確に記述するために, de brujin indexとよばれるものを導入する.
 集合$V$は変数の集合を表しており, 我々の状況では$V := \mathbb{N}$として問題ないため, 以下ではそのようにする.
 
 \begin{defn}[de brujin index]
@@ -168,11 +168,15 @@ BNFでの定義と同値なものが以下である.
 \]
 \end{defn}
 
-\begin{ex}
- TODO : de brujin indexの例
+\begin{ex}[K コンビネータ]
+ $V$を文字列の集合とする. このとき $x, y, z, w \in V$に対して以下の様な例が考えられる.
+ \[
+ (\lambda x. \lambda y. x) z w \rightarrow_{\beta} z
+ \]
+ これをde brujin indexで表わすと, 
 \end{ex}
 
-また, 計算規則として等価性の判定のために課せられている性質として合流性がある.
+また, 等価性の判定のために課せられている性質として合流性がある.
 
 \begin{defn}
  TODO : parallel reduction
