@@ -24,6 +24,7 @@
 \newtheorem{defn}{定義}
 \newtheorem{thm}{定理}
 \newtheorem{lem}{補題}
+\newtheorem{cor}{系}
 \newtheorem{ex}{例}
 
 \title{_}
@@ -144,6 +145,14 @@ BNFでの定義と同値なものが以下である.
 ここで述べた代入という操作を正確に記述するために, de brujin indexとよばれるものを導入する.
 集合$V$は変数の集合を表しており, 我々の状況では$V := \mathbb{N}$として問題ないため, 以下ではそのようにする.
 
+また, ラムダ項の定義を修正し以下のようにする.
+
+\begin{defn}
+\begin{grammar}
+ <$t$> := <v> \alt \lambda. <t> \alt <t> <t>
+\end{grammar}
+\end{defn}
+
 \begin{defn}[de brujin index]
  写像 $s \colon \Lambda \times \mathbb{N} \times \mathbb{N} \rightarrow \Lambda$を任意のラムダ項$M$, 自然数$n, c$に対して, 以下のように帰納的に定義する.
  
@@ -151,7 +160,7 @@ BNFでの定義と同値なものが以下である.
   s (M, n, c) := \begin{cases}
     M & (M \in V \text{かつ} M < c) \\
     M + n & (M \in V \text{かつ} M \geq c) \\
-    \lambda v. s (N, n, c + 1) & (M = \lambda v. N) \\
+    \lambda. s (N, n, c + 1) & (M = \lambda. N) \\
     s (N_1, n, c) s (N_2, n, c) & (M = N_1 N_2)
   \end{cases}
 \]
@@ -162,29 +171,100 @@ BNFでの定義と同値なものが以下である.
     N & (M = v) \\
     M - 1 & (M \in V \text{かつ} v < M) \\
     M & (M \in V \text{かつ} v \geq M) \\
-    \lambda v. M' [s (N, 1, 0)/(v + 1)] & (M = \lambda v. M') \\
+    \lambda. M' [s (N, 1, 0)/(v + 1)] & (M = \lambda. M') \\
     N_1[N/v] N_2[N/v] & (M = N_1 N_2)
   \end{cases}
 \]
 \end{defn}
 
-\begin{ex}[K コンビネータ]
- $V$を文字列の集合とする. このとき $x, y, z, w \in V$に対して以下の様な例が考えられる.
- \[
- (\lambda x. \lambda y. x) z w \rightarrow_{\beta} z
- \]
- これをde brujin indexで表わすと, 
-\end{ex}
-
-また, 等価性の判定のために課せられている性質として合流性がある.
+$\beta$簡約の定義も修正する.
 
 \begin{defn}
- TODO : parallel reduction
+ $\beta$簡約$\rightarrow_{\beta}$とは$\Lambda$の上の$2$項関係であり, 以下の条件を満たす最小の関係のことをいう.
+ \begin{itemize}
+  \item 任意の$M, N \in \Lambda$について, $(\lambda. M) N \rightarrow_\beta M[N/0]$
+  \item 任意の$N_1, N_2 \in \Lambda$について, $N_1 \rightarrow_\beta N_2$ならば$(\lambda. N_1) \rightarrow_\beta (\lambda. N_2)$
+  \item 任意の$M, N_1, N_2 \in \Lambda$について, $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
+ \end{itemize}
 \end{defn}
 
-\begin{thm}
+\begin{ex}[$K$ コンビネータ]
+ $V$を文字列の集合とする. このとき $x, y \in V$, $z, w \in \Lambda$に対して以下の様な例が考えられる.
+ \[
+ (\lambda x. \lambda y. x) z w \rightarrow_{\beta} (\lambda y. z) w \rightarrow_{\beta} z
+ \]
+ これをde brujin indexで表わすと, $z, w \in \Lambda$に対して以下のようになる.
+ \[
+ (\lambda. \lambda. 1) z w \rightarrow_{\beta} (\lambda. 1)[z/0] w = (\lambda. 1[s (z, 1, 0)/1]) w \rightarrow_{\beta} 1[s (z, 1, 0)/1][w/0] = s (z, 1, 0)[w/0] = s
+ \]
+ここでの$\lambda. \lambda. 1$を$K$コンビネータという.
+\end{ex}
+
+ラムダ計算の基本的な性質として合流性がある.
+
+\begin{thm}[Church Rosserの定理]\label{CR}
  $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
 \end{thm}
+
+以下では定理\ref{CR}を示すために必要な準備を行う. まずparallel reductionと呼ばれる2項関係を定義する.
+
+\begin{defn}
+ parallel reduction$\rightarrow_{p}$とは$\Lambda$の上の$2$項関係であり, 以下の条件を満たす最小の関係のことをいう.
+ \begin{itemize}
+  \item 任意の$x, y \in V$について, $x = y$ならば$x \rightarrow_{p} y$
+  \item 任意の$t, s \in \Lambda$について, $t \rightarrow_{p} s$ならば$\lambda. t \rightarrow_{p} \lambda. s$
+  \item 任意の$t_1, t_2, s_1, s_2 \in \Lambda$について,
+        $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$t_1 t_2 \rightarrow_{p} s_1 s_2$
+  \item 任意の$t_1, t_2, s_1, s_2 \in \Lambda$について,
+        $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$(\lambda. t_1) t_2 \rightarrow_{p} s_1[s_2/0]$
+ \end{itemize}
+\end{defn}
+
+\begin{lem}
+ 代入はparallel reduction$\rightarrow_{p}$を保つ. すなわち$t_1, t_2, s_1, s_2 \in \Lambda$, $u \in V$に対して, $t_1 \rightarrow_{p} t_2$かつ$s_1 \rightarrow_{p} s_2$ならば$s_1[t_1/u] \rightarrow_{p} s_2[t_2/u]$.
+\end{lem}
+
+\begin{proof}
+ $\rightarrow_{p}$の定義による帰納法を用いる. 定義の最後の条件のみが非自明なので, その場合のみを示す.
+ すなわち, $p, q, t_1, t_2, s_1, s_2 \in \Lambda$に対して,
+$p \rightarrow_{p} q$, $t_1 \rightarrow_{p} s_1$かつ $t_2 \rightarrow_{p} s_2$ならば
+  $((\lambda. t_1) t_2) [p / s] \rightarrow_{p} (s_1 [s_2 / 0] [q / s])$.
+ 
+% move=> /parallelP H /parallelP I; apply/parallelP.
+% elim: u u'/ I t t' s H => [?? -> * /=|??? H0 *||]; first by case: ifP.
+% * by constructor; apply/H0/parallelP/shift_pres_parallel/parallelP.
+% * by constructor; auto.
+% * move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
+%   move: (subst_substC 0 s1 s2 t' s).
+%   rewrite !addn0 !shiftt0 => ->.
+%   constructor; auto.
+%   by apply/IH1/parallelP/shift_pres_parallel/parallelP.
+\end{proof}
+
+parallel reductionと$\beta$簡約の関係は以下のようになる.
+
+\begin{lem}
+ \[
+ \rightarrow_{\beta} \subset \rightarrow_{p} \subset \overset{*}{\rightarrow_{\beta}}
+ \]
+\end{lem}
+
+\begin{proof}
+ 前半は項のサイズによる帰納法を用いて示される. 後半は$\rightarrow_{p}$の定義による帰納法を用いて示される.
+\end{proof}
+
+\begin{cor}
+ \[
+\overset{*}{\rightarrow_{p}} = \overset{*}{\rightarrow_{\beta}}
+ \]
+\end{cor}
+
+上記の系より定理\ref{CR}の言い換えが得られる.
+
+\begin{thm}[Church Rosserの定理]\label{CR'}
+ $\rightarrow_{p}$は合流性を持つ.
+\end{thm}
+
 \begin{proof}
  証明は\cite{高橋正子1991計算論}の71ページに従った.
 任意の$M \in P$に対して, ある$N_M \in P$が存在し, 任意の$L \in P$に対して, 
