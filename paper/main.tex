@@ -24,6 +24,7 @@
 \newtheorem{defn}{定義}
 \newtheorem{thm}{定理}
 \newtheorem{lem}{補題}
+\newtheorem{rem}{注意}
 \newtheorem{cor}{系}
 \newtheorem{ex}{例}
 
@@ -102,6 +103,11 @@ $\rightarrow$がwell foundedであるとは, 以下の条件が同値である�
  
  十分性を背理法により示す. 任意の$x \xrightarrow{+} y$について$P(y)$ならば$P(x)$かつ, ある$z \in A$が存在して$P(z)$が成立しないと仮定する. 前半の主張の対偶をとると, 任意の$x \in A$に対して$P(x)$が成立しないならば, ある$y \in A$で$x \xrightarrow{+} y$かつ$P(y)$が成立しないものが存在することになる. この主張を用いて$z$から始まる無限列を構成することができる.
 \end{proof}
+
+\begin{rem}
+帰納的に定義された(有限)木構造に対して, 自然な順序が存在する.
+このときその順序に対して, well foundnessを常に適用できるが, これを断りなく帰納法と呼ぶ.
+\end{rem}
 
 \section{型理論とは}
 % 仰々しい?
@@ -195,7 +201,7 @@ $\beta$簡約の定義も修正する.
  \]
  これをde brujin indexで表わすと, $z, w \in \Lambda$に対して以下のようになる.
  \[
- (\lambda. \lambda. 1) z w \rightarrow_{\beta} (\lambda. 1)[z/0] w = (\lambda. 1[s (z, 1, 0)/1]) w \rightarrow_{\beta} 1[s (z, 1, 0)/1][w/0] = s (z, 1, 0)[w/0] = s
+ (\lambda. \lambda. 1) z w \rightarrow_{\beta} (\lambda. 1)[z/0] w = (\lambda. 1[s (z, 1, 0)/1]) w \rightarrow_{\beta} 1[s (z, 1, 0)/1][w/0] = s (z, 1, 0)[w/0] = z
  \]
 ここでの$\lambda. \lambda. 1$を$K$コンビネータという.
 \end{ex}
@@ -210,14 +216,14 @@ $\beta$簡約の定義も修正する.
 
 \begin{defn}
  parallel reduction$\rightarrow_{p}$とは$\Lambda$の上の$2$項関係であり, 以下の条件を満たす最小の関係のことをいう.
- \begin{itemize}
-  \item 任意の$x, y \in V$について, $x = y$ならば$x \rightarrow_{p} y$
-  \item 任意の$t, s \in \Lambda$について, $t \rightarrow_{p} s$ならば$\lambda. t \rightarrow_{p} \lambda. s$
-  \item 任意の$t_1, t_2, s_1, s_2 \in \Lambda$について,
+ \begin{description}
+  \item[P1] 任意の$x, y \in V$について, $x = y$ならば$x \rightarrow_{p} y$
+  \item[P2] 任意の$t, s \in \Lambda$について, $t \rightarrow_{p} s$ならば$\lambda. t \rightarrow_{p} \lambda. s$
+  \item[P3] 任意の$t_1, t_2, s_1, s_2 \in \Lambda$について,
         $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$t_1 t_2 \rightarrow_{p} s_1 s_2$
-  \item 任意の$t_1, t_2, s_1, s_2 \in \Lambda$について,
+  \item[P4] 任意の$t_1, t_2, s_1, s_2 \in \Lambda$について,
         $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$(\lambda. t_1) t_2 \rightarrow_{p} s_1[s_2/0]$
- \end{itemize}
+ \end{description}
 \end{defn}
 
 \begin{lem}
@@ -225,28 +231,22 @@ $\beta$簡約の定義も修正する.
 \end{lem}
 
 \begin{proof}
- $\rightarrow_{p}$の定義による帰納法を用いる. 定義の最後の条件のみが非自明なので, その場合のみを示す.
- すなわち, $p, q, t_1, t_2, s_1, s_2 \in \Lambda$に対して,
-$p \rightarrow_{p} q$, $t_1 \rightarrow_{p} s_1$かつ $t_2 \rightarrow_{p} s_2$ならば
-  $((\lambda. t_1) t_2) [p / s] \rightarrow_{p} (s_1 [s_2 / 0] [q / s])$.
+ $\rightarrow_{p}$の定義による帰納法を用いる. P4%TODO: fix
+のみが非自明なので, その場合のみを示す.
+ すなわち$p, q, t_1, t_2, s_1, s_2 \in \Lambda$に対して,
+$p \rightarrow_{p} q$, $t_1 \rightarrow_{p} s_1$かつ $t_2 \rightarrow_{p} s_2$ならば$((\lambda. t_1) t_2) [p / s] \rightarrow_{p} (s_1 [s_2 / 0] [q / s])$を示す.
  
-% move=> /parallelP H /parallelP I; apply/parallelP.
-% elim: u u'/ I t t' s H => [?? -> * /=|??? H0 *||]; first by case: ifP.
-% * by constructor; apply/H0/parallelP/shift_pres_parallel/parallelP.
-% * by constructor; auto.
-% * move=> t1 t2 s1 s2 t1s1 IH1 t2s2 IH2 t t' s H.
-%   move: (subst_substC 0 s1 s2 t' s).
-%   rewrite !addn0 !shiftt0 => ->.
-%   constructor; auto.
-%   by apply/IH1/parallelP/shift_pres_parallel/parallelP.
+ 代入を交換すると, 以下のような等式が成立する
+ \[
+ (s_1 [s_2 / 0]) [q / s] = (s_1 [s(q, 1, 0) / (s + 1)]) [s_2 [q / s] / 0]
+ \]
+ ことに注意する. 上の等式により, $t_1$に対しての帰納法の仮定を適用することができて, 主張が成立する.
 \end{proof}
 
 parallel reductionと$\beta$簡約の関係は以下のようになる.
 
 \begin{lem}
- \[
- \rightarrow_{\beta} \subset \rightarrow_{p} \subset \overset{*}{\rightarrow_{\beta}}
- \]
+ $\rightarrow_{\beta} \subset \rightarrow_{p} \subset \overset{*}{\rightarrow_{\beta}}$
 \end{lem}
 
 \begin{proof}
@@ -254,12 +254,10 @@ parallel reductionと$\beta$簡約の関係は以下のようになる.
 \end{proof}
 
 \begin{cor}
- \[
-\overset{*}{\rightarrow_{p}} = \overset{*}{\rightarrow_{\beta}}
- \]
+ $\overset{*}{\rightarrow_{p}} = \overset{*}{\rightarrow_{\beta}}$
 \end{cor}
 
-上記の系より定理\ref{CR}の言い換えが得られる.
+上記の系と推移反射閉包を取る操作が合流性を保つことに注意すると, 定理\ref{CR}の言い換えが得られる.
 
 \begin{thm}[Church Rosserの定理]\label{CR'}
  $\rightarrow_{p}$は合流性を持つ.
@@ -267,14 +265,13 @@ parallel reductionと$\beta$簡約の関係は以下のようになる.
 
 \begin{proof}
  証明は\cite{高橋正子1991計算論}の71ページに従った.
-任意の$M \in P$に対して, ある$N_M \in P$が存在し, 任意の$L \in P$に対して, 
-$M \overset{*}{\rightarrow}_\beta L$ならば$L \overset{*}{\rightarrow}_\beta N_M$という主張を証明する.
-ここで, $\rightarrow_\beta$の推移反射閉包$\overset{*}{\rightarrow}_\beta$に関して議論しても一般性を失わないことに注意する.
-また, 証明は$P$に対する帰納法を用いる.
+任意の$M \in \Lambda$に対して, ある$N_M \in \Lambda$が存在し, 任意の$L \in \Lambda$に対して, $M \rightarrow_p L$ならば$L \rightarrow_p N_M$という主張を証明する.
+また, $\rightarrow_{p}$の定義による帰納法を用いる.
 
-$M \in P$を固定する.
+$M \in \Lambda$を固定する.
 
-$M \in V$の場合, $N_M := M$とすれば, 定義より直ちに従う.
+$M \in V$の場合, $N_M := M$とすれば, 任意の$L \in \Lambda$に対して, P1でのみ$M \rightarrow_p L$が与えられるため
+定義より直ちに従う.
 
 $M = \lambda v \colon T_M . M_0$となる$v \in V$, $M_0, T_M \in P$が存在する場合は, $N_M := \lambda v \colon N_{T_M} . N_{M_0}$とするとよい.
 任意の$L \in P$に対して, $M \overset{*}{\rightarrow}_\beta L$と仮定する.
