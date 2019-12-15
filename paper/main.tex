@@ -3,20 +3,6 @@
 \usepackage{bcprules}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{tikz}
-\usepackage{syntax}
-
-\makeatletter
-\def\gr@implitem#1<#2> #3 {%
-   \sbox\z@{\hskip\labelsep\grammarlabel{#2}{#3}}%
-   \strut\@@par%
-   \vskip-\parskip%
-   \vskip-\baselineskip%
-   \hrule\@height\z@\@depth\z@\relax%
-   \item[\unhbox\z@]%
-   \catcode`\<\active%
-}
-\makeatother
-
 \usetikzlibrary{matrix, positioning}
 \begin{document}
 
@@ -118,9 +104,9 @@ $\rightarrow$がwell foundedであるとは, 以下の条件が同値である�
 
 \begin{defn}
  ラムダ項$t$とは, 以下のBNFで定義される木構造を指す. $v$は可算濃度の集合$V$の元を意味している.
-\begin{grammar}
- <$t$> := <v> \alt \lambda <v>. <t> \alt <t> <t>
-\end{grammar}
+ \[
+ t := v | \lambda v. t | t t
+ \]
 \end{defn}
 
 BNFでの定義と同値なものが以下である.
@@ -154,9 +140,9 @@ BNFでの定義と同値なものが以下である.
 また, ラムダ項の定義を修正し以下のようにする.
 
 \begin{defn}
-\begin{grammar}
- <$t$> := <v> \alt \lambda. <t> \alt <t> <t>
-\end{grammar}
+ \[
+ t := v | \lambda. t | t t
+ \]
 \end{defn}
 
 \begin{defn}[de brujin index]
@@ -226,7 +212,7 @@ $\beta$簡約の定義も修正する.
  \end{description}
 \end{defn}
 
-\begin{lem}
+\begin{lem}\label{spp}
  代入はparallel reduction$\rightarrow_{p}$を保つ. すなわち$t_1, t_2, s_1, s_2 \in \Lambda$, $u \in V$に対して, $t_1 \rightarrow_{p} t_2$かつ$s_1 \rightarrow_{p} s_2$ならば$s_1[t_1/u] \rightarrow_{p} s_2[t_2/u]$.
 \end{lem}
 
@@ -266,30 +252,24 @@ parallel reductionと$\beta$簡約の関係は以下のようになる.
 \begin{proof}
  証明は\cite{高橋正子1991計算論}の71ページに従った.
 任意の$M \in \Lambda$に対して, ある$N_M \in \Lambda$が存在し, 任意の$L \in \Lambda$に対して, $M \rightarrow_p L$ならば$L \rightarrow_p N_M$という主張を証明する.
-また, $\rightarrow_{p}$の定義による帰納法を用いる.
 
-$M \in \Lambda$を固定する.
+$M \in \Lambda$を固定する. この$M$に対する帰納法を用いて主張を示す.
 
-$M \in V$の場合, $N_M := M$とすれば, 任意の$L \in \Lambda$に対して, P1でのみ$M \rightarrow_p L$が与えられるため
-定義より直ちに従う.
+$M \in V$の場合, $N_M := M$とすれば, 任意の$L \in \Lambda$に対して, P1でのみ$M \rightarrow_p L$が与えられるため, このとき$L = M$. すなわち, $L \rightarrow_p N_M$.
 
-$M = \lambda v \colon T_M . M_0$となる$v \in V$, $M_0, T_M \in P$が存在する場合は, $N_M := \lambda v \colon N_{T_M} . N_{M_0}$とするとよい.
-任意の$L \in P$に対して, $M \overset{*}{\rightarrow}_\beta L$と仮定する.
-このとき, ある$L_0, T_L \in P$が存在して, $L = \lambda v \colon T_L . L_0$, $M_0 \overset{*}{\rightarrow}_\beta L_0$かつ$T_M \overset{*}{\rightarrow}_\beta T_L$となる.
-なぜならば, $M \overset{*}{\rightarrow}_\beta L$となるときには, そのような場合しかありえないからである.
-すると, $\rightarrow_{\beta}$の定義より, $L \overset{*}{\rightarrow}_\beta N_M$となることがわかる.
+$M = \lambda. M_0$となる$M_0 \in \Lambda$が存在する場合は, $N_M := \lambda. N_{M_0}$とするとよい.
+実際, 任意の$L \in \Lambda$に対して, $M \rightarrow_p L$と仮定する.
+このとき, ある$L_0 \in \Lambda$が存在して, $L = \lambda. L_0$, $M_0 \rightarrow_p L_0$となる.
+なぜならば, $M \rightarrow_p L$となるときには, P2で$M \rightarrow_p L$が構成されることしか有り得ないためである.
+すると帰納法の仮定より$L_0 \rightarrow_p N_{M_0}$, 再びP2により$L \rightarrow_p N_M$.
 
-$M = \Pi v \colon T_M . M_0$となる$v \in V$, $M_0, T_M \in P$が存在する場合, 
-$M = M_0 M_1$となる$M_0, M_1 \in P$が存在するが, $M_0 = \lambda v \colon T_0 . M_3$あるいは$M_0 = \Pi v \colon T_0 . M_3$となるような$v \in V$, $T_0, M_3 \in P$が存在しない場合も先程と同様である.
-
-$M = (\lambda v : T_M . M_0) M_1$となる$v \in V$, $T_M, M_0, M_1 \in P$が存在する場合, $N_M := N_{M_1}[N_{M_0}/v]$とする.
-任意の$L \in P$に対して, $M \overset{*}{\rightarrow}_\beta L$と仮定する.
-このとき, ある$L_0, L_1, T_L \in P$が存在して, $L = (\lambda v \colon T_L . L_0) L_1$, $M_i \overset{*}{\rightarrow}_\beta L_i (i = 0, 1)$かつ$T_M \overset{*}{\rightarrow}_\beta T_L$となるか,
-ある$L_0, L_1 \in P$が存在して, $L = L_0[L_1/v]$かつ$M_i \overset{*}{\rightarrow}_\beta L_i (i = 0, 1)$となるかのいずれかである.
-前者の場合は$\rightarrow_{\beta}$の定義より$L \overset{*}{\rightarrow}_\beta N_M$となることがわかる.
-後者の場合は, 代入操作が$\rightarrow_{\beta}$を保つことに注意すればいえる.
-
-$M = (\Pi v : T_M . M_0) M_1$となる$v \in V$, $T_M, M_0, M_1 \in P$が存在する場合も同様である.
+$M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N_M := N_{M_0}[N_{M_1}/0]$とするとよい. 実際, 任意の$L \in \Lambda$に対して, $M \rightarrow_p L$と仮定する. このとき, $M \rightarrow_p L$の与えられ方はP3あるいはP4のいずれかとなる.
+ 
+ P3のとき$L = (\lambda. L_0) L_1$となる$L_0, L_1 \in \Lambda$が存在し, $M_0 \rightarrow_p L_0$かつ$M_1 \rightarrow_p L_1$でなければならない. 帰納法の仮定により$L_0 \rightarrow_p N_{M_0}$かつ$L_1 \rightarrow_p N_{M_1}$となっているため, P4により$(\lambda. L_0) L_1 \rightarrow_p N_{M_0} [N_{M_1}/0]$が得られる.
+ 
+ P4のとき$L = L_0 [L_1/0]$となる$L_0, L_1 \in \Lambda$が存在し, $M_0 \rightarrow_p L_0$かつ$M_1 \rightarrow_p L_1$でなければならない. 帰納法の仮定により$L_0 \rightarrow_p N_{M_0}$かつ$L_1 \rightarrow_p N_{M_1}$となっているため, 補題\ref{spp}より$L_0 [L_1/0] \rightarrow_p N_{M_0} [N_{M_1}/0]$が得られる.
+ 
+最後に$M = M_0 M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N_M := N_{M_0} N_{M_1}$とするとよい. これも自明である.
 \end{proof}
 
 % 代入をどうするか？ (de brujin index)
