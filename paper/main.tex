@@ -323,9 +323,63 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \]
 \end{defn}
 
-TODO
+  % Inductive wf : env -> Prop :=
+  %   | wf_nil : wf nil
+  %   | wf_var : forall e T s, typ e T (Srt s) -> wf (T :: e)
+  % with typ : env -> term -> term -> Prop :=
+  %   | type_prop :
+  %       forall e,
+  %       wf e ->
+  %       typ e (Srt prop) (Srt kind)
+  %   | type_var :
+  %       forall e v t,
+  %       wf e ->
+  %       item_lift t e v ->
+  %       typ e (Ref v) t
+  %   | type_abs :
+  %       forall e T M U s1 s2,
+  %       typ e T (Srt s1) ->
+  %       typ (T :: e) U (Srt s2) ->
+  %       typ (T :: e) M U ->
+  %       typ e (Abs T M) (Prod T U)
+  %   | type_app :
+  %       forall e u v V Ur,
+  %       typ e v V ->
+  %       typ e u (Prod V Ur) ->
+  %       typ e (App u v) (subst v Ur)
+  %   | type_prod :
+  %       forall e T U s1 s2,
+  %       typ e T (Srt s1) ->
+  %       typ (T :: e) U (Srt s2) ->
+  %       typ e (Prod T U) (Srt s2)
+  %   | type_conv :
+  %       forall e t U V s,
+  %       typ e t U ->
+  %       conv U V ->
+  %       typ e V (Srt s) ->
+  %       typ e t V.
 
-型づけ規則とよばれる自然演繹のシステムが存在し, それも含めての計算体系としてCoCは定義される. 習慣に従ってここでは文脈$\Gamma$を用いた記法を用いている.
+% TODO
+
+型づけ規則とよばれる自然演繹のシステムが存在し, それも含めての計算体系としてCoCは定義される.
+
+\begin{defn}
+ 文脈$\Gamma$とは, 以下のBNFで定義される木である. $p$はpseudotermを意味する.
+ \[
+ \Gamma := \Gamma, p : p |
+ \]
+ ただし, ここで述べている$p : p$とは型づけと呼ばれ, 型づけ規則とよばれるいくつかの公理から生成される木が存在することを意味している. 
+ 型づけ規則とは, 以下のように定義される.
+ 
+ pseudoterm $p, q \in P$が文脈$\Gamma$のもとで, $p : q$であるとは以下のいずれかの場合である.
+ \begin{description}
+  \item[Ax] $p = \star, q = \square$
+  \item[Var] $p \in \mathbb{N}$かつある文脈$\Gamma'$が存在して$\Gamma = \Gamma', p : q$であり$\Gamma'$のもとで, $q : \star$であるか$q : \square$となる.
+             さらに, 
+ \end{description}
+\end{defn}
+
+% 習慣に従ってここでは文脈$\Gamma$を用いた記法を用いている.
 
 \begin{defn}
  CoCにおける型づけ規則は以下のものからなる.
