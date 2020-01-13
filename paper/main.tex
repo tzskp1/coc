@@ -99,7 +99,7 @@ $\rightarrow$がwell foundedであるとは, 以下の条件が同値である�
 % 仰々しい?
 % 1
 
-\section{ラムダ計算}
+\section{ラムダ計算}\label{lambda}
 この節ではCoCの基礎となる(型なし)ラムダ計算のいくつかの事実を述べる.
 
 \begin{defn}
@@ -322,6 +322,12 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \]
 \end{defn}
 
+\ref{lambda}章とまったく同様の議論をおこなうことにより, CoCに対するChurch Rosserの定理を得ることができる.
+
+\begin{thm}[Church Rosserの定理]
+ $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
+\end{thm}
+
 型づけ規則とよばれる自然演繹のシステムが存在し, それも含めての計算体系としてCoCは定義される.
 
 \begin{defn}
@@ -353,15 +359,14 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
   \item[App] tODO
   \item[Conv] todo
  \end{description}
- ここで現れる横に長い棒は含意を意味している. またpseudoterm $p, q$に対して, ある文脈$\Gamma$が存在して, $\Gamma \vdash p : q$となるとき, $\Gamma, \vdash$を省略して$p : q$と書くことがある.
+ ここで現れる横に長い棒は含意を意味している. またpseudoterm $p, q$に対して, ある文脈$\Gamma$が存在して, $\Gamma \vdash p : q$となるとき, $\Gamma \vdash$を省略して$p : q$と書くことがある.
 \end{defn}
 
 \begin{rem}
  上記の定義では文脈と型づけ規則が同時に定義されていることに注意されたい. したがって, 上記の定義は帰納的な定義になっており循環していない.
 \end{rem}
 
-型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 以下では$T := \{p \in P | p : t,  t \in P \}$とし, $T$の元をtermと呼ぶ.
-$T$については$\beta$簡約の上で停止性が成立する.
+型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上で停止性が成立する.
 
 \begin{thm}
  型づけ可能な$P$上の$\beta$簡約$\rightarrow_{\beta}|_T$は停止性を持つ.
