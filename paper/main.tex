@@ -340,7 +340,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  pseudoterm $p, q \in P$が文脈$\Gamma$のもとで, $p : q$であるとは以下のいずれかの場合である.
  また, この状況を$\Gamma \vdash p : q$と書きあらわす.
  \begin{description}
-  \item[Ax] $p = \star, q = \square$
+  \item[Ax] $p = {\star}, q = {\square}$
   \item[Var] $p \in \mathbb{N}$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', p : q$であり, $\Gamma' \vdash q : \star$であるか$\Gamma' \vdash q : \square$となる. さらに, $p$は$\Gamma'$に自由に現れるどの変数とも異なっていなければならない.
   \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$, 自然数$v$が存在して$\Gamma = \Gamma', v : r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $v$は$\Gamma'$に自由に現れるどの変数とも異なっていなければならない.
   \item[\Pi] あるpseudoterm $r, u$が存在して, $p = \Pi r. u$. かつ, $q = \star$あるいは$q = \square$. また$\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $\Gamma', 0 : r \vdash u : q$が成立する.
@@ -350,13 +350,14 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \end{description}
  これらの定義の仕方は煩雑であるため, いくつかのルールによって生成される木が型づけとなることを暗黙の内に処理することが習慣となっている. 同値な定義を以下に述べる.
  \begin{description}
-  \item[Ax] \[ \frac{}{\vdash \star \colon \square} \]
-  \item[Var] \[ \frac{\Gamma \vdash t : \star \text{ or } \square \quad \text{$v$は$\Gamma$に自由に出現しない}}{\Gamma, v : t \vdash v : t} \]
-  \item[Weak] \[ 
-             \frac{\Gamma \vdash t : \star \text{ or } \square \quad \Gamma \vdash m : u \quad \text{$v$は$\Gamma$に自由に出現しない}}{\Gamma, v : t \vdash m : u}
- \]
-  \item[\Pi] TODO
-  \item[\lambda] TODOH
+  \item[Ax] \[ \frac{}{\vdash {\star} {\colon} {\square}} \]
+  \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square} \quad \text{$v$は$\Gamma$に自由に出現しない}}{\Gamma, v {\colon} t \vdash v {\colon} t} \]
+  \item[Weak] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u \quad \text{$v$は$\Gamma$に自由に出現しない}}{\Gamma, v {\colon} t \vdash m {\colon} u} \]
+  \item[\Pi] \[ \frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, 0 {\colon} r \vdash u {\colon} s}{\Gamma \vdash \Pi r. u {\colon} s} 
+             \quad
+             s = {\star}, {\square}
+\]
+  \item[\lambda] TODO
   \item[App] tODO
   \item[Conv] todo
  \end{description}
