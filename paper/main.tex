@@ -348,7 +348,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
   \item[App] あるpseudoterm $n, m, u$が存在して, $p = m n$, $q = u[n/0]$. また, pseudoterm $t$が存在して$\Gamma \vdash m : \Pi t. u$かつ$\Gamma \vdash n : t$.
   \item[Conv] あるpseudoterm $t$が存在して, $t \overset{*}{\leftrightarrow}_\beta q$かつ$\Gamma \vdash p : t$. また$\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる.
  \end{description}
- これらの定義の仕方は煩雑であるため, いくつかのルールによって生成される木が型づけとなることを暗黙の内に処理することが習慣となっている. 同値な定義を以下に述べる.
+ これらの定義の仕方は煩雑であるため, いくつかのルールによって生成される木が型づけとなることを暗黙の内に処理することが習慣となっている. そのような書き方による同値な定義を以下に述べる.
  \begin{description}
   \item[Ax] \[ \frac{}{\vdash {\star} {\colon} {\square}} \]
   \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square} \quad \text{$v$は$\Gamma$に出現しない}}{\Gamma, v {\colon} t \vdash v {\colon} t} \]
@@ -370,8 +370,16 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 簡単な帰納法により示される事実ではあるが, 重要なこととして以下の補題がある.
 
 \begin{lem}[Classification]
- 
+ 文脈$\Gamma$, pseudoterm $A, B \in P$に対して, $\Gamma \vdash A \colon B$となるのは以下の場合のいずれかに限る. また, それぞれの条件は重複しない.
+ \begin{description}
+  \item[Kind] $B = \square$
+  \item[Constr] $\Gamma \vdash B {\colon} {\square}$
+  \item[Term] $\Gamma \vdash B {\colon} {\star}$
+ \end{description}
 \end{lem}
+\begin{proof}
+ 型づけに対する帰納法を用いる.
+\end{proof}
 
 型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 型づけ可能な$P$上の$\beta$簡約に対しては停止性が成立する.
 
