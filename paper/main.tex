@@ -331,32 +331,34 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 型づけ規則とよばれる自然演繹のシステムが存在し, それも含めての計算体系としてCoCは定義される.
 
 \begin{defn}
- 文脈$\Gamma$とは, 以下のBNFで定義される木である. $p$はpseudotermを$v$は自然数をそれぞれ意味する.
+ 文脈$\Gamma$とは, 以下のBNFで定義される木である. $p$はpseudotermを意味する.
  \[
- \Gamma := \Gamma, v : p |
+ \Gamma := \Gamma, p |
  \]
- ただし, ここで述べている$v : p$とは型づけと呼ばれ, 型づけ規則とよばれるいくつかの公理から生成される木が存在することを意味している. 型づけ規則とは, 以下のように定義される.
+ % ただし, ここで述べている$v : p$とは型づけと呼ばれ, 型づけ規則とよばれるいくつかの公理から生成される木が存在することを意味している. 型づけ規則とは, 以下のように定義される.
+ さらに, 型づけ規則とよばれるいくつかの公理から生成される木が定義される.
  
  pseudoterm $p, q \in P$が文脈$\Gamma$のもとで, $p : q$であるとは以下のいずれかの場合である.
  また, この状況を$\Gamma \vdash p : q$と書きあらわす.
  \begin{description}
   \item[Ax] $p = {\star}, q = {\square}$
-  \item[Var] $p \in \mathbb{N}$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', p : q$であり, $\Gamma' \vdash q : \star$であるか$\Gamma' \vdash q : \square$となる. さらに, $p$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
-  \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$, 自然数$v$が存在して$\Gamma = \Gamma', v : r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $v$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
-  \item[\Pi] あるpseudoterm $r, u$が存在して, $p = \Pi r. u$. かつ, $q = \star$あるいは$q = \square$. また$\Gamma \vdash r : \star$であるか$\Gamma \vdash r : \square$となる. さらに, $\Gamma, 0 : r \vdash u : q$が成立する.
-  \item[\lambda] あるpseudoterm $r, u, t, m$が存在して, $p = \lambda t. m$, $q = \Pi r. u$. また, $\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる. さらに, $\Gamma, 0 : r \vdash m : u$が成立する.
+  \item[Var] $p = 0$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', q$となる. またpseudoterm $t$が存在して$q = s(t, 1, 0)$となり, $\Gamma' \vdash t : \star$であるか$\Gamma' \vdash t : \square$となる. 
+% さらに, $p$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
+  \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$が存在して$\Gamma = \Gamma', r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. 
+  \item[\Pi] あるpseudoterm $r, u$が存在して, $p = \Pi r. u$. かつ, $q = \star$あるいは$q = \square$. また$\Gamma \vdash r : \star$であるか$\Gamma \vdash r : \square$となる. さらに, $\Gamma, r \vdash u : q$が成立する.
+  \item[\lambda] あるpseudoterm $r, u, m$が存在して, $p = \lambda r. m$, $q = \Pi r. u$. また, $\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる. さらに, $\Gamma, r \vdash m : u$が成立する.
   \item[App] あるpseudoterm $n, m, u$が存在して, $p = m n$, $q = u[n/0]$. また, pseudoterm $t$が存在して$\Gamma \vdash m : \Pi t. u$かつ$\Gamma \vdash n : t$.
   \item[Conv] あるpseudoterm $t$が存在して, $t \overset{*}{\leftrightarrow}_\beta q$かつ$\Gamma \vdash p : t$. また$\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる.
  \end{description}
  これらの定義の仕方は煩雑であるため, いくつかのルールによって生成される木が型づけとなることを暗黙の内に処理することが習慣となっている. そのような書き方による同値な定義を以下に述べる.
  \begin{description}
   \item[Ax] \[ \frac{}{\vdash {\star} {\colon} {\square}} \]
-  \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square} \quad \text{$v$は$\Gamma$に出現しない}}{\Gamma, v {\colon} t \vdash v {\colon} t} \]
-  \item[Weak] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u \quad \text{$v$は$\Gamma$に出現しない}}{\Gamma, v {\colon} t \vdash m {\colon} u} \]
-  \item[\Pi] \[ \frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, 0 {\colon} r \vdash u {\colon} s}{\Gamma \vdash \Pi r. u {\colon} s} 
+  \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square}}{\Gamma, t \vdash 0 {\colon} s(t, 1, 0)} \]
+  \item[Weak] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u}{\Gamma, t \vdash m {\colon} u} \]
+  \item[\Pi] \[ \frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, r \vdash u {\colon} s}{\Gamma \vdash \Pi r. u {\colon} s} 
              \quad
-             s = {\star}, {\square} \]
-  \item[\lambda] \[ \frac{\Gamma \vdash \Pi r. u {\colon} {\star} \text{ or } {\square} \quad \Gamma, 0 : r \vdash m : u}{\Gamma \vdash \lambda t. m {\colon} \Pi r. u} \]
+             s = {\star} \text{ or } {\square} \]
+  \item[\lambda] \[ \frac{\Gamma \vdash \Pi r. u {\colon} {\star} \text{ or } {\square} \quad \Gamma, r \vdash m : u}{\Gamma \vdash \lambda r. m {\colon} \Pi r. u} \]
   \item[App] \[ \frac{\Gamma \vdash m : \Pi t. u \quad \Gamma \vdash n : t}{\Gamma \vdash m n {\colon} u[n/0]} \]
   \item[Conv] \[\frac{\Gamma \vdash q {\colon} {\star} \text{ or } {\square} \quad \Gamma \vdash p {\colon} t \quad t \overset{*}{\leftrightarrow}_\beta q}{\Gamma \vdash p {\colon} q} \]
  \end{description}
@@ -364,8 +366,28 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \end{defn}
 
 \begin{rem}
+ 規則$\Pi$は四通り存在する.
+\end{rem}
+
+\begin{rem}
  上記の定義では文脈と型づけ規則が同時に定義されていることに注意されたい. したがって, 上記の定義は帰納的な定義になっており循環していない.
 \end{rem}
+
+難しくない事実として, Subject Reductionと呼ばれるものがある.
+
+\begin{thm}[Subject Reduction]
+ 文脈$\Gamma$, pseudoterm $A, B, C \in P$に対して, $\Gamma \vdash A \colon C$, $A \rightarrow_\beta B$のとき$\Gamma \vdash B \colon C$.
+ % wrong statement
+ % また$\Gamma \vdash C \colon A$, $A \rightarrow_\beta B$のとき$\Gamma \vdash C \colon B$.
+\end{thm}
+\begin{proof}
+ 型づけに対する帰納法を用いる.
+ \begin{description}
+  \item[Ax, Var] 簡約が存在しない.
+  \item[Weak, Conv] 帰納法の仮定より直ちに従う.
+ \end{description}
+ 
+\end{proof}
 
 簡単な帰納法により示される事実ではあるが, 重要なこととして以下の補題がある.
 
@@ -378,10 +400,11 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \end{description}
 \end{lem}
 \begin{proof}
- 型づけに対する帰納法を用いる.
+ 型づけに対する帰納法を用いる. また, 証明を簡潔にするため, Convによる型づけの導出の不定性は無視する.
  \begin{description}
   \item[Ax] 自明にKindのみが成立する.
-  \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のときTermであり, $\Gamma \vdash t {\colon} {\square}$のとき
+  \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のとき, Weakを用いれば$\Gamma, v {\colon} t \vdash t {\colon} {\star}$が分かるので結論はTermであり, $\Gamma \vdash t {\colon} {\square}$のときはConstrとなる. 逆に結論に対してTermかつConstrであると仮定するとWeakで分解できて, $\Gamma \vdash t {\colon} {\star}$かつ$\Gamma \vdash t {\colon} {\square}$となるがこれは帰納法の仮定に反する.
+  \item[Weak] 前提の二番目$\Gamma \vdash m {\colon} u$の分類が, 結論に一対一に対応することが直ちに分かる.
  \end{description}
 \end{proof}
 
