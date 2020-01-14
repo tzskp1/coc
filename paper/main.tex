@@ -1,5 +1,6 @@
 \documentclass{ltjsarticle}
 \usepackage{luatexja}
+\usepackage{bussproofs}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{tikz}
 \usetikzlibrary{matrix, positioning}
@@ -333,7 +334,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \begin{defn}
  文脈$\Gamma$とは, 以下のBNFで定義される木である. $p$はpseudotermを意味する.
  \[
- \Gamma := \Gamma, p |
+ \Gamma ::= \Gamma, p \mid
  \]
  % ただし, ここで述べている$v : p$とは型づけと呼ばれ, 型づけ規則とよばれるいくつかの公理から生成される木が存在することを意味している. 型づけ規則とは, 以下のように定義される.
  さらに, 型づけ規則とよばれるいくつかの公理から生成される木が定義される.
@@ -383,11 +384,34 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \begin{proof}
  型づけに対する帰納法を用いる.
  \begin{description}
-  \item[Ax, Var] 簡約が存在しない.
+  \item[Ax, Var] $\beta$簡約が存在しない.
   \item[Weak, Conv] 帰納法の仮定より直ちに従う.
  \end{description}
  
 \end{proof}
+
+\begin{ex}[恒等射]
+ 単純ではあるが普遍的なものとして恒等射があるが, CoCには恒等射を表現するのに十分な能力がある. (これは型理論にとっては自明ではない.)
+
+ pseudoterm $x$を$x \colon {\square}$となる様なものとするとき, この上の恒等射としてふさわしい項は$\lambda x. 0 \colon \Pi x. s(x, 1, 0)$となる. 実際に$y \colon x$となる$y$をとると, 規則Appにより$(\lambda x. 0)y \colon s(x, 1, 0)[y/0] \rightarrow_\beta 0[y/0] \colon x = y \colon x$となることが確認される.
+
+ また例えば$x = \star$に対して, $\lambda x. 0 \colon \Pi x. s(x, 1, 0)$が型づけ可能であることは以下の様に示される.
+\begin{prooftree}
+\AxiomC{$\vdash \star \colon \square$}
+\AxiomC{$\vdash \star \colon \square$}
+\AxiomC{$\vdash s(x, 1, 0) = \star \colon \square$}
+\RightLabel{Weak}
+\BinaryInfC{$x \vdash s(x, 1, 0) \colon \square$}
+\RightLabel{$\Pi$}
+\BinaryInfC{$\vdash \Pi x. s(x, 1, 0) \colon \square$}
+\AxiomC{$\vdash \star \colon \square$}
+\RightLabel{Var}
+\UnaryInfC{$x \vdash 0 \colon s(x, 1, 0)$}
+\RightLabel{$\lambda$}
+\BinaryInfC{$\vdash \lambda x.0 \colon \Pi x. s(x, 1, 0)$}
+\end{prooftree}
+このような図式を証明図と言う.
+\end{ex}
 
 簡単な帰納法により示される事実ではあるが, 重要なこととして以下の補題がある.
 
