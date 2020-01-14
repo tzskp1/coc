@@ -343,7 +343,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
   \item[Ax] $p = {\star}, q = {\square}$
   \item[Var] $p \in \mathbb{N}$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', p : q$であり, $\Gamma' \vdash q : \star$であるか$\Gamma' \vdash q : \square$となる. さらに, $p$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
   \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$, 自然数$v$が存在して$\Gamma = \Gamma', v : r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $v$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
-  \item[\Pi] あるpseudoterm $r, u$が存在して, $p = \Pi r. u$. かつ, $q = \star$あるいは$q = \square$. また$\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $\Gamma', 0 : r \vdash u : q$が成立する.
+  \item[\Pi] あるpseudoterm $r, u$が存在して, $p = \Pi r. u$. かつ, $q = \star$あるいは$q = \square$. また$\Gamma \vdash r : \star$であるか$\Gamma \vdash r : \square$となる. さらに, $\Gamma, 0 : r \vdash u : q$が成立する.
   \item[\lambda] あるpseudoterm $r, u, t, m$が存在して, $p = \lambda t. m$, $q = \Pi r. u$. また, $\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる. さらに, $\Gamma, 0 : r \vdash m : u$が成立する.
   \item[App] あるpseudoterm $n, m, u$が存在して, $p = m n$, $q = u[n/0]$. また, pseudoterm $t$が存在して$\Gamma \vdash m : \Pi t. u$かつ$\Gamma \vdash n : t$.
   \item[Conv] あるpseudoterm $t$が存在して, $t \overset{*}{\leftrightarrow}_\beta q$かつ$\Gamma \vdash p : t$. また$\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる.
@@ -379,6 +379,10 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \end{lem}
 \begin{proof}
  型づけに対する帰納法を用いる.
+ \begin{description}
+  \item[Ax] 自明にKindのみが成立する.
+  \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のときTermであり, $\Gamma \vdash t {\colon} {\square}$のとき
+ \end{description}
 \end{proof}
 
 型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 型づけ可能な$P$上の$\beta$簡約に対しては停止性が成立する.
