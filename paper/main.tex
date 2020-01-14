@@ -1,4 +1,4 @@
-\documentclass{ltjsarticle}
+\documentclass[12pt]{ltjsarticle}
 \usepackage{luatexja}
 \usepackage{bussproofs}
 \usepackage{amsmath,amssymb,amsthm}
@@ -412,7 +412,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \RightLabel{$\lambda$}
 \BinaryInfC{$\vdash \lambda x.0 \colon \Pi x. s(x, 1, 0)$}
 \end{prooftree}
-このような図式を証明図と言う.
+このような図式を証明木と言う.
 \end{ex}
 
 簡単な帰納法により示される事実ではあるが, 重要なこととして以下の補題がある.
@@ -431,6 +431,9 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
   \item[Ax] 自明にKindのみが成立する.
   \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のとき, Weakを用いれば$\Gamma, t \vdash t {\colon} {\star}$が分かるので結論はTermであり, $\Gamma \vdash t {\colon} {\square}$のときはConstrとなる. 逆に結論に対してTermかつConstrであると仮定するとWeakで分解できて, $\Gamma \vdash t {\colon} {\star}$かつ$\Gamma \vdash t {\colon} {\square}$となるがこれは帰納法の仮定に反する.
   \item[Weak] 前提の二番目$\Gamma \vdash m {\colon} u$の分類が, 結論に一対一に対応することが直ちに分かる.
+  \item[\Pi] 分類の一意性のみが非自明である. 前提の二番目$\Gamma, r \vdash u {\colon} s$に対して, Weakで分解できるので, 帰納法の仮定より主張が従う.
+  \item[\lambda] 自明である.
+  \item[App] 代入が型づけを保つ事実および, 規則$\Pi$が分類を保つことに注意すれば, 帰納法の仮定が反映される.
  \end{description}
 \end{proof}
 
