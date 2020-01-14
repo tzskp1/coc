@@ -341,25 +341,24 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  また, この状況を$\Gamma \vdash p : q$と書きあらわす.
  \begin{description}
   \item[Ax] $p = {\star}, q = {\square}$
-  \item[Var] $p \in \mathbb{N}$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', p : q$であり, $\Gamma' \vdash q : \star$であるか$\Gamma' \vdash q : \square$となる. さらに, $p$は$\Gamma'$に自由に現れるどの変数とも異なっていなければならない.
-  \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$, 自然数$v$が存在して$\Gamma = \Gamma', v : r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $v$は$\Gamma'$に自由に現れるどの変数とも異なっていなければならない.
+  \item[Var] $p \in \mathbb{N}$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', p : q$であり, $\Gamma' \vdash q : \star$であるか$\Gamma' \vdash q : \square$となる. さらに, $p$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
+  \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$, 自然数$v$が存在して$\Gamma = \Gamma', v : r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $v$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
   \item[\Pi] あるpseudoterm $r, u$が存在して, $p = \Pi r. u$. かつ, $q = \star$あるいは$q = \square$. また$\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. さらに, $\Gamma', 0 : r \vdash u : q$が成立する.
-  \item[\lambda] あるpseudoterm $r, u, t, m$が存在して, $p = \lambda t. m$, $q = \Pi r. u$. また, $\Gamma' \vdash q : \star$であるか$\Gamma' \vdash q : \square$となる. さらに, $\Gamma', 0 : r \vdash m : u$が成立する.
+  \item[\lambda] あるpseudoterm $r, u, t, m$が存在して, $p = \lambda t. m$, $q = \Pi r. u$. また, $\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる. さらに, $\Gamma, 0 : r \vdash m : u$が成立する.
   \item[App] あるpseudoterm $n, m, u$が存在して, $p = m n$, $q = u[n/0]$. また, pseudoterm $t$が存在して$\Gamma \vdash m : \Pi t. u$かつ$\Gamma \vdash n : t$.
-  \item[Conv] あるpseudoterm $t$が存在して, $t \overset{*}{\leftrightarrow}_\beta q$かつ$p : t$. また$\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる.
+  \item[Conv] あるpseudoterm $t$が存在して, $t \overset{*}{\leftrightarrow}_\beta q$かつ$\Gamma \vdash p : t$. また$\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる.
  \end{description}
  これらの定義の仕方は煩雑であるため, いくつかのルールによって生成される木が型づけとなることを暗黙の内に処理することが習慣となっている. 同値な定義を以下に述べる.
  \begin{description}
   \item[Ax] \[ \frac{}{\vdash {\star} {\colon} {\square}} \]
-  \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square} \quad \text{$v$は$\Gamma$に自由に出現しない}}{\Gamma, v {\colon} t \vdash v {\colon} t} \]
-  \item[Weak] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u \quad \text{$v$は$\Gamma$に自由に出現しない}}{\Gamma, v {\colon} t \vdash m {\colon} u} \]
+  \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square} \quad \text{$v$は$\Gamma$に出現しない}}{\Gamma, v {\colon} t \vdash v {\colon} t} \]
+  \item[Weak] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u \quad \text{$v$は$\Gamma$に出現しない}}{\Gamma, v {\colon} t \vdash m {\colon} u} \]
   \item[\Pi] \[ \frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, 0 {\colon} r \vdash u {\colon} s}{\Gamma \vdash \Pi r. u {\colon} s} 
              \quad
-             s = {\star}, {\square}
-\]
-  \item[\lambda] TODO
-  \item[App] tODO
-  \item[Conv] todo
+             s = {\star}, {\square} \]
+  \item[\lambda] \[ \frac{\Gamma \vdash \Pi r. u {\colon} {\star} \text{ or } {\square} \quad \Gamma, 0 : r \vdash m : u}{\Gamma \vdash \lambda t. m {\colon} \Pi r. u} \]
+  \item[App] \[ \frac{\Gamma \vdash m : \Pi t. u \quad \Gamma \vdash n : t}{\Gamma \vdash m n {\colon} u[n/0]} \]
+  \item[Conv] \[\frac{\Gamma \vdash q {\colon} {\star} \text{ or } {\square} \quad \Gamma \vdash p {\colon} t \quad t \overset{*}{\leftrightarrow}_\beta q}{\Gamma \vdash p {\colon} q} \]
  \end{description}
  ここで現れる横に長い棒は含意を意味している. またpseudoterm $p, q$に対して, ある文脈$\Gamma$が存在して, $\Gamma \vdash p : q$となるとき, $\Gamma \vdash$を省略して$p : q$と書くことがある.
 \end{defn}
@@ -368,10 +367,15 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  上記の定義では文脈と型づけ規則が同時に定義されていることに注意されたい. したがって, 上記の定義は帰納的な定義になっており循環していない.
 \end{rem}
 
-型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上で停止性が成立する.
+簡単な帰納法により示される事実ではあるが, 重要なこととして以下の補題がある.
 
-\begin{lem}
+\begin{lem}[Classification]
+ 
 \end{lem}
+
+型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 型づけ可能な$P$上の$\beta$簡約に対しては停止性が成立する.
+
+% 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上
 
 \begin{thm}
  型づけ可能な$P$上の$\beta$簡約$\rightarrow_{\beta}|_T$は停止性を持つ.
