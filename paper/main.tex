@@ -426,10 +426,10 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \end{description}
 \end{lem}
 \begin{proof}
- 型づけに対する帰納法を用いる. また, 証明を簡潔にするため, Convによる型づけの導出の不定性は無視する.
+ 型づけに対する帰納法を用いる. また, 証明を簡潔にするため, Convによる型づけの導出の不定性は無視する. 実際Subject Reductionにより, 分類を保ったまま導出からConvを消去することは可能である.
  \begin{description}
   \item[Ax] 自明にKindのみが成立する.
-  \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のとき, Weakを用いれば$\Gamma, v {\colon} t \vdash t {\colon} {\star}$が分かるので結論はTermであり, $\Gamma \vdash t {\colon} {\square}$のときはConstrとなる. 逆に結論に対してTermかつConstrであると仮定するとWeakで分解できて, $\Gamma \vdash t {\colon} {\star}$かつ$\Gamma \vdash t {\colon} {\square}$となるがこれは帰納法の仮定に反する.
+  \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のとき, Weakを用いれば$\Gamma, t \vdash t {\colon} {\star}$が分かるので結論はTermであり, $\Gamma \vdash t {\colon} {\square}$のときはConstrとなる. 逆に結論に対してTermかつConstrであると仮定するとWeakで分解できて, $\Gamma \vdash t {\colon} {\star}$かつ$\Gamma \vdash t {\colon} {\square}$となるがこれは帰納法の仮定に反する.
   \item[Weak] 前提の二番目$\Gamma \vdash m {\colon} u$の分類が, 結論に一対一に対応することが直ちに分かる.
  \end{description}
 \end{proof}
