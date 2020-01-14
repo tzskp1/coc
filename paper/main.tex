@@ -351,7 +351,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
   \item[App] あるpseudoterm $n, m, u$が存在して, $p = m n$, $q = u[n/0]$. また, pseudoterm $t$が存在して$\Gamma \vdash m : \Pi t. u$かつ$\Gamma \vdash n : t$.
   \item[Conv] あるpseudoterm $t$が存在して, $t \overset{*}{\leftrightarrow}_\beta q$かつ$\Gamma \vdash p : t$. また$\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる.
  \end{description}
- これらの定義の仕方は煩雑であるため, いくつかのルールによって生成される木が型づけとなることを暗黙の内に処理することが習慣となっている. そのような書き方による同値な定義を以下に述べる.
+ これらの定義の仕方は煩雑であるため, いくつかの規則によって生成される木が型づけとなることを暗黙の内に処理することが習慣となっている. そのような書き方による同値な定義を以下に述べる.
  \begin{description}
   \item[Ax] \[ \frac{}{\vdash {\star} {\colon} {\square}} \]
   \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square}}{\Gamma, t \vdash 0 {\colon} s(t, 1, 0)} \]
@@ -370,9 +370,9 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  規則$\Pi$は四通り存在する.
 \end{rem}
 
-\begin{rem}
- 上記の定義では文脈と型づけ規則が同時に定義されていることに注意されたい. したがって, 上記の定義は帰納的な定義になっており循環していない.
-\end{rem}
+% \begin{rem}
+%  上記の定義では文脈と型づけ規則が同時に定義されていることに注意されたい. したがって, 上記の定義は帰納的な定義になっており循環していない.
+% \end{rem}
 
 難しくない事実として, Subject Reductionと呼ばれるものがある.
 
@@ -386,8 +386,10 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \begin{description}
   \item[Ax, Var] $\beta$簡約が存在しない.
   \item[Weak, Conv] 帰納法の仮定より直ちに従う.
+  \item[\Pi] $\beta$簡約$A (= \Pi r. u) \rightarrow_\beta B$のうち, $B = \Pi r'. u, r \rightarrow_\beta r'$となる$r' \in P$がある場合が非自明である. この場合は規則$\Pi$, Weakおよび帰納法の仮定を用いれば主張が示せる.
+  \item[\lambda] $\beta$簡約$A (= \lambda r. m) \rightarrow_\beta B$のうち, $B = \lambda r'. m, r \rightarrow_\beta r'$となる$r' \in P$がある場合が非自明である. この場合は規則Conv, $\lambda$, $\Pi$, Weakおよび帰納法の仮定を用いれば主張が示せる.
+  \item[App] $\beta$簡約$A (= (\lambda t. m) n) \rightarrow_\beta B$のうち, $B = m[n/0]$となる$t, m \in P$がある場合が非自明である. この場合は規則$\lambda$, Weak, 帰納法の仮定および代入が型づけを保存することに注意すれば示せる.
  \end{description}
- 
 \end{proof}
 
 \begin{ex}[恒等射]
