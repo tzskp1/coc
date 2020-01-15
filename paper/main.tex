@@ -480,19 +480,6 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  saturatedな集合の集合を$SAT$と書く.
 \end{defn}
 
-\begin{defn}
- 解釈$\mathcal{V} : Kind \rightarrow Set$を以下のように帰納的に定義する. 
-\[
-  \mathcal{V} (A) := \begin{cases}
-    SAT & (A = \star) \\
-    \{ f \mid f : \mathcal{V}(B) \rightarrow \mathcal{V}(C) \} & (A = \Pi B. C \text{ かつ }B : \square) \\
-    \mathcal{V} (C) & (A = \Pi B. C  \text{ かつ }B : \star)
-  \end{cases}
-\]
- $\mathcal{V}$の値域を$(SAT)^\star := \bigcup_{A \in Kind} \{\mathcal{V}(A)\}$のように書く.
-\end{defn}
-% 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上
-
 \begin{lem}
  $SAT$は交差と含意で閉じる. すなわち以下を満たす.
  \begin{itemize}
@@ -517,6 +504,19 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  $Y$はsaturated setであったので, $m[p/0] q_1 \ldots q_n l \in Y$であればよいが, 
  $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$であったので主張が従う.
 \end{proof}
+
+\begin{defn}
+ 解釈$\mathcal{V} : Kind \rightarrow Set$を以下のように帰納的に定義する. 
+\[
+  \mathcal{V} (A) := \begin{cases}
+    SAT & (A = \star) \\
+    \{ f \mid f : \mathcal{V}(B) \rightarrow \mathcal{V}(C) \} & (A = \Pi B. C \text{ かつ }B : \square) \\
+    \mathcal{V} (C) & (A = \Pi B. C  \text{ かつ }B : \star)
+  \end{cases}
+\]
+ $\mathcal{V}$の値域を$(SAT)^\star := \bigcup_{A \in Kind} \mathcal{V}(A)$のように書く.
+\end{defn}
+% 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上
 
 \begin{thm}
  型づけ可能な$P$上の$\beta$簡約$\rightarrow_{\beta}|_T$は停止性を持つ.
