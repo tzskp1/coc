@@ -5,6 +5,20 @@
 \usepackage{stmaryrd}
 \usepackage{tikz}
 \usetikzlibrary{matrix, positioning}
+\DeclareMathOperator{\SN}{SN}
+\DeclareMathOperator{\Term}{Term}
+\DeclareMathOperator{\Obj}{Obj}
+\DeclareMathOperator{\Constr}{Constr}
+\DeclareMathOperator{\Type}{Type}
+\DeclareMathOperator{\Kind}{Kind}
+\DeclareMathOperator{\SAT}{SAT}
+\DeclareMathOperator{\Set}{Set}
+\DeclareMathOperator{\GTerm}{\Gamma-Term}
+\DeclareMathOperator{\GObj}{\Gamma-Obj}
+\DeclareMathOperator{\GConstr}{\Gamma-Constr}
+\DeclareMathOperator{\GType}{\Gamma-Type}
+\DeclareMathOperator{\GKind}{\Gamma-Kind}
+\newcommand{\iprt}[2]{\llbracket {#1} \rrbracket_ {#2}}
 \begin{document}
 
 \theoremstyle{definition}
@@ -52,8 +66,6 @@
 % 適切なReductionを入れることが重要であると私はおもっている...
 % - directed homotopy? (わかってないので書かない)
 % - よくかんがえたらこの問題意識はcompletion由来かも?
-
-\newcommand{\iprt}[2]{\llbracket {#1} \rrbracket_ {#2}}
 
 \begin{abstract}
 \end{abstract}
@@ -445,35 +457,35 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \begin{defn}
 補題\ref{clsfy}を踏まえて, pseudotermの集合$P$をいくつかのクラスに分類する.
  \begin{itemize}
-  \item $Kind := \{ A \mid \Gamma \text{が存在し} \Gamma \vdash A \colon {\square}\}$
-  \item $Constr := \{ P \mid \Gamma, A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\square}\}$
-  \item $Obj := \{ P \mid \Gamma, A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\star}\}$
+  \item $\Kind := \{ A \mid \Gamma \text{が存在し} \Gamma \vdash A \colon {\square}\}$
+  \item $\Constr := \{ P \mid \Gamma, A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\square}\}$
+  \item $\Obj := \{ P \mid \Gamma, A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\star}\}$
  \end{itemize}
  補題\ref{clsfy}でみたようにこれらは互いにdisjointである.
  
  同様に, disjointではないクラスとして以下を定義する.
  \begin{itemize}
-  \item $Term := \{p \in P | \Gamma, t \in P\text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
-  \item $Type := \{ A \mid \Gamma \text{が存在し} \Gamma \vdash A \colon {\star}\}$
+  \item $\Term := \{p \in P | \Gamma, t \in P\text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
+  \item $\Type := \{ A \mid \Gamma \text{が存在し} \Gamma \vdash A \colon {\star}\}$
  \end{itemize}
  
 また文脈$\Gamma$に対して, 以下のように定義する.
  \begin{itemize}
-  \item $\Gamma-Kind := \{ A \mid \Gamma \vdash A \colon {\square}\}$
-  \item $\Gamma-Constr := \{ P \mid A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\square}\}$
-  \item $\Gamma-Obj := \{ P \mid A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\star}\}$
-  \item $\Gamma-Term := \{p \in P | t \in P\text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
-  \item $\Gamma-Type := \{ A \mid \Gamma \vdash A \colon {\star}\}$
+  \item $\GKind := \{ A \mid \Gamma \vdash A \colon {\square}\}$
+  \item $\GConstr := \{ P \mid A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\square}\}$
+  \item $\GObj := \{ P \mid A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\star}\}$
+  \item $\GTerm := \{p \in P | t \in P\text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
+  \item $\GType := \{ A \mid \Gamma \vdash A \colon {\star}\}$
  \end{itemize}
 \end{defn}
 
-以下では$d \in \Lambda$として正規形となるものを一つ固定する. また$SN := \{ t \in \Lambda \mid t \text{は停止する}\}$とする.
+以下では$d \in \Lambda$として正規形となるものを一つ固定する. また$\SN := \{ t \in \Lambda \mid t \text{は停止する}\}$とする.
 
 \begin{defn}
  base terms $\mathcal{B}$を以下を満たす最小の集合として定義する.
  \begin{itemize}
   \item $\mathbb{N} \subset \mathcal{B}$かつ$d \in \mathcal{B}$
-  \item $m \in \mathcal{B}$かつ$n \in SN$ならば, $mn \in \mathcal{B}$
+  \item $m \in \mathcal{B}$かつ$n \in \SN$ならば, $mn \in \mathcal{B}$
  \end{itemize}
 \end{defn}
 
@@ -491,15 +503,15 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \begin{defn}[Saturated Set]\label{ss}
  型なしラムダ項の集合$X \subset \Lambda$がsaturatedであるとは, 以下のすべてを満たすものをいう.
  \begin{itemize}
-  \item $X \subset SN$.
+  \item $X \subset \SN$.
   \item $\mathcal{B} \subset X$.
-  \item 任意の$m \in \Lambda$に対して, $red_k(m) \in X$かつ$m \in SN$ならば$m \in X$.
+  \item 任意の$m \in \Lambda$に対して, $red_k(m) \in X$かつ$m \in \SN$ならば$m \in X$.
  \end{itemize}
- saturatedな集合の集合を$SAT$と書く.
+ saturatedな集合の集合を$\SAT$と書く.
 \end{defn}
 
 \begin{lem}
- $SAT$は交差と含意で閉じる. すなわち以下を満たす.
+ $\SAT$は交差と含意で閉じる. すなわち以下を満たす.
  \begin{itemize}
   \item saturated set $X, Y$に対して, $X \cap Y$もsaturatedとなる.
   \item saturated set $X, Y$に対して, $\{ M \in \Lambda \mid \text{任意の} N \in X \text{に対して}, M N \in Y\}$もsaturatedとなる.
@@ -511,28 +523,28 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  後半をみるには定義\ref{ss}の帰納的ないいかえを考えるとよい. すなわち, 
  型なしラムダ項の集合$X \subset \Lambda$がsaturatedであるとは, 以下のすべてを満たすものをいう.
  \begin{itemize}
-  \item $X \subset SN$.
-  \item $n \in \mathbb{N}, q_1, \ldots, q_n \in SN, x \in \mathbb{N}$に対して, $x q_1 \ldots q_n \in X$.
-  \item $n \in \mathbb{N}, q_1, \ldots, q_n \in SN$に対して, $d q_1 \ldots q_n \in X$.
-  \item $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in SN$に対して, $m[p/0]q_1 \ldots q_n \in X$ならば$(\lambda m)p q_1 \ldots q_n \in X$.
+  \item $X \subset \SN$.
+  \item $n \in \mathbb{N}, q_1, \ldots, q_n \in \SN, x \in \mathbb{N}$に対して, $x q_1 \ldots q_n \in X$.
+  \item $n \in \mathbb{N}, q_1, \ldots, q_n \in \SN$に対して, $d q_1 \ldots q_n \in X$.
+  \item $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in \SN$に対して, $m[p/0]q_1 \ldots q_n \in X$ならば$(\lambda m)p q_1 \ldots q_n \in X$.
  \end{itemize}
 最後のいいかえについては, key redexの定義を考えればすぐにいえる.
-さて, $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in SN$に対して, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$とする. このとき, $(\lambda m)p q_1 \ldots q_n \in X \rightarrow Y$を言いたい.
+さて, $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in \SN$に対して, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$とする. このとき, $(\lambda m)p q_1 \ldots q_n \in X \rightarrow Y$を言いたい.
 すなわち, 任意の$l \in X$に対して, $(\lambda m)p q_1 \ldots q_n l \in Y$となることを言いたい.
  $Y$はsaturated setであったので, $m[p/0] q_1 \ldots q_n l \in Y$であればよいが, 
  $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$であったので主張が従う.
 \end{proof}
 
 \begin{defn}
- 解釈$\mathcal{V} : Kind \rightarrow Set$を以下のように帰納的に定義する. 
+ 解釈$\mathcal{V} : \Kind \rightarrow \Set$を以下のように帰納的に定義する. 
 \[
   \mathcal{V} (A) := \begin{cases}
-    SAT & (A = \star) \\
+    \SAT & (A = \star) \\
     \{ f \mid f : \mathcal{V}(B) \rightarrow \mathcal{V}(C) \} & (A = \Pi B. C \text{ かつ }B : \square) \\
     \mathcal{V} (C) & (A = \Pi B. C  \text{ かつ }B : \star)
   \end{cases}
 \]
- $\mathcal{V}$の値域を$(SAT)^\star := \bigcup_{A \in Kind} \mathcal{V}(A)$のように書く.
+ $\mathcal{V}$の値域を$(\SAT)^\star := \bigcup_{A \in \Kind} \mathcal{V}(A)$のように書く.
 \end{defn}
 
 \begin{defn}
@@ -546,7 +558,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \end{defn}
 
 \begin{defn}
- 文脈$\Gamma$に対して写像$\xi : \mathbb{N} \rightarrow (SAT)^\star$がconstructor valuationであるとは, 自然数$n$で$\Gamma$のサイズを越えないものに対して, $\xi (n) \in \mathcal{V}(\Gamma(n))$となるもののことを言う.
+ 文脈$\Gamma$に対して写像$\xi : \mathbb{N} \rightarrow (\SAT)^\star$がconstructor valuationであるとは, 自然数$n$で$\Gamma$のサイズを越えないものに対して, $\xi (n) \in \mathcal{V}(\Gamma(n))$となるもののことを言う.
 \end{defn}
 
 \begin{defn}
@@ -561,23 +573,28 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \end{defn}
 
 \begin{defn}
- 文脈$\Gamma$とそのconstructor valuation $\xi : \mathbb{N} \rightarrow (SAT)^\star$に対して, 写像$\iprt{\cdot}{\xi} : \Gamma - Term \setminus \Gamma - Obj \rightarrow (SAT)^\star$を以下のように帰納的に定義する.
+ 文脈$\Gamma$とそのconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$に対して, 写像$\iprt{\cdot}{\xi} : \GTerm \setminus \GObj \rightarrow (\SAT)^\star$を以下のように帰納的に定義する.
 \[
  \iprt{A}{\xi} := \begin{cases}
-    SN & (A = \star \text{ または } \square) \\
+    \SN & (A = \star \text{ または } \square) \\
     \xi (A) & (A \in \mathbb{N}) \\
-    (\iprt{p}{\xi}) \iprt{q}{\xi} & (A = p q, q \in Constr) \\
-    \iprt{p}{\xi} & (A = p q, q \in Obj) \\
-    \{ \mathcal{V} (t) \ni a \mapsto \iprt{p}{\xi[a]} \} & (A = \lambda t. p, t \in Kind) <- ? \\
-    \iprt{p}{\xi} & (A = \lambda t. p, t \in Type) \\
-    \iprt{t}{\xi} \rightarrow \iprt{p}{\xi} & (A = \Pi t. p, t \in Type) \\
-    \iprt{t}{\xi} \rightarrow \cap_{a \in \mathcal{V}(t)} \iprt{p}{\xi[a]} & (A = \Pi t. p, t \in Kind)
+    (\iprt{p}{\xi}) \iprt{q}{\xi} & (A = p q, q \in \Constr) \\
+    \iprt{p}{\xi} & (A = p q, q \in \Obj) \\
+    \{ \mathcal{V} (t) \ni a \mapsto \iprt{p}{\xi[a]} \} & (A = \lambda t. p, t \in \Kind) <- ? \\
+    \iprt{p}{\xi} & (A = \lambda t. p, t \in \Type) \\
+    \iprt{t}{\xi} \rightarrow \iprt{p}{\xi} & (A = \Pi t. p, t \in \Type) \\
+    \iprt{t}{\xi} \rightarrow \cap_{a \in \mathcal{V}(t)} \iprt{p}{\xi[a]} & (A = \Pi t. p, t \in \Kind)
   \end{cases}
 \]
 \end{defn}
 \begin{rem}
  上記の定義は写像としてうまく定義されている. 実際型づけの規則から, 上記のような場合しかおこり得ないことを示すことができる.
 \end{rem}
+
+\begin{lem}
+ 写像$\iprt{\cdot}{\xi}$は代入と$\beta$簡約に対して整合的である. すなわち以下が成立する.
+\end{lem}
+
 
 % 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上
 
