@@ -415,21 +415,23 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 このような図式を証明木と言う.
 \end{ex}
 
+型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 型づけ可能な$P$上の$\beta$簡約に対しては停止性が成立する. 以下では停止性の証明に必要な準備を行っていく. 証明は\cite{geuvers1994short}, \cite{girard1989proofs}に従った.
+
 簡単な帰納法により示される事実ではあるが, 重要なこととして以下の補題がある.
 
-\begin{lem}[Classification]
+\begin{lem}[Classification]\label{clsfy}
  文脈$\Gamma$, pseudoterm $A, B \in P$に対して, $\Gamma \vdash A \colon B$となるのは以下の場合のいずれかに限る. また, それぞれの条件は重複しない.
  \begin{description}
   \item[Kind] $B = \square$
   \item[Constr] $\Gamma \vdash B {\colon} {\square}$
-  \item[Term] $\Gamma \vdash B {\colon} {\star}$
+  \item[Obj] $\Gamma \vdash B {\colon} {\star}$
  \end{description}
 \end{lem}
 \begin{proof}
  型づけに対する帰納法を用いる. また, 証明を簡潔にするため, Convによる型づけの導出の不定性は無視する. 実際Subject Reductionにより, 分類を保ったまま導出からConvを消去することは可能である.
  \begin{description}
   \item[Ax] 自明にKindのみが成立する.
-  \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のとき, Weakを用いれば$\Gamma, t \vdash t {\colon} {\star}$が分かるので結論はTermであり, $\Gamma \vdash t {\colon} {\square}$のときはConstrとなる. 逆に結論に対してTermかつConstrであると仮定するとWeakで分解できて, $\Gamma \vdash t {\colon} {\star}$かつ$\Gamma \vdash t {\colon} {\square}$となるがこれは帰納法の仮定に反する.
+  \item[Var] 帰納法により$\square \colon \star$および$\square \colon \square$がおこらないことがわかるため, Kindはあり得ない. 型づけを生成する含意の前提に注目すると, 前提が$\Gamma \vdash t {\colon} {\star}$のとき, Weakを用いれば$\Gamma, t \vdash t {\colon} {\star}$が分かるので結論はObjであり, $\Gamma \vdash t {\colon} {\square}$のときはConstrとなる. 逆に結論に対してObjかつConstrであると仮定するとWeakで分解できて, $\Gamma \vdash t {\colon} {\star}$かつ$\Gamma \vdash t {\colon} {\square}$となるがこれは帰納法の仮定に反する.
   \item[Weak] 前提の二番目$\Gamma \vdash m {\colon} u$の分類が, 結論に一対一に対応することが直ちに分かる.
   \item[\Pi] 分類の一意性のみが非自明である. 前提の二番目$\Gamma, r \vdash u {\colon} s$に対して, Weakで分解できるので, 帰納法の仮定より主張が従う.
   \item[\lambda] 自明である.
@@ -437,15 +439,89 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \end{description}
 \end{proof}
 
-型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 型づけ可能な$P$上の$\beta$簡約に対しては停止性が成立する.
+\begin{defn}
+補題\ref{clsfy}を踏まえて, pseudotermの集合$P$をいくつかのクラスに分類する.
+ \begin{itemize}
+  \item $Kind := \{ A \mid \Gamma \text{が存在し} \Gamma \vdash A \colon {\square}\}$
+  \item $Constr := \{ P \mid \Gamma, A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\square}\}$
+  \item $Obj := \{ P \mid \Gamma, A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\star}\}$
+ \end{itemize}
+ 補題\ref{clsfy}でみたようにこれらは互いにdisjointである.
+\end{defn}
 
+以下では$d \in \Lambda$として正規形となるものを一つ固定する. また$SN := \{ t \in \Lambda \mid t \text{は停止する}\}$とする.
+
+\begin{defn}
+ base terms $\mathcal{B}$を以下を満たす最小の集合として定義する.
+ \begin{itemize}
+  \item $\mathbb{N} \subset \mathcal{B}$かつ$d \in \mathcal{B}$
+  \item $m \in \mathcal{B}$かつ$n \in SN$ならば, $mn \in \mathcal{B}$
+ \end{itemize}
+\end{defn}
+
+\begin{defn}
+ 型なしラムダ計算のkey redexを以下を満たし, 最小になるように定義する.
+ \begin{itemize}
+  \item $m \in \Lambda$がredexであれば, $m$はkey redex.
+  \item $m \in \Lambda$がkey redex $n \in \Lambda$を持てば, 任意の$p \in \Lambda$に対して, $m p$もkey redexとして$n$を持つ.
+ \end{itemize}
+ここで述べたredexとよばれる項は, 簡約がおこる部分木のことを指している. すなわち, $(\lambda. e) e' \quad (e, e' \in \Lambda)$となるような形の項のことを指している.
+ 
+また, $m$に対するkey redexを$red_k(m)$と書く.
+\end{defn}
+
+\begin{defn}[Saturated set]\label{ss}
+ 型なしラムダ項の集合$X \subset \Lambda$がsaturatedであるとは, 以下のすべてを満たすものをいう.
+ \begin{itemize}
+  \item $X \subset SN$.
+  \item $\mathcal{B} \subset X$.
+  \item 任意の$m \in \Lambda$に対して, $red_k(m) \in X$かつ$m \in SN$ならば$m \in X$.
+ \end{itemize}
+ saturatedな集合の集合を$SAT$と書く.
+\end{defn}
+
+\begin{defn}
+ 解釈$\mathcal{V} : Kind \rightarrow Set$を以下のように帰納的に定義する. 
+\[
+  \mathcal{V} (A) := \begin{cases}
+    SAT & (A = \star) \\
+    \{ f \mid f : \mathcal{V}(B) \rightarrow \mathcal{V}(C) \} & (A = \Pi B. C \text{ かつ }B : \square) \\
+    \mathcal{V} (C) & (A = \Pi B. C  \text{ かつ }B : \star)
+  \end{cases}
+\]
+ $\mathcal{V}$の値域を$(SAT)^\star := \bigcup_{A \in Kind} \{\mathcal{V}(A)\}$のように書く.
+\end{defn}
 % 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上
+
+\begin{lem}
+ $SAT$は交差と含意で閉じる. すなわち以下を満たす.
+ \begin{itemize}
+  \item saturated set $X, Y$に対して, $X \cap Y$もsaturatedとなる.
+  \item saturated set $X, Y$に対して, $\{ M \in \Lambda \mid \text{任意の} N \in X \text{に対して}, M N \in Y\}$もsaturatedとなる.
+ \end{itemize}
+ ここで現れた $\{ M \in \Lambda \mid \text{任意の} N \in X \text{に対して}, M N \in Y\}$を$X \rightarrow Y$とかく.
+\end{lem}
+\begin{proof}
+ 前半は自明である.
+ 後半をみるには定義\ref{ss}の帰納的ないいかえを考えるとよい. すなわち, 
+ 型なしラムダ項の集合$X \subset \Lambda$がsaturatedであるとは, 以下のすべてを満たすものをいう.
+ \begin{itemize}
+  \item $X \subset SN$.
+  \item $n \in \mathbb{N}, q_1, \ldots, q_n \in SN, x \in \mathbb{N}$に対して, $x q_1 \ldots q_n \in X$.
+  \item $n \in \mathbb{N}, q_1, \ldots, q_n \in SN$に対して, $d q_1 \ldots q_n \in X$.
+  \item $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in SN$に対して, $m[p/0]q_1 \ldots q_n \in X$ならば$(\lambda m)p q_1 \ldots q_n \in X$.
+ \end{itemize}
+最後のいいかえについては, key redexの定義を考えればすぐにいえる.
+さて, $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in SN$に対して, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$とする. このとき, $(\lambda m)p q_1 \ldots q_n \in X \rightarrow Y$を言いたい.
+すなわち, 任意の$l \in X$に対して, $(\lambda m)p q_1 \ldots q_n l \in Y$となることを言いたい.
+ $Y$はsaturated setであったので, $m[p/0] q_1 \ldots q_n l \in Y$であればよいが, 
+ $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$であったので主張が従う.
+\end{proof}
 
 \begin{thm}
  型づけ可能な$P$上の$\beta$簡約$\rightarrow_{\beta}|_T$は停止性を持つ.
 \end{thm}
 \begin{proof}
- 証明は\cite{geuvers1994short}, \cite{girard1989proofs}に従った.
 \end{proof}
 
 %\section{論理体系としてのCoC}
