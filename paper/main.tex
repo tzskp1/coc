@@ -70,8 +70,7 @@
 \begin{abstract}
 \end{abstract}
 
-% いらないのでは？
-\section{記号等}
+\section{項書き換え系}
 初めに簡約関係と呼ばれる一般の$2$項関係について論じる. 考えている集合$A$とその上の$2$項関係$\rightarrow \subset A \times A$を固定する.ここでそれぞれ,
 $\xrightarrow{n}$を$\rightarrow$を$n$回合成した関係,
 $\leftrightarrow$を$\rightarrow$の対称閉包,
@@ -86,7 +85,7 @@ $\overset{*}{\leftrightarrow}$を$\rightarrow$の推移対称反射閉包とす�
 $\rightarrow$が合流性を持つとは,任意の$y_{1},y_{2},x \in A$について$y_1 \overset{*}{\leftarrow} x \overset{*}{\rightarrow} y_2$ならば, $y_1 \overset{*}{\rightarrow} z \overset{*}{\leftarrow} y_2$となる$z \in A$が存在することを言い, 停止するとは無限列$a_0 \rightarrow a_1 \rightarrow a_2 \rightarrow \cdots$が$A$に存在しないことを言う. さらに$x \in A$が正規形であるとは, $x \rightarrow y$となる$y \in A$が存在しないことを言う.
 \end{defn}
 
-また停止性の非自明な言い換えとしてwell foundnessとよばれるものがある.
+また停止性の非自明な言い換えとしてwell foundednessとよばれるものがある.
 
 \begin{defn}
 $\rightarrow$がwell foundedであるとは, 以下の条件が同値であることをいう. ただし$P$は任意の述語を表している.
@@ -97,7 +96,7 @@ $\rightarrow$がwell foundedであるとは, 以下の条件が同値である�
 \end{defn}
 
 \begin{thm}
- 停止性とwell foundnessは同値である.
+ 停止性とwell foundednessは同値である.
 \end{thm}
 
 \begin{proof}
@@ -108,7 +107,7 @@ $\rightarrow$がwell foundedであるとは, 以下の条件が同値である�
 
 \begin{rem}
 帰納的に定義された(有限)木構造に対して, 自然な順序が存在する.
-このときその順序に対して, well foundnessを常に適用できるが, これを断りなく帰納法と呼ぶ.
+このときその順序に対して, well foundednessを常に適用できるが, これを断りなく帰納法と呼ぶ.
 \end{rem}
 
 %\section{型理論とは}
@@ -121,7 +120,7 @@ $\rightarrow$がwell foundedであるとは, 以下の条件が同値である�
 \begin{defn}
  ラムダ項$t$とは, 以下のBNFで定義される木である. $v$は可算濃度の集合$V$の元を意味している.
  \[
- t := v | \lambda v. t | t t
+ t ::= v \mid \lambda v. t \mid t t
  \]
 \end{defn}
 
@@ -150,18 +149,18 @@ BNFでの定義と同値なものが以下である.
  ただし, ここで$M[N/v]$とは代入と呼ばれる操作を表している. 代入とはラムダ項$M \in \Lambda$の中に表れる$v \in V$をすべてラムダ項$N \in \Lambda$に置きかえるということである.
 \end{defn}
 
-ここで述べた代入という操作を正確に記述するために, de brujin indexとよばれるものを導入する.
+ここで述べた代入という操作を正確に記述するために, de Brujin indexとよばれるものを導入する.
 集合$V$は変数の集合を表しており, 我々の状況では$V := \mathbb{N}$として問題ないため, 以下ではそのようにする.
 
 また, ラムダ項の定義を修正し以下のようにする.
 
 \begin{defn}
  \[
- t := v | \lambda. t | t t
+ t ::= v \mid \lambda. t \mid t t
  \]
 \end{defn}
 
-\begin{defn}[de brujin index]
+\begin{defn}[de Brujin index]
  写像 $s \colon \Lambda \times \mathbb{N} \times \mathbb{N} \rightarrow \Lambda$を任意のラムダ項$M$, 自然数$n, c$に対して, 以下のように帰納的に定義する.
  
 \[
@@ -201,7 +200,7 @@ $\beta$簡約の定義も修正する.
  \[
  (\lambda x. \lambda y. x) z w \rightarrow_{\beta} (\lambda y. z) w \rightarrow_{\beta} z
  \]
- これをde brujin indexで表わすと, $z, w \in \Lambda$に対して以下のようになる.
+ これをde Brujin indexで表わすと, $z, w \in \Lambda$に対して以下のようになる.
  \[
  (\lambda. \lambda. 1) z w \rightarrow_{\beta} (\lambda. 1)[z/0] w = (\lambda. 1[s (z, 1, 0)/1]) w \rightarrow_{\beta} 1[s (z, 1, 0)/1][w/0] = s (z, 1, 0)[w/0] = z
  \]
@@ -236,11 +235,11 @@ $\beta$簡約の定義も修正する.
  $\rightarrow_{p}$の定義による帰納法を用いる. P4%TODO: fix
 のみが非自明なので, その場合のみを示す.
  すなわち$p, q, t_1, t_2, s_1, s_2 \in \Lambda$に対して,
-$p \rightarrow_{p} q$, $t_1 \rightarrow_{p} s_1$かつ $t_2 \rightarrow_{p} s_2$ならば$((\lambda. t_1) t_2) [p / s] \rightarrow_{p} (s_1 [s_2 / 0] [q / s])$を示す.
+$p \rightarrow_{p} q$, $t_1 \rightarrow_{p} s_1$かつ $t_2 \rightarrow_{p} s_2$ならば$((\lambda. t_1) t_2) [p / u] \rightarrow_{p} (s_1 [s_2 / 0] [q / u])$を示す.
  
  代入を交換すると, 以下のような等式が成立する
  \[
- s_1 [s_2 / 0][q / s] = s_1 [s(q, 1, 0) / (s + 1)][s_2 [q / s] / 0]
+ s_1 [s_2 / 0][q / u] = s_1 [s(q, 1, 0) / (u + 1)][s_2 [q / u] / 0]
  \]
  ことに注意する. 上の等式により, $t_1$に対しての帰納法の仮定を適用することができて, 主張が成立する.
 \end{proof}
@@ -295,7 +294,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \begin{defn}
  pseudoterm $p$とは, 以下のBNFで定義される木である. $v$は自然数を意味している.
  \[
- p := v | \lambda p. p | \Pi p. p | p p | \star | \square
+ p ::= v \mid \lambda p. p \mid \Pi p. p \mid p p \mid \star \mid \square
  \]
  また, $P$をpseudotermの集合とする.
 \end{defn}
@@ -310,9 +309,9 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \end{itemize}
 \end{defn}
 
- ただし, ここでもあいまいさを回避するためにde brujin indexによって代入を定義する.
+ ただし, ここでもあいまいさを回避するためにde Brujin indexによって代入を定義する.
 
-\begin{defn}[de brujin index]
+\begin{defn}[de Brujin index]
  写像 $s \colon P \times \mathbb{N} \times \mathbb{N} \rightarrow P$を任意のpseudoterm $M$, 自然数$n, c$に対して, 以下のように帰納的に定義する.
 
 \[
@@ -410,22 +409,22 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \begin{ex}[恒等射]
  単純ではあるが普遍的なものとして恒等射があるが, CoCには恒等射を表現するのに十分な能力がある. (これは型理論にとっては自明ではない.)
 
- pseudoterm $x$を$x \colon {\square}$となる様なものとするとき, この上の恒等射としてふさわしい項は$\lambda x. 0 \colon \Pi x. s(x, 1, 0)$となる. 実際に$y \colon x$となる$y$をとると, 規則Appにより$(\lambda x. 0)y \colon s(x, 1, 0)[y/0] \rightarrow_\beta 0[y/0] \colon x = y \colon x$となることが確認される.
+ pseudoterm $p$を$p \colon {\square}$となる様なものとするとき, この上の恒等射としてふさわしい項は$\lambda p. 0 \colon \Pi p. s(p, 1, 0)$となる. 実際に$q \colon p$となる$q$をとると, 規則Appにより$(\lambda p. 0)q \colon s(p, 1, 0)[q/0] \rightarrow_\beta 0[q/0] \colon p = q \colon p$となることが確認される.
 
- また例えば$x = \star$に対して, $\lambda x. 0 \colon \Pi x. s(x, 1, 0)$が型づけ可能であることは以下の様に示される.
+ また例えば$p = \star$に対して, $\lambda p. 0 \colon \Pi p. s(p, 1, 0)$が型づけ可能であることは以下の様に示される.
 \begin{prooftree}
 \AxiomC{$\vdash \star \colon \square$}
 \AxiomC{$\vdash \star \colon \square$}
-\AxiomC{$\vdash s(x, 1, 0) = \star \colon \square$}
+\AxiomC{$\vdash s(p, 1, 0) = \star \colon \square$}
 \RightLabel{Weak}
-\BinaryInfC{$x \vdash s(x, 1, 0) \colon \square$}
+\BinaryInfC{$p \vdash s(p, 1, 0) \colon \square$}
 \RightLabel{$\Pi$}
-\BinaryInfC{$\vdash \Pi x. s(x, 1, 0) \colon \square$}
+\BinaryInfC{$\vdash \Pi p. s(p, 1, 0) \colon \square$}
 \AxiomC{$\vdash \star \colon \square$}
 \RightLabel{Var}
-\UnaryInfC{$x \vdash 0 \colon s(x, 1, 0)$}
+\UnaryInfC{$p \vdash 0 \colon s(p, 1, 0)$}
 \RightLabel{$\lambda$}
-\BinaryInfC{$\vdash \lambda x.0 \colon \Pi x. s(x, 1, 0)$}
+\BinaryInfC{$\vdash \lambda p.0 \colon \Pi p. s(p, 1, 0)$}
 \end{prooftree}
 このような図式を証明木と言う.
 \end{ex}
@@ -531,8 +530,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 最後のいいかえについては, key redexの定義を考えればすぐにいえる.
 さて, $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in \SN$に対して, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$とする. このとき, $(\lambda m)p q_1 \ldots q_n \in X \rightarrow Y$を言いたい.
 すなわち, 任意の$l \in X$に対して, $(\lambda m)p q_1 \ldots q_n l \in Y$となることを言いたい.
- $Y$はsaturated setであったので, $m[p/0] q_1 \ldots q_n l \in Y$であればよいが, 
- $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$であったので主張が従う.
+ $Y$はsaturated setであったので, $m[p/0] q_1 \ldots q_n l \in Y$であればよいが, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$であったので主張が従う.
 \end{proof}
 
 \begin{defn}
@@ -588,7 +586,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \]
 \end{defn}
 \begin{rem}
- 上記の定義は写像としてうまく定義されている. 実際型づけの規則から, 上記のような場合しかおこり得ないことを示すことができる.
+ 上記の定義は写像としてうまく定義されている. 実際型づけの規則から, 上記のような場合しか起こり得ないことを示すことができる.
 \end{rem}
 
 \begin{lem}
@@ -609,10 +607,6 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 % domain のなかで証明列をながめると?
 % CoCでないと扱えないようなStatementの例とは? : Proposition の合成?
 % 3
-
-\section{まとめ}
-% 結論がよわいような...
-% 1
 
 \section{謝辞}
 
