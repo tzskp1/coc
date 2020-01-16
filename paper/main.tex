@@ -1,4 +1,4 @@
-\documentclass[12pt]{ltjsarticle}
+\documentclass[12pt, titlepage]{ltjsarticle}
 \usepackage{luatexja}
 \usepackage{bussproofs}
 \usepackage{amsmath,amssymb,amsthm}
@@ -67,8 +67,17 @@
 % - directed homotopy? (わかってないので書かない)
 % - よくかんがえたらこの問題意識はcompletion由来かも?
 
-\begin{abstract}
-\end{abstract}
+\section{序文}
+この文章はCalculus of Construction(CoC)と呼ばれる(数理論理学的な)言語についてのサーベイである.
+
+現在の数学的なコンピュータソフトウェアというものは, おおよそ代数的な計算を行うものであり, しかも特定の領域に特化したアルゴリズムを書く必要がある.
+
+CoCの実際的な価値というのは, 数学的な対象を言語を通じてあらわすことにより,
+抽象的な表現をコンピュータ上で行なうことができる点にある.
+
+本文章では, CoCの論理的な整合性について特に論じる.
+
+また, 本文章の停止性の証明は \cite{geuvers1994short}によるところが大きい.
 
 \section{項書き換え系}
 初めに簡約関係と呼ばれる一般の$2$項関係について論じる. 考えている集合$A$とその上の$2$項関係$\rightarrow \subset A \times A$を固定する.ここでそれぞれ,
@@ -184,6 +193,8 @@ BNFでの定義と同値なものが以下である.
 \]
 \end{defn}
 
+ここで述べている$s$という写像はあらわれた$\lambda$の分, 参照するべき数字を増やすという働きをしている.
+
 $\beta$簡約の定義も修正する.
 
 \begin{defn}
@@ -194,6 +205,15 @@ $\beta$簡約の定義も修正する.
   \item 任意の$M, N_1, N_2 \in \Lambda$について, $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
  \end{itemize}
 \end{defn}
+
+de Brujin indexについて注意すべき性質がある.
+
+\begin{lem}
+ 任意の$t, r \in \Lambda$に対して, $s (t, 1, 0)[r/0] = t$.
+\end{lem}
+\begin{proof}
+ 帰納法による.
+\end{proof}
 
 \begin{ex}[$K$ コンビネータ]
  $V$を文字列の集合とする. このとき $x, y \in V$, $z, w \in \Lambda$に対して以下の様な例が考えられる.
@@ -384,6 +404,16 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  規則$\Pi$は四通り存在する.
 \end{rem}
 
+CoCにおいては, $\Pi$には複数の役割がある. 
+\begin{itemize}
+ \item 計算論的な側面からは, $\Pi$は関数あるいは写像の型
+ \item 命題論理学的な側面からは, $\Pi$は含意
+ \item 述語論理学的な側面からは, $\Pi$は述語
+\end{itemize}
+をそれぞれ意味している. $\Pi$の柔軟性により, CoCは現代数学に現われるほとんどの主張をいいあらわすことができる. 
+
+また, Curry Howard対応というものが広く知られており, $\Gamma \vdash p : q$であるときに, $q$を命題の主張, $p$をその証明とみなすことが可能である. CoCの本来の役割は証明を記述し, 型づけによりその整合性を確かめることにあった.
+
 % \begin{rem}
 %  上記の定義では文脈と型づけ規則が同時に定義されていることに注意されたい. したがって, 上記の定義は帰納的な定義になっており循環していない.
 % \end{rem}
@@ -429,7 +459,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 このような図式を証明木と言う.
 \end{ex}
 
-型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 型づけ可能な$P$上の$\beta$簡約に対しては停止性が成立する. 以下では停止性の証明に必要な準備を行っていく. 証明は\cite{geuvers1994short}, \cite{girard1989proofs}に従った.
+型つきの計算規則のもとでは, 型がつく項のみが考える対象となる. 実際, 型づけ可能な$P$上の$\beta$簡約に対しては停止性が成立する. 以下では停止性の証明に必要な準備を行っていく. 証明は\cite{geuvers1994short}, \cite{girard1989proofs}に従った.
 
 簡単な帰納法により示される事実ではあるが, 重要なこととして以下の補題がある.
 
@@ -509,6 +539,10 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  saturatedな集合の集合を$\SAT$と書く.
 \end{defn}
 
+\begin{rem}
+ Saturated Setは停止性の証明において本質的である.
+\end{rem}
+
 \begin{lem}
  $\SAT$は交差と含意で閉じる. すなわち以下を満たす.
  \begin{itemize}
@@ -549,25 +583,33 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  文脈の$n$番目を取る操作を以下のように定義する. ただし, $n$は文脈$\Gamma$のサイズを越えないものとする.
 \[
   \Gamma (n) := \begin{cases}
-    \Gamma' (n - 1) & (\Gamma = \Gamma', A  \text{ かつ } n > 0) \\
-    A & (\Gamma = \Gamma', A  \text{ かつ } n = 0)
+    s (\Gamma' (n - 1), 1, 0) & (\Gamma = \Gamma', A  \text{ かつ } n > 0) \\
+    s(A, 1, 0) & (\Gamma = \Gamma', A  \text{ かつ } n = 0)
   \end{cases}
 \]
+ここでの$s$はde Brujin indexを合わせるためにつけている.
 \end{defn}
 
-\begin{defn}
- 文脈$\Gamma$に対して写像$\xi : \mathbb{N} \rightarrow (\SAT)^\star$がconstructor valuationであるとは, 自然数$n$で$\Gamma$のサイズを越えないものに対して, $\xi (n) \in \mathcal{V}(\Gamma(n))$となるもののことを言う.
-\end{defn}
+\begin{lem}
+ 文脈$\Gamma$および, 自然数$n$で$\Gamma$のサイズを越えないものに対して, $\Gamma \vdash n \colon \Gamma (n)$.
+\end{lem}
+\begin{proof}
+ 帰納法による.
+\end{proof}
 
 \begin{defn}
 集合$A$, 写像$\xi : \mathbb{N} \rightarrow A$および$a \in A$に対して,
  \[
    \xi[a](n) := \begin{cases}
     a & (n = 0) \\
-    \xi(n) & (n > 0)
+    \xi(n - 1) & (n > 0)
   \end{cases}
  \]
 とする.
+\end{defn}
+
+\begin{defn}
+ 文脈$\Gamma$に対して写像$\xi : \mathbb{N} \rightarrow (\SAT)^\star$がconstructor valuationであるとは, 自然数$n$で$\Gamma$のサイズを越えないものに対して, $\xi (n) \in \mathcal{V}(\Gamma(n))$となるもののことを言う.
 \end{defn}
 
 \begin{defn}
@@ -576,7 +618,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \iprt{A}{\xi} := \begin{cases}
     \SN & (A = \star \text{ または } \square) \\
     \xi (A) & (A \in \mathbb{N}) \\
-    (\iprt{p}{\xi}) \iprt{q}{\xi} & (A = p q, q \in \Constr) \\
+    \iprt{p}{\xi} (\iprt{q}{\xi}) & (A = p q, q \in \Constr) \\
     \iprt{p}{\xi} & (A = p q, q \in \Obj) \\
     \mathcal{V} (t) \ni a \mapsto \iprt{p}{\xi[a]} & (A = \lambda t. p, t \in \Kind) \\
     \iprt{p}{\xi} & (A = \lambda t. p, t \in \Type) \\
@@ -588,10 +630,60 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 \begin{rem}
  上記の定義は写像としてうまく定義されている. 実際型づけの規則から, 上記のような場合しか起こり得ないことを示すことができる.
 \end{rem}
-
-\begin{lem}
+\begin{lem}\label{betap}
  写像$\iprt{\cdot}{\xi}$は代入と$\beta$簡約に対して整合的である. すなわち以下が成立する.
+pseudoterm $p, q \in P$に対して, 
+ \begin{itemize}
+  \item $\iprt{p [q/0]}{\xi} = \iprt{p}{\xi[\iprt{q}{\xi}]}$.
+  \item $p \overset{*}{\leftrightarrow}_\beta q$ならば, $\iprt{p}{\xi} = \iprt{q}{\xi}$.
+ \end{itemize}
 \end{lem}
+\begin{proof}
+ 後半は前半から直ちに従う. 前半は$p$に対する帰納法を行なえばよい.
+\end{proof}
+
+\begin{defn}
+ 文脈$\Gamma$とそのconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$に対して, 写像$\rho : \mathbb{N} \rightarrow \Lambda$がobject valuationであるとは, 自然数$n$で$\Gamma$のサイズを越えないものに対して, $\rho (n) \in \iprt{\Gamma(n)}{\xi}$となるもののことを言う.
+\end{defn}
+
+\begin{defn}
+ 文脈$\Gamma$とそのconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$, object valuation $\rho : \mathbb{N} \rightarrow \Lambda$に対して, 写像$\iprt{\cdot}{\rho} : \GTerm \setminus \{\square\} \rightarrow \Lambda$を以下のように帰納的に定義する.
+\[
+ \iprt{A}{\rho} := \begin{cases}
+    d & (A = \star) \\
+    \rho (A) & (A \in \mathbb{N}) \\
+    \iprt{p}{\rho} \iprt{q}{\rho} & (A = p q) \\
+    K (\lambda . \iprt{p}{\rho[0]}) \iprt{t}{\rho} & (A = \lambda t. p) \\
+    d \iprt{t}{\rho} (\lambda . \iprt{p}{\rho[0]}) & (A = \Pi t. p)
+  \end{cases}
+\]
+\end{defn}
+
+いままで述べた定義は, CoCのモデルの解釈を与えている. 以下に述べる定理は数理論理学においては健全性定理と呼ばれるものである.
+
+\begin{thm}
+ 文脈$\Gamma$, pseudoterm $A, B \in P$に対して, $\Gamma \vdash A \colon B$となるとき,
+ 任意のconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$, object valuation $\rho : \mathbb{N} \rightarrow \Lambda$に対して, $\iprt{A}{\rho} \in \iprt{B}{\xi}$が成立する.
+\end{thm}
+\begin{proof}
+ $A$に対する帰納法を行う.
+ \begin{itemize}
+  \item $A \in \mathbb{N}$のとき, 規則Convによる不定性から$B \overset{*}{\leftrightarrow}_\beta \Gamma(A)$, $\iprt{A}{\rho} = \rho (A) \in \iprt{\Gamma(A)}{\xi}$.
+        また, 補題\ref{betap}より $\iprt{\Gamma(A)}{\xi} = \iprt{B}{\xi}$.
+  \item $A = \lambda p. q, \quad p \in \Type, q \in \Constr$のとき,
+        ある$r \in P$が存在して, $\Gamma, p \vdash q \colon r$
+% \iprt{B}{\xi}$
+%         $\rho (n) \in 
+ \end{itemize}
+\end{proof}
+
+% \begin{lem}
+%  文脈$\Gamma$とそのconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$, object valuation $\rho : \mathbb{N} \rightarrow \Lambda$および$\iprt{\cdot}{\rho} : \GTerm \setminus \{\square\} \rightarrow \Lambda$を考える.
+%  このとき, $\rho$に対する依存を分離することができる. すなわち,
+%  \[
+%  \iprt{p}{\rho} = \lceil p \rceil (\rho)
+%  \]
+% \end{lem}
 
 
 % 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上
@@ -608,7 +700,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 % CoCでないと扱えないようなStatementの例とは? : Proposition の合成?
 % 3
 
-\section{謝辞}
+% \section{謝辞}
 
 \bibliography{bib}
 \bibliographystyle{junsrt}
