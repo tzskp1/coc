@@ -673,9 +673,10 @@ pseudoterm $p, q \in P$に対して,
         また, 補題\ref{betap}より $\iprt{\Gamma(A)}{\xi} = \iprt{B}{\xi}$.
   \item $A = \lambda p. q$のとき規則$\lambda$, Convより, ある$r \in P$が存在して$\Gamma, p \vdash q \colon r$かつ$\Pi p. r \overset{*}{\leftrightarrow}_\beta B$. このとき, さらに以下の二つに場合分けされる.
  \begin{itemize}
-  \item $p \in \Type$のとき,
-        $\iprt{A}{\rho} = \iprt{\lambda p. q}{\rho} = K (\lambda . \iprt{q}{\rho[0]}) \iprt{p}{\rho} \rightarrow_\beta \lambda . \iprt{q}{\rho[0]}$
-        $\iprt{B}{\xi} = \iprt{\Pi p. r}{\xi} = \iprt{p}{\xi} \rightarrow \iprt{r}{\xi}$
+  \item $p \in \Type$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\star}{\xi} = \SN$.
+        \[
+        \iprt{A}{\rho} = \iprt{\lambda p. q}{\rho} = K (\lambda . \iprt{q}{\rho[0]}) \iprt{p}{\rho} \rightarrow_\beta \lambda . \iprt{q}{\rho[0]} \in \iprt{B}{\xi} = \iprt{\Pi p. r}{\xi} = \iprt{p}{\xi} \rightarrow \iprt{r}{\xi}
+        \]
         % $\iprt{A}{\xi} = \iprt{\lambda p. q}{\xi} = \iprt{q}{\xi}$
         % $\iprt{B}{\rho} = \iprt{\Pi p. r}{\rho} = d \iprt{p}{\rho} (\lambda . \iprt{r}{\rho[0]})$
  \end{itemize}
