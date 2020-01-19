@@ -690,8 +690,13 @@ CoCにおいては, $\Pi$には複数の役割がある.
 いままで述べた定義は, CoCのモデルの解釈を与えている. 以下に述べる定理は数理論理学においては健全性定理と呼ばれるものである.
 
 \begin{thm}
+ 文脈$\Gamma$, pseudoterm $A \in \Kind$, $B \in \Constr$に対して, $\Gamma \vdash A \colon B$となるとき,
+ 任意のconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$に対して, $\iprt{A}{\xi} \in \mathcal{V}(B)$.
+\end{thm}
+
+\begin{thm}
  文脈$\Gamma$, pseudoterm $A, B \in P$に対して, $\Gamma \vdash A \colon B$となるとき,
- 任意のconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$, object valuation $\rho : \mathbb{N} \rightarrow \Lambda$に対して, $\iprt{A}{\rho} \in \iprt{B}{\xi}$が成立する.
+ 任意のconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$, object valuation $\rho : \mathbb{N} \rightarrow \Lambda$に対して, $\iprt{A}{\rho} \in \iprt{B}{\xi}$.
 \end{thm}
 \begin{proof}
  $A$に対する帰納法を行う.
