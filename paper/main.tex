@@ -624,8 +624,8 @@ CoCにおいては, $\Pi$には複数の役割がある.
     \iprt{p}{\xi} (\iprt{q}{\xi}) & (A = p q, q \in \Constr) \\
     \iprt{p}{\xi} & (A = p q, q \in \Obj) \\
     \mathcal{V} (t) \ni a \mapsto \iprt{p}{\xi[a]} & (A = \lambda t. p, t \in \Kind) \\
-    \iprt{p}{\xi} & (A = \lambda t. p, t \in \Type) \\
-    \iprt{t}{\xi} \rightarrow \iprt{p}{\xi} & (A = \Pi t. p, t \in \Type) \\
+    \iprt{p}{\xi[d]} & (A = \lambda t. p, t \in \Type) \\
+    \iprt{t}{\xi} \rightarrow \iprt{p}{\xi[d]} & (A = \Pi t. p, t \in \Type) \\
     \iprt{t}{\xi} \rightarrow \cap_{a \in \mathcal{V}(t)} \iprt{p}{\xi[a]} & (A = \Pi t. p, t \in \Kind)
   \end{cases}
 \]
@@ -635,14 +635,39 @@ CoCにおいては, $\Pi$には複数の役割がある.
 \end{rem}
 \begin{lem}\label{betap}
  写像$\iprt{\cdot}{\xi}$は代入と$\beta$簡約に対して整合的である. すなわち以下が成立する.
-pseudoterm $p, q \in P$に対して, 
  \begin{itemize}
-  \item $\iprt{p [q/0]}{\xi} = \iprt{p}{\xi[\iprt{q}{\xi}]}$.
-  \item $p \overset{*}{\leftrightarrow}_\beta q$ならば, $\iprt{p}{\xi} = \iprt{q}{\xi}$.
+  \item pseudoterm $p, q \in P$に対して$p [q/0] \in \GTerm \setminus \GObj$とする.
+        このとき$i \in \mathbb{N}$, $a_1, \ldots, a_i \in (\SAT)^\star$に対して,
+        \[
+        \iprt{p [s (q, i, 0)/i]}{\xi[a_i]\ldots[a_1]} = \begin{cases}
+        \iprt{p}{\xi[d][a_i]\ldots[a_1]} & (q \in \Obj) \\
+        \iprt{p}{\xi[\iprt{q}{\xi}][a_i]\ldots[a_1]} & (\text{その他})
+        \end{cases}
+        \]
+  \item $p, q \in \GTerm \setminus \GObj$に対して$p \overset{*}{\leftrightarrow}_\beta q$ならば, $\iprt{p}{\xi} = \iprt{q}{\xi}$.
  \end{itemize}
 \end{lem}
 \begin{proof}
- 後半は前半から直ちに従う. 前半は$p$に対する帰納法を行なえばよい.
+ 後半は前半から直ちに従う. 前半を$p$に対する帰納法により示す.
+ \begin{itemize}
+  \item $p = i$のとき$q \notin \Obj$なので,
+        \[
+        \iprt{p [s (q, i, 0)/i]}{\xi[a_i]\ldots[a_1]} = \iprt{s (q, i, 0)}{\xi[a_i]\ldots[a_1]} = \iprt{q}{\xi} = \iprt{p}{\xi[\iprt{q}{\xi}][a_i]\ldots[a_1]}
+        \]
+  \item $p \neq i$, $p = p_1 p_2$となるときは明らか.
+  \item $p = \lambda t. p_0$, $t \in \Kind$, $q \notin \Obj$のとき
+        \begin{align*}
+        \iprt{p [s (q, i, 0)/i]}{\xi[a_i]\ldots[a_1]} &= \iprt{(\lambda t. p_0) [s (q, i, 0)/i]}{\xi[a_i]\ldots[a_1]} \\
+         &= \iprt{\lambda t[s (q, i+1, 0)/i]. p_0[s (q, i+1, 0)/(i+1)]}{\xi[a_i]\ldots[a_1]} \\
+         %t[s (q, i+1, 0)/i] は Kind (代入が型づけを保存することから)
+         &= a_0 \mapsto \iprt{p_0[s (q, i+1, 0)/(i+1)]}{\xi[a_i]\ldots[a_1][a_0]} \\
+         % \mathcal{V} (t[s (q, i+1, 0)/i]) = \mathcal{V} (t)
+         &= a_0 \mapsto \iprt{p_0}{\xi[\iprt{q}{\xi}][a_i]\ldots[a_1][a_0]} \\
+         &= \iprt{p}{\xi[\iprt{q}{\xi}][a_i]\ldots[a_1]}
+        \end{align*}
+        となり問題ない.
+  \item その他の場合も上記と同様に従う.
+ \end{itemize}
 \end{proof}
 
 \begin{defn}
