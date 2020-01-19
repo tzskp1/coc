@@ -18,6 +18,8 @@
 \DeclareMathOperator{\GConstr}{\Gamma-Constr}
 \DeclareMathOperator{\GType}{\Gamma-Type}
 \DeclareMathOperator{\GKind}{\Gamma-Kind}
+\DeclareMathOperator{\K}{K}
+\DeclareMathOperator{\red}{red}
 \newcommand{\iprt}[2]{\llbracket {#1} \rrbracket_ {#2}}
 \begin{document}
 
@@ -216,7 +218,7 @@ de Brujin indexについて注意すべき性質がある.
  帰納法による.
 \end{proof}
 
-\begin{ex}[$K$ コンビネータ]
+\begin{ex}[$\K$ コンビネータ]
  $V$を文字列の集合とする. このとき $x, y \in V$, $z, w \in \Lambda$に対して以下の様な例が考えられる.
  \[
  (\lambda x. \lambda y. x) z w \rightarrow_{\beta} (\lambda y. z) w \rightarrow_{\beta} z
@@ -225,7 +227,7 @@ de Brujin indexについて注意すべき性質がある.
  \[
  (\lambda. \lambda. 1) z w \rightarrow_{\beta} (\lambda. 1)[z/0] w = (\lambda. 1[s (z, 1, 0)/1]) w \rightarrow_{\beta} 1[s (z, 1, 0)/1][w/0] = s (z, 1, 0)[w/0] = z
  \]
-ここでの$\lambda. \lambda. 1$を$K$コンビネータという.
+ここでの$\lambda. \lambda. 1$を$\K$コンビネータという.
 \end{ex}
 
 ラムダ計算の基本的な性質として合流性がある.
@@ -527,7 +529,7 @@ CoCにおいては, $\Pi$には複数の役割がある.
  \end{itemize}
 ここで述べたredexとよばれる項は, 簡約がおこる部分木のことを指している. すなわち, $(\lambda. e) e' \quad (e, e' \in \Lambda)$となるような形の項のことを指している.
  
-また, $m$に対するkey redexを$red_k(m)$と書く.
+また, $m$に対するkey redexを$\red_k(m)$と書く.
 \end{defn}
 
 \begin{defn}[Saturated Set]\label{ss}
@@ -535,7 +537,7 @@ CoCにおいては, $\Pi$には複数の役割がある.
  \begin{itemize}
   \item $X \subset \SN$.
   \item $\mathcal{B} \subset X$.
-  \item 任意の$m \in \Lambda$に対して, $red_k(m) \in X$かつ$m \in \SN$ならば$m \in X$.
+  \item 任意の$m \in \Lambda$に対して, $\red_k(m) \in X$かつ$m \in \SN$ならば$m \in X$.
  \end{itemize}
  saturatedな集合の集合を$\SAT$と書く.
 \end{defn}
@@ -560,7 +562,7 @@ CoCにおいては, $\Pi$には複数の役割がある.
   \item $X \subset \SN$.
   \item $n \in \mathbb{N}, q_1, \ldots, q_n \in \SN, x \in \mathbb{N}$に対して, $x q_1 \ldots q_n \in X$.
   \item $n \in \mathbb{N}, q_1, \ldots, q_n \in \SN$に対して, $d q_1 \ldots q_n \in X$.
-  \item $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in \SN$に対して, $m[p/0]q_1 \ldots q_n \in X$ならば$(\lambda m)p q_1 \ldots q_n \in X$.
+  \item $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in \SN$に対して, $m[p/0]q_1 \ldots q_n \in X$ならば$(\lambda . m)p q_1 \ldots q_n \in X$.
  \end{itemize}
 最後のいいかえについては, key redexの定義を考えればすぐにいえる.
 さて, $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in \SN$に対して, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$とする. このとき, $(\lambda m)p q_1 \ldots q_n \in X \rightarrow Y$を言いたい.
@@ -572,16 +574,16 @@ CoCにおいては, $\Pi$には複数の役割がある.
  解釈$\mathcal{V} : \Kind \rightarrow \Set$を以下のように帰納的に定義する. 
 \[
   \mathcal{V} (A) := \begin{cases}
-    \SAT & (A = \star) \\
-    \{ f \mid f : \mathcal{V}(B) \rightarrow \mathcal{V}(C) \} & (A = \Pi B. C \text{ かつ }B : \square) \\
-    \mathcal{V} (C) & (A = \Pi B. C  \text{ かつ }B : \star)
+    \SAT & (A \in \Type) \\
+    \{ f \mid f : \mathcal{V}(B) \rightarrow \mathcal{V}(C) \} & (A = \Pi B. C, B \in \Kind) \\
+    \mathcal{V} (C) & (A = \Pi B. C, B \in \Type)
   \end{cases}
 \]
- $\mathcal{V}$の値域を$(\SAT)^\star := \bigcup_{A \in \Kind} \mathcal{V}(A)$のように書く.
+ $\mathcal{V}$による像を集めた集合を$(\SAT)^\star := \bigcup_{A \in \Kind} \mathcal{V}(A)$のように書く.
 \end{defn}
 
 \begin{defn}
- 文脈の$n$番目を取る操作を以下のように定義する. ただし, $n$は文脈$\Gamma$のサイズを越えないものとする.
+ 文脈の$n + 1$番目を取る操作を以下のように定義する. ただし, $n$は文脈$\Gamma$のサイズを越えないものとする.
 \[
   \Gamma (n) := \begin{cases}
     s (\Gamma' (n - 1), 1, 0) & (\Gamma = \Gamma', A  \text{ かつ } n > 0) \\
@@ -654,7 +656,7 @@ pseudoterm $p, q \in P$に対して,
     d & (A = \star) \\
     \rho (A) & (A \in \mathbb{N}) \\
     \iprt{p}{\rho} \iprt{q}{\rho} & (A = p q) \\
-    K (\lambda . \iprt{p}{\rho[0]}) \iprt{t}{\rho} & (A = \lambda t. p) \\
+    \K (\lambda . \iprt{p}{\rho[0]}) \iprt{t}{\rho} & (A = \lambda t. p) \\
     d \iprt{t}{\rho} (\lambda . \iprt{p}{\rho[0]}) & (A = \Pi t. p)
   \end{cases}
 \]
@@ -673,12 +675,14 @@ pseudoterm $p, q \in P$に対して,
         また, 補題\ref{betap}より $\iprt{\Gamma(A)}{\xi} = \iprt{B}{\xi}$.
   \item $A = \lambda p. q$のとき規則$\lambda$, Convより, ある$r \in P$が存在して$\Gamma, p \vdash q \colon r$かつ$\Pi p. r \overset{*}{\leftrightarrow}_\beta B$. このとき, さらに以下の二つに場合分けされる.
  \begin{itemize}
-  \item $p \in \Type$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\star}{\xi} = \SN$.
-        \[
-        \iprt{A}{\rho} = \iprt{\lambda p. q}{\rho} = K (\lambda . \iprt{q}{\rho[0]}) \iprt{p}{\rho} \rightarrow_\beta \lambda . \iprt{q}{\rho[0]} \in \iprt{B}{\xi} = \iprt{\Pi p. r}{\xi} = \iprt{p}{\xi} \rightarrow \iprt{r}{\xi}
-        \]
-        % $\iprt{A}{\xi} = \iprt{\lambda p. q}{\xi} = \iprt{q}{\xi}$
-        % $\iprt{B}{\rho} = \iprt{\Pi p. r}{\rho} = d \iprt{p}{\rho} (\lambda . \iprt{r}{\rho[0]})$
+  \item $p \in \Type$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\star}{\xi} = \SN$, $\lambda . \iprt{q}{\rho[0]} \in \iprt{p}{\xi} \rightarrow \iprt{r}{\xi} = \iprt{\Pi p. r}{\xi} = \iprt{B}{\xi}$となる.
+        また, Saturated Setの定義に注意すると$\iprt{A}{\rho} = \iprt{\lambda p. q}{\rho} = \K (\lambda . \iprt{q}{\rho[0]}) \iprt{p}{\rho} \overset{2}{\rightarrow}_\beta \lambda . \iprt{q}{\rho[0]}$であることより, $\iprt{A}{\rho} \in \iprt{B}{\xi}$.
+  \item $p \in \Kind$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\square}{\xi} = \SN$, $\lambda . \iprt{q}{\rho[0]} \in \iprt{p}{\xi} \rightarrow \cap_{a \in \mathcal{V}(p)} \iprt{r}{\xi[a]} = \iprt{\Pi p. r}{\xi} = \iprt{B}{\xi}$となる.
+        上記の場合と同様に, $\iprt{A}{\rho} \in \iprt{B}{\xi}$.
+ \end{itemize}
+  \item $A = p q$のとき規則App, Convより, ある$r, t \in P$が存在して$\Gamma \vdash p \colon \Pi t. r$, $\Gamma \vdash q \colon t$, $r[q/0] \overset{*}{\leftrightarrow}_\beta B$. このとき, さらに以下の二つに場合分けされる.
+ \begin{itemize}
+  \item $q \in \Obj$のとき,
  \end{itemize}
  \end{itemize}
 \end{proof}
