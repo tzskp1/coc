@@ -41,7 +41,7 @@
 \maketitle
 
 % 構成案
-% 
+%
 % 型システムを論理体系とみなすために必要な事実とは
 % 合流性 (等式の判定のため)
 % 正規性 (?, 不等式の場合にかんがえてみるべき?)
@@ -64,7 +64,7 @@
 % - System Fのモチベーション
 %   - Prop as Type
 % Intuitionistic logicの歴史はいる?
-% 
+%
 % 適切なReductionを入れることが重要であると私はおもっている...
 % - directed homotopy? (わかってないので書かない)
 % - よくかんがえたらこの問題意識はcompletion由来かも?
@@ -113,7 +113,7 @@ $\rightarrow$がwell foundedであるとは, 以下の条件が同値である�
 
 \begin{proof}
  必要性を示す. 任意の$w \in A$について$P(w):= \text{無限列} w \rightarrow w_1 \rightarrow \cdots \text{は存在しない}$と置く. 任意の$x \xrightarrow{+} y$について$P(y)$が成立するとすると, $x$から始まる無限列は起こり得ない. したがって$P(x)$が成立する. $\rightarrow$がwell foundedであることより, 任意の$z \in A$に対して$P(z)$, すなわち$\rightarrow$の停止性が従う.
- 
+
  十分性を背理法により示す. 任意の$x \xrightarrow{+} y$について$P(y)$ならば$P(x)$かつ, ある$z \in A$が存在して$P(z)$が成立しないと仮定する. 前半の主張の対偶をとると, 任意の$x \in A$に対して$P(x)$が成立しないならば, ある$y \in A$で$x \xrightarrow{+} y$かつ$P(y)$が成立しないものが存在することになる. この主張を用いて$z$から始まる無限列を構成することができる.
 \end{proof}
 
@@ -174,7 +174,7 @@ BNFでの定義と同値なものが以下である.
 
 \begin{defn}[de Brujin index]
  写像 $s \colon \Lambda \times \mathbb{N} \times \mathbb{N} \rightarrow \Lambda$を任意のラムダ項$M$, 自然数$n, c$に対して, 以下のように帰納的に定義する.
- 
+
 \[
   s (M, n, c) := \begin{cases}
     M & (M \in V \text{かつ} M < c) \\
@@ -184,7 +184,7 @@ BNFでの定義と同値なものが以下である.
   \end{cases}
 \]
  この写像$s$を用いて, ラムダ項$M, N \in \Lambda$, 変数$v \in V$に対する代入を以下のように帰納的に定義する.
- 
+
 \[
  M[N/v] := \begin{cases}
     N & (M = v) \\
@@ -259,7 +259,7 @@ de Brujin indexについて注意すべき性質がある.
 のみが非自明なので, その場合のみを示す.
  すなわち$p, q, t_1, t_2, s_1, s_2 \in \Lambda$に対して,
 $p \rightarrow_{p} q$, $t_1 \rightarrow_{p} s_1$かつ $t_2 \rightarrow_{p} s_2$ならば$((\lambda. t_1) t_2) [p / u] \rightarrow_{p} (s_1 [s_2 / 0] [q / u])$を示す.
- 
+
  代入を交換すると, 以下のような等式が成立する
  \[
  s_1 [s_2 / 0][q / u] = s_1 [s(q, 1, 0) / (u + 1)][s_2 [q / u] / 0]
@@ -302,11 +302,11 @@ $M = \lambda. M_0$となる$M_0 \in \Lambda$が存在する場合は, $N_M := \l
 すると帰納法の仮定より$L_0 \rightarrow_p N_{M_0}$, 再びP2により$L \rightarrow_p N_M$.
 
 $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N_M := N_{M_0}[N_{M_1}/0]$とするとよい. 実際, 任意の$L \in \Lambda$に対して, $M \rightarrow_p L$と仮定する. このとき, $M \rightarrow_p L$の与えられ方はP3あるいはP4のいずれかとなる.
- 
+
  P3のとき$L = (\lambda. L_0) L_1$となる$L_0, L_1 \in \Lambda$が存在し, $M_0 \rightarrow_p L_0$かつ$M_1 \rightarrow_p L_1$でなければならない. 帰納法の仮定により$L_0 \rightarrow_p N_{M_0}$かつ$L_1 \rightarrow_p N_{M_1}$となっているため, P4により$(\lambda. L_0) L_1 \rightarrow_p N_{M_0} [N_{M_1}/0]$が得られる.
- 
+
  P4のとき$L = L_0 [L_1/0]$となる$L_0, L_1 \in \Lambda$が存在し, $M_0 \rightarrow_p L_0$かつ$M_1 \rightarrow_p L_1$でなければならない. 帰納法の仮定により$L_0 \rightarrow_p N_{M_0}$かつ$L_1 \rightarrow_p N_{M_1}$となっているため, 補題\ref{spp}より$L_0 [L_1/0] \rightarrow_p N_{M_0} [N_{M_1}/0]$が得られる.
- 
+
 最後に$M = M_0 M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N_M := N_{M_0} N_{M_1}$とするとよい. これも自明である.
 \end{proof}
 
@@ -375,14 +375,14 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  \]
  % ただし, ここで述べている$v : p$とは型づけと呼ばれ, 型づけ規則とよばれるいくつかの公理から生成される木が存在することを意味している. 型づけ規則とは, 以下のように定義される.
  さらに, 型づけ規則とよばれるいくつかの公理から生成される木が定義される.
- 
+
  pseudoterm $p, q \in P$が文脈$\Gamma$のもとで, $p : q$であるとは以下のいずれかの場合である.
  また, この状況を$\Gamma \vdash p : q$と書きあらわす.
  \begin{description}
   \item[Ax] $p = {\star}, q = {\square}$
-  \item[Var] $p = 0$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', q$となる. またpseudoterm $t$が存在して$q = s(t, 1, 0)$となり, $\Gamma' \vdash t : \star$であるか$\Gamma' \vdash t : \square$となる. 
+  \item[Var] $p = 0$かつ, ある文脈$\Gamma'$が存在して$\Gamma = \Gamma', q$となる. またpseudoterm $t$が存在して$q = s(t, 1, 0)$となり, $\Gamma' \vdash t : \star$であるか$\Gamma' \vdash t : \square$となる.
 % さらに, $p$は$\Gamma'$に現れるどの変数とも異なっていなければならない.
-  \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$が存在して$\Gamma = \Gamma', r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる. 
+  \item[Weak] ある文脈$\Gamma'$およびpseudoterm $r$が存在して$\Gamma = \Gamma', r$となり, $\Gamma' \vdash p : q$である. また, $\Gamma' \vdash r : \star$であるか$\Gamma' \vdash r : \square$となる.
   \item[\Pi] あるpseudoterm $r, u$が存在して, $p = \Pi r. u$. かつ, $q = \star$あるいは$q = \square$. また$\Gamma \vdash r : \star$であるか$\Gamma \vdash r : \square$となる. さらに, $\Gamma, r \vdash u : q$が成立する.
   \item[\lambda] あるpseudoterm $r, u, m$が存在して, $p = \lambda r. m$, $q = \Pi r. u$. また, $\Gamma \vdash q : \star$であるか$\Gamma \vdash q : \square$となる. さらに, $\Gamma, r \vdash m : u$が成立する.
   \item[App] あるpseudoterm $n, m, u$が存在して, $p = m n$, $q = u[n/0]$. また, pseudoterm $t$が存在して$\Gamma \vdash m : \Pi t. u$かつ$\Gamma \vdash n : t$.
@@ -393,7 +393,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
   \item[Ax] \[ \frac{}{\vdash {\star} {\colon} {\square}} \]
   \item[Var] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square}}{\Gamma, t \vdash 0 {\colon} s(t, 1, 0)} \]
   \item[Weak] \[ \frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u}{\Gamma, t \vdash m {\colon} u} \]
-  \item[\Pi] \[ \frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, r \vdash u {\colon} s}{\Gamma \vdash \Pi r. u {\colon} s} 
+  \item[\Pi] \[ \frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, r \vdash u {\colon} s}{\Gamma \vdash \Pi r. u {\colon} s}
              \quad
              s = {\star} \text{ or } {\square} \]
   \item[\lambda] \[ \frac{\Gamma \vdash \Pi r. u {\colon} {\star} \text{ or } {\square} \quad \Gamma, r \vdash m : u}{\Gamma \vdash \lambda r. m {\colon} \Pi r. u} \]
@@ -407,13 +407,13 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
  規則$\Pi$は四通り存在する.
 \end{rem}
 
-CoCにおいては, $\Pi$には複数の役割がある. 
+CoCにおいては, $\Pi$には複数の役割がある.
 \begin{itemize}
  \item 計算論的な側面からは, $\Pi$は関数あるいは写像の型
  \item 命題論理学的な側面からは, $\Pi$は含意
  \item 述語論理学的な側面からは, $\Pi$は述語
 \end{itemize}
-をそれぞれ意味している. $\Pi$の柔軟性により, CoCは現代数学に現われるほとんどの主張をいいあらわすことができる. 
+をそれぞれ意味している. $\Pi$の柔軟性により, CoCは現代数学に現われるほとんどの主張をいいあらわすことができる.
 
 また, Curry Howard対応というものが広く知られており, $\Gamma \vdash p : q$であるときに, $q$を命題の主張, $p$をその証明とみなすことが可能である. CoCの本来の役割は証明を記述し, 型づけによりその整合性を確かめることにあった.
 
@@ -494,19 +494,19 @@ CoCにおいては, $\Pi$には複数の役割がある.
   \item $\Obj := \{ P \mid \Gamma, A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\star}\}$
  \end{itemize}
  補題\ref{clsfy}でみたようにこれらは互いにdisjointである.
- 
+
  同様に, disjointではないクラスとして以下を定義する.
  \begin{itemize}
-  \item $\Term := \{p \in P | \Gamma, t \in P\text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
+  \item $\Term := \{p | \Gamma, t \text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
   \item $\Type := \{ A \mid \Gamma \text{が存在し} \Gamma \vdash A \colon {\star}\}$
  \end{itemize}
- 
+
 また文脈$\Gamma$に対して, 以下のように定義する.
  \begin{itemize}
   \item $\GKind := \{ A \mid \Gamma \vdash A \colon {\square}\}$
   \item $\GConstr := \{ P \mid A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\square}\}$
   \item $\GObj := \{ P \mid A \text{が存在し} \Gamma \vdash P \colon A \text{ かつ } \Gamma \vdash A \colon {\star}\}$
-  \item $\GTerm := \{p \in P | t \in P\text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
+  \item $\GTerm := \{p | t \text {が存在し} \Gamma \vdash t : p \text{または} \Gamma \vdash p : t \}$
   \item $\GType := \{ A \mid \Gamma \vdash A \colon {\star}\}$
  \end{itemize}
 \end{defn}
@@ -528,7 +528,7 @@ CoCにおいては, $\Pi$には複数の役割がある.
   \item $m \in \Lambda$がkey redex $n \in \Lambda$を持てば, 任意の$p \in \Lambda$に対して, $m p$もkey redexとして$n$を持つ.
  \end{itemize}
 ここで述べたredexとよばれる項は, 簡約がおこる部分木のことを指している. すなわち, $(\lambda. e) e' \quad (e, e' \in \Lambda)$となるような形の項のことを指している.
- 
+
 また, $m$に対するkey redexを$\red_k(m)$と書く.
 \end{defn}
 
@@ -549,14 +549,14 @@ CoCにおいては, $\Pi$には複数の役割がある.
 \begin{lem}
  $\SAT$は交差と含意で閉じる. すなわち以下を満たす.
  \begin{itemize}
-  \item saturated set $X, Y$に対して, $X \cap Y$もsaturatedとなる.
-  \item saturated set $X, Y$に対して, $\{ M \in \Lambda \mid \text{任意の} N \in X \text{に対して}, M N \in Y\}$もsaturatedとなる.
+  \item Saturated Set $X, Y$に対して, $X \cap Y$もsaturatedとなる.
+  \item Saturated Set $X, Y$に対して, $\{ M \in \Lambda \mid \text{任意の} N \in X \text{に対して}, M N \in Y\}$もsaturatedとなる.
  \end{itemize}
  ここで現れた $\{ M \in \Lambda \mid \text{任意の} N \in X \text{に対して}, M N \in Y\}$を$X \rightarrow Y$とかく.
 \end{lem}
 \begin{proof}
  前半は自明である.
- 後半をみるには定義\ref{ss}の帰納的ないいかえを考えるとよい. すなわち, 
+ 後半をみるには定義\ref{ss}の帰納的ないいかえを考えるとよい. すなわち,
  型なしラムダ項の集合$X \subset \Lambda$がsaturatedであるとは, 以下のすべてを満たすものをいう.
  \begin{itemize}
   \item $X \subset \SN$.
@@ -567,11 +567,11 @@ CoCにおいては, $\Pi$には複数の役割がある.
 最後のいいかえについては, key redexの定義を考えればすぐにいえる.
 さて, $n \in \mathbb{N}, q_1, \ldots, q_n, m, p \in \SN$に対して, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$とする. このとき, $(\lambda m)p q_1 \ldots q_n \in X \rightarrow Y$を言いたい.
 すなわち, 任意の$l \in X$に対して, $(\lambda m)p q_1 \ldots q_n l \in Y$となることを言いたい.
- $Y$はsaturated setであったので, $m[p/0] q_1 \ldots q_n l \in Y$であればよいが, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$であったので主張が従う.
+ $Y$はSaturated Setであったので, $m[p/0] q_1 \ldots q_n l \in Y$であればよいが, $m[p/0]q_1 \ldots q_n \in X \rightarrow Y$であったので主張が従う.
 \end{proof}
 
 \begin{defn}
- 解釈$\mathcal{V} : \Kind \rightarrow \Set$を以下のように帰納的に定義する. 
+ 解釈$\mathcal{V} : \Kind \rightarrow \Set$を以下のように帰納的に定義する.
 \[
   \mathcal{V} (A) := \begin{cases}
     \SAT & (A \in \Type) \\
@@ -689,10 +689,13 @@ CoCにおいては, $\Pi$には複数の役割がある.
 
 いままで述べた定義は, CoCのモデルの解釈を与えている. 以下に述べる定理は数理論理学においては健全性定理と呼ばれるものである.
 
-\begin{thm}
- 文脈$\Gamma$, pseudoterm $A \in \Kind$, $B \in \Constr$に対して, $\Gamma \vdash A \colon B$となるとき,
+\begin{thm}\label{snd1}
+ 文脈$\Gamma$, pseudoterm $A \in P$, $B \in P \setminus \{\square\}$に対して$\Gamma \vdash A \colon B$となるとき,
  任意のconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$に対して, $\iprt{A}{\xi} \in \mathcal{V}(B)$.
 \end{thm}
+\begin{proof}
+ 帰納法による.
+\end{proof}
 
 \begin{thm}
  文脈$\Gamma$, pseudoterm $A, B \in P$に対して, $\Gamma \vdash A \colon B$となるとき,
@@ -705,15 +708,17 @@ CoCにおいては, $\Pi$には複数の役割がある.
         また, 補題\ref{betap}より $\iprt{\Gamma(A)}{\xi} = \iprt{B}{\xi}$.
   \item $A = \lambda p. q$のとき規則$\lambda$, Convより, ある$r \in P$が存在して$\Gamma, p \vdash q \colon r$かつ$\Pi p. r \overset{*}{\leftrightarrow}_\beta B$. このとき, さらに以下の二つに場合分けされる.
  \begin{itemize}
-  \item $p \in \Type$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\star}{\xi} = \SN$, $\lambda . \iprt{q}{\rho[0]} \in \iprt{p}{\xi} \rightarrow \iprt{r}{\xi} = \iprt{\Pi p. r}{\xi} = \iprt{B}{\xi}$となる.
-        また, Saturated Setの定義に注意すると$\iprt{A}{\rho} = \iprt{\lambda p. q}{\rho} = \K (\lambda . \iprt{q}{\rho[0]}) \iprt{p}{\rho} \overset{2}{\rightarrow}_\beta \lambda . \iprt{q}{\rho[0]}$であることより, $\iprt{A}{\rho} \in \iprt{B}{\xi}$.
+  \item $p \in \Type$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\star}{\xi} = \SN$, $\lambda . \iprt{q}{\rho[0]} \in \iprt{p}{\xi} \rightarrow \iprt{r}{\xi[d]} = \iprt{\Pi p. r}{\xi} = \iprt{B}{\xi}$となる.
+        また, 定理\ref{snd1}およびSaturated Setの定義に注意すると$\iprt{A}{\rho} = \iprt{\lambda p. q}{\rho} = \K (\lambda . \iprt{q}{\rho[0]}) \iprt{p}{\rho} \overset{2}{\rightarrow}_\beta \lambda . \iprt{q}{\rho[0]}$であることより, $\iprt{A}{\rho} \in \iprt{B}{\xi}$.
   \item $p \in \Kind$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\square}{\xi} = \SN$, $\lambda . \iprt{q}{\rho[0]} \in \iprt{p}{\xi} \rightarrow \cap_{a \in \mathcal{V}(p)} \iprt{r}{\xi[a]} = \iprt{\Pi p. r}{\xi} = \iprt{B}{\xi}$となる.
         上記の場合と同様に, $\iprt{A}{\rho} \in \iprt{B}{\xi}$.
  \end{itemize}
   \item $A = p q$のとき規則App, Convより, ある$r, t \in P$が存在して$\Gamma \vdash p \colon \Pi t. r$, $\Gamma \vdash q \colon t$, $r[q/0] \overset{*}{\leftrightarrow}_\beta B$. このとき, さらに以下の二つに場合分けされる.
  \begin{itemize}
-  \item $q \in \Obj$のとき,
+  \item $q \in \Obj$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\Pi t. r}{\xi} = \iprt{t}{\xi} \rightarrow \iprt{r}{\xi[d]}$, $\iprt{q}{\rho} \in \iprt{t}{\xi}$となる. $\iprt{r[q/0]}{\xi} = \iprt{r}{\xi[d]}$に注意すると, $\iprt{A}{\rho} \in \iprt{B}{\xi}$が分かる.
+  \item $q \in \Kind$のとき, 帰納法の仮定より $\iprt{p}{\rho} \in \iprt{\Pi t. r}{\xi} = \iprt{t}{\xi} \rightarrow \cap_{a \in \mathcal{V}(t)} \iprt{r}{\xi[a]}$, $\iprt{q}{\rho} \in \iprt{t}{\xi}$となる. $\iprt{r[q/0]}{\xi} = \iprt{r}{\xi[\iprt{q}{\xi}]}$に注意すると, $\iprt{A}{\rho} \in \iprt{B}{\xi}$が分かる.
  \end{itemize}
+  \item $A = \Pi p. q$のとき規則$\Pi$, Convより, ある$s \in \{ \star, \square \}$が存在して$\Gamma, p \vdash q \colon s$, $s \overset{*}{\leftrightarrow}_\beta B$. 帰納法の仮定より $\iprt{p}{\rho} \in \SN$, $\lambda. \iprt{q}{\rho[0]} \in \SN$となるため, $\iprt{B}{\xi} = \SN \ni d \iprt{p}{\rho} (\lambda. \iprt{q}{\rho[0]}) = \iprt{\Pi p. q}{\rho}$.
  \end{itemize}
 \end{proof}
 
@@ -760,7 +765,7 @@ Unset Printing Implicit Defensive.
 Section Generalities.
 Variables T U : eqType.
 
-Fixpoint tcn (r : T -> T -> Prop) n (a b : T) := 
+Fixpoint tcn (r : T -> T -> Prop) n (a b : T) :=
   match n with
   | 0 => a = b
   | 1 => r a b
@@ -870,7 +875,7 @@ End Generalities.
 Inductive term :=
 | Var of nat | Abs of term | App of term & term.
 
-Local Fixpoint eq_t t1 t2 := 
+Local Fixpoint eq_t t1 t2 :=
   match t1, t2 with
   | Var u1, Var u2 => u1 == u2
   | Abs p1, Abs p2 => eq_t p1 p2
@@ -937,7 +942,7 @@ Local Lemma sizeu0 t : sizeu t == 0 = false.
 Proof. elim: t => // ? IH *; by rewrite addn_eq0 IH. Qed.
 
 Local Lemma subpattern x y :
-  (forall y : term, wfr_term y x -> Acc (fun s t : term => wfr_term s t) y) -> 
+  (forall y : term, wfr_term y x -> Acc (fun s t : term => wfr_term s t) y) ->
   sizeu y < (sizeu x).+1 -> Acc (fun s t : term => sizeu s < sizeu t) y.
 Proof.
   case xy: (sizeu x == sizeu y).
@@ -949,7 +954,7 @@ Proof.
 Qed.
 
 Local Lemma subpattern_n n x y :
-  (forall y : term, wfr_term y x -> Acc (fun s t : term => wfr_term s t) y) -> 
+  (forall y : term, wfr_term y x -> Acc (fun s t : term => wfr_term s t) y) ->
   sizeu y < sizeu x + n -> Acc (fun s t : term => sizeu s < sizeu t) y.
 Proof.
   elim: (ltn_wf n) x y => {n} n _ IH x y H yxn.
@@ -1012,7 +1017,7 @@ Qed.
 Lemma shiftnSC t s i j :
   j <= i -> shift (shift t s i) 1 j = shift (shift t 1 j) s i.+1.
 Proof.
-elim: t s i j => /= [???? K|? IH|? IH ? IH'] *; 
+elim: t s i j => /= [???? K|? IH|? IH ? IH'] *;
 rewrite ?IH ?IH' // ?addnA.
 case: ifP => /=.
  case: ifP => [? ->|H I]; first by rewrite ltnW.
@@ -1055,7 +1060,7 @@ case: t => //= [] //= *.
 by rewrite eqxx orbT.
 Qed.
 
-Lemma tcn_betat s t n : tcn beta n s t -> betat s t. 
+Lemma tcn_betat s t n : tcn beta n s t -> betat s t.
 Proof. move=> *; by exists n. Qed.
 
 Hint Resolve wfr_term_t_abst wfr_term_t_appl
@@ -1071,12 +1076,12 @@ rewrite tcnS => [][] ? [] /(IH _ _) [] t [] -> Mt /beta_abs [] s [] -> ts.
 exists s; split => //; by apply/(betat_trans Mt)/beta_betat.
 Qed.
 
-Lemma betatAC p p' : 
+Lemma betatAC p p' :
   betat (Abs p) (Abs p') <-> betat p p'.
 Proof.
 split.
 * case; case => [[] -> //|[|n H]]; auto.
-  elim: (ltn_wf n) p p' H => {n} [] [_ _ ? ? [] x []|n _ IH p p']. 
+  elim: (ltn_wf n) p p' H => {n} [] [_ _ ? ? [] x []|n _ IH p p'].
    case:x => //= ? a ?; by apply: betat_trans;apply beta_betat;first by apply a.
   case: n IH => // [_ [] x [][] y []|n IH].
    case: y x => // ? [] ? // /= a b c.
@@ -1090,7 +1095,7 @@ split.
   by apply: (IH n.+1).
 Qed.
 
-Lemma betatApC p2 p2' p1 p1' : 
+Lemma betatApC p2 p2' p1 p1' :
   betat p1 p1' -> betat p2 p2' -> betat (App p1 p2) (App p1' p2').
 Proof.
   move=> H1; case => x H2.
@@ -1305,7 +1310,7 @@ Proof.
 
   move=> ? IH ???? ?.
   by rewrite /= IH // addSn shiftnSC.
-   
+
   move=> ? IH1 ? IH2 ?????.
   by rewrite /= IH1 // IH2.
 Qed.
@@ -1336,10 +1341,10 @@ Proof.
   rewrite -ltnNge ltnS.
   case: ifP => [/pat7 H /H //|] _ + _ _ /leq_ltn_trans H => /H H'.
   by rewrite addnC addnBA // H' ltn_addr // addnC.
-  
+
   move=> ? IH ???? ?.
   by rewrite /= IH // shiftnSC.
-   
+
   move=> ? IH1 ? IH2 ?????.
   by rewrite /= IH1 // IH2.
 Qed.
@@ -1516,7 +1521,7 @@ Proof.
   exists (cr y); split.
    by apply/(tc_trans H0)/(tc_trans (parallel_parallelt H1))
            /parallel_parallelt/CR_parallel.
-  by apply/(tc_trans H2)/parallel_parallelt/CR_parallel. 
+  by apply/(tc_trans H2)/parallel_parallelt/CR_parallel.
 Qed.
 
 Lemma CR M1 M2 N1 : betat N1 M1 -> betat N1 M2 -> exists N2, betat M1 N2 /\ betat M2 N2.
