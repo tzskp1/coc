@@ -697,7 +697,7 @@ CoCにおいては, $\Pi$には複数の役割がある.
  帰納法による.
 \end{proof}
 
-\begin{thm}
+\begin{thm}\label{snd2}
  文脈$\Gamma$, pseudoterm $A, B \in P$に対して, $\Gamma \vdash A \colon B$となるとき,
  任意のconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$, object valuation $\rho : \mathbb{N} \rightarrow \Lambda$に対して, $\iprt{A}{\rho} \in \iprt{B}{\xi}$.
 \end{thm}
@@ -722,21 +722,33 @@ CoCにおいては, $\Pi$には複数の役割がある.
  \end{itemize}
 \end{proof}
 
-% \begin{lem}
-%  文脈$\Gamma$とそのconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$, object valuation $\rho : \mathbb{N} \rightarrow \Lambda$および$\iprt{\cdot}{\rho} : \GTerm \setminus \{\square\} \rightarrow \Lambda$を考える.
-%  このとき, $\rho$に対する依存を分離することができる. すなわち,
-%  \[
-%  \iprt{p}{\rho} = \lceil p \rceil (\rho)
-%  \]
-% \end{lem}
-
-
-% 以下では$T := \{p \in P | t \in P\text {が存在し} t : p \text{または} p : t \}$とし, $T$の元をtermと呼ぶ. $T$については$\beta$簡約の上
+canonicalなvaluationを考えることで, 停止性を持つCoCのモデルを得ることができる.
 
 \begin{thm}
- 型づけ可能な$P$上の$\beta$簡約$\rightarrow_{\beta}|_T$は停止性を持つ.
+ 型づけ可能な$P$上の$\beta$簡約$\rightarrow_{\beta}|_{\Term}$は停止性を持つ.
 \end{thm}
 \begin{proof}
+ 文脈$\Gamma$を固定する.
+ $\GTerm = \{M \mid N \text{が存在し} \Gamma \vdash M \colon N\} \cup \{\square\}$となることに注意する.
+ $M \in \GTerm$に対して$M = \square$のときはいうべきことはない. $N$が存在し$\Gamma \vdash M \colon N$となるときを示す.
+ $A \in \Kind$に対して$\mathcal{V}(A)$のcanonicalな要素$c^A$を以下のように定義する.
+ \[
+  c^A := \begin{cases}
+    \SN & (A = \star) \\
+    \mathcal{V} (t) \ni a \mapsto c^p & (A = \lambda t. p, t \in \Kind) \\
+    c^p & (A = \lambda t. p, t \in \Type)
+  \end{cases}
+ \]
+ この$c$を用いて, $\Gamma$に対するconstructor valuation $\xi : \mathbb{N} \rightarrow (\SAT)^\star$を
+ \[
+  \xi(n) := \begin{cases}
+    c^{\Gamma(n)} & (n \text{が} \Gamma \text{のサイズを越えないとき}) \\
+    \SN & (その他)
+  \end{cases}
+ \]
+ と定義する. さらに $\Gamma, \xi$に対するobject valuation $\rho : \mathbb{N} \rightarrow \Lambda$を$\rho (n) := n$と定義する.
+ このとき, 実際に$\rho$がobject valuationになっていること, すなわち$n$が$\Gamma$のサイズを越えないとき$\rho(n) \in \iprt{\Gamma(n)}{\xi}$となることが, 帰納法により示される.
+ 定理\ref{snd2}によってこのような$\xi, \rho$に対して$\iprt{M}{\rho} \in \iprt{N}{\xi}$となるが, $\iprt{N}{\xi} \in \SAT$であることが帰納法により確かめられるため$\iprt{M}{\rho} \in \SN$となる. $\iprt{M}{\rho}$が停止することと$M$が停止することの同値性により, $M$は停止することが分かる.
 \end{proof}
 
 %\section{論理体系としてのCoC}
