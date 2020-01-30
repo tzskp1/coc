@@ -88,13 +88,21 @@ CoCなどの言語における項を証明, 型を主張とみなしコンピュ
 第一段階として, このサーベイの範囲であるCoCの基本的な性質, およびその証明を調べることとした.
 このねらいはCoCの持つ望ましい性質を特徴づけ, CoC自体がどのくらい変化させられるものなのか調べることであった.
 現段階では証明の細部を形式的にチェックすることにとどまっているが, その際にde Brujin indexとよばれる手法を用いて, 代入をすべて陽に扱うことをこころがけた.
-またいくつかの定理(くわしくかく)は証明をCoqで行なった.
+またいくつかの定理は証明をCoqで行なった.
 
-停止性の証明についてくわしく
-また, 本文章の停止性の証明は \cite{geuvers1994short}によるところが大きい.
-定理\ref{CR}のCoqによる形式化を付録に付ける.
+以下では各章の内容についてまとめる.
 
-\section{項書き換え系}
+章\ref{tremrew}では一般の二項関係について簡単な事実と記号を整理した.
+
+章\ref{lambda}ではCoCの原型となるラムダ計算を紹介し, 合流性を証明した. 合流性の証明はCoCに対してもまったく同様に適用できるが, 簡潔さのためラムダ計算に対して証明を与えた.
+おおよそこの章がCoqでのCodeと対応している. 代表的に対応を与えると 系\ref{paraP}とparallelt\_betatP, 定理\ref{CR}とCRが対応している.
+
+章\ref{CoC}ではCoCの型づけ規則を紹介し, 論理的な整合性をうみだす停止性について証明した.
+また, 本文章の停止性の証明は \cite{geuvers1994short}によるところが大きい. 具体的には章\ref{CoC}の後半の構成および証明は \cite{geuvers1994short}にのっとったものとなっている.
+
+% 定理\ref{CR}のCoqによる形式化を付録に付ける.
+
+\section{項書き換え系}\label{tremrew}
 初めに簡約関係と呼ばれる一般の$2$項関係について論じる. ここで与えている記号は\cite{baader1999term}に従った.
 考えている集合$A$とその上の$2$項関係$\rightarrow \subset A \times A$を固定する.ここでそれぞれ,
 $\xrightarrow{n}$を$\rightarrow$を$n$回合成した関係,
@@ -290,7 +298,7 @@ parallel reductionと$\beta$簡約の関係は以下のようになる.
  前半は項のサイズによる帰納法を用いて示される. 後半は$\rightarrow_{p}$の定義による帰納法を用いて示される.
 \end{proof}
 
-\begin{cor}
+\begin{cor}\label{paraP}
  $\overset{*}{\rightarrow_{p}} = \overset{*}{\rightarrow_{\beta}}$
 \end{cor}
 
@@ -323,7 +331,7 @@ $M = (\lambda. M_0) M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N
 最後に$M = M_0 M_1$となる$M_0, M_1 \in \Lambda$が存在する場合, $N_M := N_{M_0} N_{M_1}$とするとよい. これも自明である.
 \end{proof}
 
-\section{Calculus of Construction}
+\section{Calculus of Construction}\label{CoC}
 この節ではCoCの定義および停止性の証明を与える. 型なしラムダ計算における議論とは平行していることに注意されたい.
 型なしの場合におけるラムダ項に対応するものとしてpseudotermと呼ばれるものを定義する.
 
