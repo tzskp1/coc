@@ -52,7 +52,7 @@
 
 \begin{frame}{ラムダ計算}
  \begin{itemize}
-  \item 最も簡潔な計算体系
+  \item 簡潔な計算体系
   \item $t ::= v \mid \lambda v. t \mid t t$
   \item $(\lambda v. M) N \rightarrow_\beta M[N/v]$
   \item $N_1 \rightarrow_\beta N_2$ならば$(\lambda v. N_1) \rightarrow_\beta (\lambda v. N_2)$ \item $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
@@ -71,24 +71,12 @@
 \end{frame}
 
 \begin{frame}[fragile]{型つけ規則}
-\begin{tabular}{rl}
- \begin{minipage}{135pt}
- \begin{description}
-  \item[\scriptsize{Ax}] $\vdash {\star} {\colon} {\square}$
-  \item[\scriptsize{Var}] $\frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square}}{\Gamma, v \colon t \vdash v {\colon} t}$
-  \item[\scriptsize{Weak}] $\frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u}{\Gamma, v \colon t \vdash m {\colon} u}$
-  \item[\Pi] $\frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, v \colon r \vdash u {\colon} s}{\Gamma \vdash \Pi v \colon r. u {\colon} s}$
-  \item $s = {\star} \text{ or } {\square}$
- \end{description}
- \end{minipage} &
- \begin{minipage}{130pt}
- \begin{description}
-  \item[\lambda] $\frac{\Gamma \vdash \Pi v \colon r. u {\colon} {\star} \text{ or } {\square} \quad \Gamma, v \colon r \vdash m : u}{\Gamma \vdash \lambda v \colon r. m {\colon} \Pi v \colon r. u}$
-  \item[\scriptsize{App}] $\frac{\Gamma \vdash m : \Pi v \colon t. u \quad \Gamma \vdash n : t}{\Gamma \vdash m n {\colon} u[n/v]}$
-  \item[\scriptsize{Conv}] $\frac{\Gamma \vdash q {\colon} {\star} \text{ or } {\square} \quad \Gamma \vdash p {\colon} t \quad t \overset{*}{\leftrightarrow}_\beta q}{\Gamma \vdash p {\colon} q}$
-  \item $\Gamma ::= \Gamma, v \colon p \mid$ 
- \end{description}
- \end{minipage} \\
+\begin{tabular}{cccc}
+ $\vdash {\star} {\colon} {\square}$ & (Ax) & $\frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square}}{\Gamma, v \colon t \vdash v {\colon} t}$ & (Var) \\[30pt]
+ $\frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u}{\Gamma, v \colon t \vdash m {\colon} u}$ & (Weak) & $\frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, v \colon r \vdash u {\colon} s}{\Gamma \vdash \Pi v \colon r. u {\colon} s}$ & ($\Pi$) \\[30pt]
+ $\frac{\Gamma \vdash \Pi v \colon r. u {\colon} {\star} \text{ or } {\square} \quad \Gamma, v \colon r \vdash m : u}{\Gamma \vdash \lambda v \colon r. m {\colon} \Pi v \colon r. u}$ & ($\lambda$) & $\frac{\Gamma \vdash m : \Pi v \colon t. u \quad \Gamma \vdash n : t}{\Gamma \vdash m n {\colon} u[n/v]}$ & (App) \\[30pt]
+ $\frac{\Gamma \vdash q {\colon} {\star} \text{ or } {\square} \quad \Gamma \vdash p {\colon} t \quad t \overset{*}{\leftrightarrow}_\beta q}{\Gamma \vdash p {\colon} q}$ & (Conv) & $s = {\star} \text{ or } {\square}$ & \\[30pt]
+& & $\Gamma ::= \Gamma, v \colon p \mid$ & \\
 \end{tabular}
 \end{frame}
 
