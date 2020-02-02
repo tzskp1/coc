@@ -1,0 +1,53 @@
+\documentclass[18pt]{beamer}
+\usetheme{metropolis}
+\usepackage{listings}
+\usepackage{luatexja}
+\usepackage{minted}
+\usepackage{bussproofs}
+
+\title{Calculus of Constructionの基本的性質}
+\author{321701183 田中 一成}
+
+\begin{document}
+
+\frame{\maketitle}
+
+\begin{frame}{型理論とは}
+ 型とは
+ \begin{itemize}
+  \item プログラミング言語におけるデータの種類
+  \item 写像の定義域と値域
+  \item 所属関係が決定可能な集合(論)
+  \item 主張に対しての証明
+ \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{プログラミング言語におけるデータの種類/写像の定義域と値域}
+\begin{tabular}{c}
+ \begin{minipage}{0.5\textwidth}
+  \begin{minted}[mathescape, framesep=2mm]{c}
+   int f(int x) {
+       return x;
+   }
+  \end{minted}
+ \end{minipage}
+ \begin{minipage}{0.5\textwidth}
+ \[
+ f \colon \mathbb{N} \rightarrow \mathbb{N}
+ \]
+ \end{minipage}
+\end{tabular}
+\end{frame}
+
+
+\begin{frame}[fragile]{所属関係が決定可能な集合(論)/主張に対しての証明}
+ \[
+ x \mapsto f (x) \in \{ g \mid g \colon \mathbb{N} \rightarrow \mathbb{N} \}
+ \]
+\begin{prooftree}
+\AxiomC{$x \colon \mathbb{N} \vdash f(x) \colon \mathbb{N}$}
+\UnaryInfC{$\vdash x \mapsto f(x) \colon \mathbb{N} \rightarrow \mathbb{N}$}
+\end{prooftree}
+\end{frame}
+
+\end{document}
