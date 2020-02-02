@@ -4,11 +4,12 @@
 \usepackage{luatexja}
 \usepackage{minted}
 \usepackage{bussproofs}
+\setbeamersize{text margin left=5mm, text margin right=5mm}
+\begin{document}
 
 \title{Calculus of Constructionの基本的性質}
 \author{321701183 田中 一成}
 
-\begin{document}
 
 \frame{\maketitle}
 
@@ -39,7 +40,6 @@
 \end{tabular}
 \end{frame}
 
-
 \begin{frame}[fragile]{所属関係が決定可能な集合(論)/主張に対しての証明}
  \[
  x \mapsto f (x) \in \{ g \mid g \colon \mathbb{N} \rightarrow \mathbb{N} \}
@@ -48,6 +48,48 @@
 \AxiomC{$x \colon \mathbb{N} \vdash f(x) \colon \mathbb{N}$}
 \UnaryInfC{$\vdash x \mapsto f(x) \colon \mathbb{N} \rightarrow \mathbb{N}$}
 \end{prooftree}
+\end{frame}
+
+\begin{frame}{ラムダ計算}
+ \begin{itemize}
+  \item 最も簡潔な計算体系
+  \item $t ::= v \mid \lambda v. t \mid t t$
+  \item $(\lambda v. M) N \rightarrow_\beta M[N/v]$
+  \item $N_1 \rightarrow_\beta N_2$ならば$(\lambda v. N_1) \rightarrow_\beta (\lambda v. N_2)$ \item $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{Calculus of Construction(CoC)}
+ \begin{itemize}
+  \item ラムダ項に対して型をつける
+  \item $p ::= v \mid \lambda v \colon p. p \mid \Pi v \colon p. p \mid p p \mid \star \mid \square$
+  \item $(\lambda v \colon T. M) N \rightarrow_\beta M[N/v]$
+  \item $N_1 \rightarrow_\beta N_2$ならば$\lambda v \colon M. N_1 \rightarrow_\beta \lambda v \colon M. N_2$かつ$\lambda v \colon N_1. M \rightarrow_\beta \lambda v \colon N_2. M$
+  \item $N_1 \rightarrow_\beta N_2$ならば$\Pi v \colon M. N_1 \rightarrow_\beta \Pi v \colon M. N_2$かつ$\Pi v \colon N_1. M \rightarrow_\beta \Pi v \colon N_2. M$
+  \item $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
+ \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{型つけ規則}
+\begin{tabular}{rl}
+ \begin{minipage}{135pt}
+ \begin{description}
+  \item[\scriptsize{Ax}] $\vdash {\star} {\colon} {\square}$
+  \item[\scriptsize{Var}] $\frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square}}{\Gamma, v \colon t \vdash v {\colon} t}$
+  \item[\scriptsize{Weak}] $\frac{\Gamma \vdash t {\colon} {\star} \text{ or } \square \quad \Gamma \vdash m {\colon} u}{\Gamma, v \colon t \vdash m {\colon} u}$
+  \item[\Pi] $\frac{\Gamma \vdash r {\colon} {\star} \text{ or } {\square} \quad \Gamma, v \colon r \vdash u {\colon} s}{\Gamma \vdash \Pi v \colon r. u {\colon} s}$
+  \item $s = {\star} \text{ or } {\square}$
+ \end{description}
+ \end{minipage} &
+ \begin{minipage}{130pt}
+ \begin{description}
+  \item[\lambda] $\frac{\Gamma \vdash \Pi v \colon r. u {\colon} {\star} \text{ or } {\square} \quad \Gamma, v \colon r \vdash m : u}{\Gamma \vdash \lambda v \colon r. m {\colon} \Pi v \colon r. u}$
+  \item[\scriptsize{App}] $\frac{\Gamma \vdash m : \Pi v \colon t. u \quad \Gamma \vdash n : t}{\Gamma \vdash m n {\colon} u[n/v]}$
+  \item[\scriptsize{Conv}] $\frac{\Gamma \vdash q {\colon} {\star} \text{ or } {\square} \quad \Gamma \vdash p {\colon} t \quad t \overset{*}{\leftrightarrow}_\beta q}{\Gamma \vdash p {\colon} q}$
+  \item $\Gamma ::= \Gamma, v \colon p \mid$ 
+ \end{description}
+ \end{minipage} \\
+\end{tabular}
 \end{frame}
 
 \end{document}
