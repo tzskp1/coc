@@ -4,8 +4,39 @@
 \usepackage{luatexja}
 \usepackage{minted}
 \usepackage{bussproofs}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{stmaryrd}
+\usepackage{tikz}
+\usetikzlibrary{matrix, positioning}
+\DeclareMathOperator{\SN}{SN}
+\DeclareMathOperator{\Term}{Term}
+\DeclareMathOperator{\Obj}{Obj}
+\DeclareMathOperator{\Constr}{Constr}
+\DeclareMathOperator{\Type}{Type}
+\DeclareMathOperator{\Kind}{Kind}
+\DeclareMathOperator{\SAT}{SAT}
+\DeclareMathOperator{\Set}{Set}
+\DeclareMathOperator{\GTerm}{\Gamma-Term}
+\DeclareMathOperator{\GObj}{\Gamma-Obj}
+\DeclareMathOperator{\GConstr}{\Gamma-Constr}
+\DeclareMathOperator{\GType}{\Gamma-Type}
+\DeclareMathOperator{\GKind}{\Gamma-Kind}
+\DeclareMathOperator{\K}{K}
+\DeclareMathOperator{\red}{red}
+\newcommand{\iprt}[2]{\llbracket {#1} \rrbracket_ {#2}}
+
 \setbeamersize{text margin left=5mm, text margin right=5mm}
 \begin{document}
+
+
+\theoremstyle{definition}
+\newtheorem{defn}{定義}
+\newtheorem{thm}{定理}
+\newtheorem{lem}{補題}
+\newtheorem{rem}{注意}
+\newtheorem{cor}{系}
+\newtheorem{ex}{例}
+\renewcommand{\proofname}{\bf{証明}}
 
 \title{Calculus of Constructionの基本的性質}
 \author{321701183 田中 一成}
@@ -41,13 +72,19 @@
 \end{frame}
 
 \begin{frame}[fragile]{所属関係が決定可能な集合(論)/主張に対しての証明}
+\begin{tabular}{cc}
+ \begin{minipage}{0.5\textwidth}
  \[
  x \mapsto f (x) \in \{ g \mid g \colon \mathbb{N} \rightarrow \mathbb{N} \}
  \]
+ \end{minipage} &
+ \begin{minipage}{0.5\textwidth}
 \begin{prooftree}
 \AxiomC{$x \colon \mathbb{N} \vdash f(x) \colon \mathbb{N}$}
 \UnaryInfC{$\vdash x \mapsto f(x) \colon \mathbb{N} \rightarrow \mathbb{N}$}
 \end{prooftree}
+ \end{minipage} //
+\end{tabular}
 \end{frame}
 
 \begin{frame}{ラムダ計算}
@@ -55,7 +92,14 @@
   \item 簡潔な計算体系
   \item $t ::= v \mid \lambda v. t \mid t t$
   \item $(\lambda v. M) N \rightarrow_\beta M[N/v]$
-  \item $N_1 \rightarrow_\beta N_2$ならば$(\lambda v. N_1) \rightarrow_\beta (\lambda v. N_2)$ \item $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
+  \item $N_1 \rightarrow_\beta N_2$ならば$(\lambda v. N_1) \rightarrow_\beta (\lambda v. N_2)$ 
+  \item $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{例 $\colon$ 自然数}
+ \begin{itemize}
+  \item 
  \end{itemize}
 \end{frame}
 
@@ -78,6 +122,36 @@
  $\frac{\Gamma \vdash q {\colon} {\star} \text{ or } {\square} \quad \Gamma \vdash p {\colon} t \quad t \overset{*}{\leftrightarrow}_\beta q}{\Gamma \vdash p {\colon} q}$ & (Conv) & $s = {\star} \text{ or } {\square}$ & \\[30pt]
 & & $\Gamma ::= \Gamma, v \colon p \mid$ & \\
 \end{tabular}
+\end{frame}
+
+\begin{frame}{例 $\colon$ 自然数}
+ \begin{itemize}
+  \item 
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{Church Rosser}
+\begin{thm}[Church Rosserの定理]
+ $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
+\end{thm}
+\begin{proof}
+ \begin{description}
+  \item $v_1 = v_2$ならば$v_1 \rightarrow_{p} v_2$
+  \item $t \rightarrow_{p} s$ならば$\lambda v \colon T. t \rightarrow_{p} \lambda v \colon T. s$
+  \item $t \rightarrow_{p} s$ならば$\Pi v \colon T. t \rightarrow_{p} \Pi v \colon T. s$
+  \item $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$t_1 t_2 \rightarrow_{p} s_1 s_2$
+  \item $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$(\lambda v \colon T. t_1) t_2 \rightarrow_{p} s_1[s_2/v]$
+ \end{description}
+\end{proof}
+\end{frame}
+
+\begin{frame}{Subject Reduction}
+\begin{thm}[Subject Reduction]
+ $\Gamma \vdash A \colon C$, $A \rightarrow_\beta B$のとき$\Gamma \vdash B \colon C$
+\end{thm}
+\begin{proof}
+ 型づけに対する帰納法を用いる.
+\end{proof}
 \end{frame}
 
 \end{document}
