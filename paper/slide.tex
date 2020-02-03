@@ -150,6 +150,13 @@
 \end{tabular}
 \end{frame}
 
+\begin{frame}[fragile]{型つけ規則}
+ \begin{itemize}
+  \item $X \rightarrow Y := \Pi \_ \colon X. Y$と書き含意を表す
+  \item $\Pi$は$\lambda$(関数, 写像)の型
+ \end{itemize}
+\end{frame}
+
 \begin{frame}{例 $\colon$ 自然数}
  \begin{align*}
   n & := \lambda X \colon {\star}. \lambda x \colon X. \lambda f \colon X \rightarrow X. \underbrace{f (\cdots (f}_{n} x)) \\
@@ -178,7 +185,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{Church Rosser}
-\begin{thm}[Church Rosserの定理]
+\begin{thm}
  \begin{tabular}{lr}
  $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ. &
 \begin{tikzcd}
@@ -197,12 +204,41 @@ P \arrow[r, "*"', dashed] & M'
 \end{frame}
 
 \begin{frame}{Subject Reduction}
-\begin{thm}[Subject Reduction]
+\begin{thm}
  $\Gamma \vdash A \colon C$, $A \rightarrow_\beta B$のとき$\Gamma \vdash B \colon C$
 \end{thm}
 \begin{proof}
  型づけに対する帰納法を用いる.
 \end{proof}
+ \begin{itemize}
+  \item 型は$\beta$簡約に対して整合的
+ \end{itemize}
 \end{frame}
 
+\begin{frame}{Classification}
+\begin{thm}
+ \[
+ \Gamma \vdash A \colon B \Leftrightarrow \begin{cases}
+                                           B = \square & A \in \Kind\\
+                                           \Gamma \vdash B \colon {\square} & A \in \Constr\\
+                                           \Gamma \vdash B \colon {\star} & A \in \Obj
+                                          \end{cases}
+ \]
+\end{thm}
+\begin{proof}
+ 型づけに対する帰納法を用いる.
+\end{proof}
+ \begin{itemize}
+  \item 項にヒエラルキーがある
+  % \item 4種類のクラスを持つような型理論では
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{停止性}
+\begin{thm}
+ $\Gamma \vdash A \colon B$ならば$A$は停止する.
+ 
+ つまり$A$からはじまる$\beta$簡約の無限列が存在しない.
+\end{thm}
+\end{frame}
 \end{document}
