@@ -7,7 +7,7 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{stmaryrd}
 \usepackage{tikz}
-\usetikzlibrary{matrix, positioning}
+\usetikzlibrary{matrix, positioning, cd}
 \DeclareMathOperator{\SN}{SN}
 \DeclareMathOperator{\Term}{Term}
 \DeclareMathOperator{\Obj}{Obj}
@@ -88,7 +88,7 @@
  \begin{minipage}{0.5\textwidth}
 \begin{prooftree}
 \AxiomC{$x \colon \mathbb{N} \vdash f(x) \colon \mathbb{N}$}
-\UnaryInfC{$\vdash x \mapsto f(x) \colon \mathbb{N} \rightarrow \mathbb{N}$}
+\UnaryInfC{$\vdash x \mapsto f(x) \colon \underbrace{\mathbb{N} \rightarrow \mathbb{N}}_{\text{何かについての主張}}$}
 \end{prooftree}
  \end{minipage} //
 \end{tabular}
@@ -107,8 +107,10 @@
 
 \begin{frame}{ラムダ計算}
  \begin{itemize}
-  \item $t ::= v \mid \lambda v. t \mid t t$
-  \item $(\lambda v. M) N \rightarrow_\beta M[N/v]$
+  \item おおよそこう読める
+  \item $\lambda v. M \simeq v \mapsto M$
+  \item $(\lambda v. M) N \simeq (v \mapsto M) (N)$
+  \item 例えば $\lambda v. v + 1 \simeq v \mapsto v + 1$
  \end{itemize}
 \end{frame}
 
@@ -159,10 +161,25 @@
  \end{itemize}
 \end{frame}
 
+% \begin{frame}{Church Rosser}
+% \begin{thm}[Church Rosserの定理]
+%  $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
+% \end{thm}
+
+% \begin{minipage}
+%  % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAFkQBfU9TXfIRQBGclVqMWbAHLdeIDNjwEiZYePrNWiEAAU5fJYKKj11TVJ3sA5N3EwoAc3hFQAMwBOEALZIyIHAgkURAGOgAjGAZdfmUhUJg3HAMQTx8-akCkACZqMMjo2OMdDyxHAAtknncvX0QQrMQAZjysMG0QKDo4cocQPIiomKMVHQZE5PNJDoAdGZgADyw4HARq1NqczKDm1va2Lp6+gYLhgVGQUorJiS02OcXl1bsuIA
+% \begin{tikzcd}
+% M \arrow[r] \arrow[d]           & N \arrow[d, "\exists", dashed] \\
+% P \arrow[r, "\exists"', dashed] & M'                            
+% \end{tikzcd}
+% \end{minipage}
+% \end{frame}
+
 \begin{frame}{Church Rosser}
 \begin{thm}[Church Rosserの定理]
  $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
 \end{thm}
+ 
 \begin{proof}
  \begin{description}
   \item $v_1 = v_2$ならば$v_1 \rightarrow_{p} v_2$
