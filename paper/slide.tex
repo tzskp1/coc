@@ -28,7 +28,6 @@
 \setbeamersize{text margin left=5mm, text margin right=5mm}
 \begin{document}
 
-
 \theoremstyle{definition}
 \newtheorem{defn}{定義}
 \newtheorem{thm}{定理}
@@ -41,16 +40,24 @@
 \title{Calculus of Constructionの基本的性質}
 \author{321701183 田中 一成}
 
-
 \frame{\maketitle}
 
-\begin{frame}{型理論とは}
+\begin{frame}{歴史}
+ \begin{itemize}
+  \item Russell
+  \item Church
+  \item Martin lof
+  \item Coquand
+  \item Coq
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{型とは}
  型とは
  \begin{itemize}
   \item プログラミング言語におけるデータの種類
-  \item 写像の定義域と値域
-  \item 所属関係が決定可能な集合(論)
-  \item 主張に対しての証明
+  \item 数学の写像の定義域と値域
+  \item 何かについての主張
  \end{itemize}
 \end{frame}
 
@@ -71,7 +78,7 @@
 \end{tabular}
 \end{frame}
 
-\begin{frame}[fragile]{所属関係が決定可能な集合(論)/主張に対しての証明}
+\begin{frame}[fragile]{何かについての主張}
 \begin{tabular}{cc}
  \begin{minipage}{0.5\textwidth}
  \[
@@ -87,6 +94,7 @@
 \end{tabular}
 \end{frame}
 
+% 関数であることをいう
 \begin{frame}{ラムダ計算}
  \begin{itemize}
   \item 簡潔な計算体系
@@ -99,8 +107,13 @@
 
 \begin{frame}{例 $\colon$ 自然数}
  \begin{itemize}
-  \item 
+  \item Church Encodingとよばれる自然数の表現が知られている
+  \item これはラムダ計算の上で与えられる
  \end{itemize}
+\end{frame}
+
+\begin{frame}{例 $\colon$ 自然数}
+ $n := \lambda f. \lambda x. f (\cdots (f x))$
 \end{frame}
 
 \begin{frame}{Calculus of Construction(CoC)}
@@ -114,6 +127,7 @@
  \end{itemize}
 \end{frame}
 
+% 論理に対応させる
 \begin{frame}[fragile]{型つけ規則}
 \begin{tabular}{cccc}
  $\vdash {\star} {\colon} {\square}$ & (Ax) & $\frac{\Gamma \vdash t {\colon} {\star} \text{ or } {\square}}{\Gamma, v \colon t \vdash v {\colon} t}$ & (Var) \\[30pt]
