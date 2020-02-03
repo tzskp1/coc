@@ -158,7 +158,23 @@
 \end{frame}
 
 \begin{frame}{例 $\colon$ 自然数}
- 
+\begin{prooftree}
+\AxiomC{$\vdash \star \colon \square$}
+\AxiomC{$\vdash \star \colon \square$}
+\noLine
+\UnaryInfC{$\vdots$}
+\noLine
+\UnaryInfC{$X \colon {\star} \vdash \Pi x. \Pi f. X \colon {\star}$}
+\RightLabel{$\Pi$}
+\BinaryInfC{$\vdash \Pi X \colon {\star}. \Pi x. \Pi f. X \colon {\star}$}
+\AxiomC{$X \colon {\star}, x \colon X, f \colon X \rightarrow X \vdash f (\cdots (f x)) \colon X$}
+\noLine
+\UnaryInfC{$\vdots$}
+\noLine
+\UnaryInfC{$X \colon {\star} \vdash \lambda x. \lambda f. f (\cdots (f x)) \colon \Pi x. \Pi f. X$}
+\RightLabel{$\lambda$}
+\BinaryInfC{$\vdash \lambda X \colon {\star}. \lambda x \colon X. \lambda f \colon X \rightarrow X. f (\cdots (f x)) \colon \Pi X \colon {\star}. \Pi x \colon X. \Pi f \colon X \rightarrow X. X$}
+\end{prooftree}
 \end{frame}
 
 \begin{frame}[fragile]{Church Rosser}
