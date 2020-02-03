@@ -37,18 +37,18 @@
 \newtheorem{ex}{例}
 \renewcommand{\proofname}{\bf{証明}}
 
-\title{Calculus of Constructionの基本的性質}
+\title{Calculus of Construction(CoC)の基本的性質}
 \author{321701183 田中 一成}
 
 \frame{\maketitle}
 
 \begin{frame}{歴史}
  \begin{itemize}
-  \item Russell
-  \item Church
+  \item Russell $\quad$ 
+  \item Church $\quad$ 
   \item Martin lof
-  \item Coquand
-  \item Coq
+  \item Coquand $\quad$ CoCを考案
+  \item Coq $\quad$ CoCを援用した定理証明支援系
  \end{itemize}
 \end{frame}
 
@@ -105,6 +105,13 @@
  \end{itemize}
 \end{frame}
 
+\begin{frame}{ラムダ計算}
+ \begin{itemize}
+  \item $t ::= v \mid \lambda v. t \mid t t$
+  \item $(\lambda v. M) N \rightarrow_\beta M[N/v]$
+ \end{itemize}
+\end{frame}
+
 \begin{frame}{例 $\colon$ 自然数}
  \begin{itemize}
   \item Church Encodingとよばれる自然数の表現が知られている
@@ -113,7 +120,15 @@
 \end{frame}
 
 \begin{frame}{例 $\colon$ 自然数}
- $n := \lambda f. \lambda x. f (\cdots (f x))$
+ \begin{align*}
+ n & := \lambda f. \lambda x. \underbrace{f (\cdots (f}_{n} x)) \\
+ n + m & := \lambda f. \lambda x. (m f) (n f x) \\
+       & \rightarrow_\beta \lambda f. \lambda x. (\lambda y. \underbrace{g (\cdots (g}_{m} y))[g/f]) (n f x) \\
+       & = \lambda f. \lambda x. (\lambda y. \underbrace{f (\cdots (f}_{m} y))) (n f x) \\
+       & \rightarrow_\beta \lambda f. \lambda x. (\underbrace{f (\cdots (f}_{m} y)))[y/(n f x)] \\
+       & = \lambda f. \lambda x. \underbrace{f (\cdots (f}_{m} (n f x))) \\
+       & \rightarrow_\beta \lambda f. \lambda x. \underbrace{f (\cdots (f}_{m} (\underbrace{f (\cdots (f}_{n} x)))))
+ \end{align*}
 \end{frame}
 
 \begin{frame}{Calculus of Construction(CoC)}
