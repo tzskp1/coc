@@ -100,8 +100,6 @@
   \item 簡潔な計算体系
   \item $t ::= v \mid \lambda v. t \mid t t$
   \item $(\lambda v. M) N \rightarrow_\beta M[N/v]$
-  \item $N_1 \rightarrow_\beta N_2$ならば$(\lambda v. N_1) \rightarrow_\beta (\lambda v. N_2)$ 
-  \item $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
  \end{itemize}
 \end{frame}
 
@@ -123,24 +121,21 @@
 
 \begin{frame}{例 $\colon$ 自然数}
  \begin{align*}
- n & := \lambda f. \lambda x. \underbrace{f (\cdots (f}_{n} x)) \\
- n + m & := \lambda f. \lambda x. (m f) (n f x) \\
-       & \rightarrow_\beta \lambda f. \lambda x. (\lambda y. \underbrace{g (\cdots (g}_{m} y))[g/f]) (n f x) \\
-       & = \lambda f. \lambda x. (\lambda y. \underbrace{f (\cdots (f}_{m} y))) (n f x) \\
-       & \rightarrow_\beta \lambda f. \lambda x. (\underbrace{f (\cdots (f}_{m} y)))[y/(n f x)] \\
-       & = \lambda f. \lambda x. \underbrace{f (\cdots (f}_{m} (n f x))) \\
+ n & := \lambda x. \lambda f. \underbrace{f (\cdots (f}_{n} x)) \\
+ n + m & := \lambda x. \lambda f. m (n x f) f \\
+       & = \lambda x. \lambda f. (\lambda y. \lambda g. \underbrace{g (\cdots (g}_{m} y))) (n x f) f \\
+       & \rightarrow_\beta \lambda x. \lambda f. (\lambda g. \underbrace{g (\cdots (g}_{m} y))[y/n x f]) f \\
+       & = \lambda x. \lambda f. (\lambda g. \underbrace{g (\cdots (g}_{m} (n x f)))) f \\
+       & \rightarrow_\beta \lambda x. \lambda f. \underbrace{f (\cdots (f}_{m} (n x f))) \\
        & \rightarrow_\beta \lambda f. \lambda x. \underbrace{f (\cdots (f}_{m} (\underbrace{f (\cdots (f}_{n} x)))))
  \end{align*}
 \end{frame}
 
-\begin{frame}{Calculus of Construction(CoC)}
+\begin{frame}{Calculus of Construction}
  \begin{itemize}
   \item ラムダ項に対して型をつける
   \item $p ::= v \mid \lambda v \colon p. p \mid \Pi v \colon p. p \mid p p \mid \star \mid \square$
   \item $(\lambda v \colon T. M) N \rightarrow_\beta M[N/v]$
-  \item $N_1 \rightarrow_\beta N_2$ならば$\lambda v \colon M. N_1 \rightarrow_\beta \lambda v \colon M. N_2$かつ$\lambda v \colon N_1. M \rightarrow_\beta \lambda v \colon N_2. M$
-  \item $N_1 \rightarrow_\beta N_2$ならば$\Pi v \colon M. N_1 \rightarrow_\beta \Pi v \colon M. N_2$かつ$\Pi v \colon N_1. M \rightarrow_\beta \Pi v \colon N_2. M$
-  \item $N_1 \rightarrow_\beta N_2$ならば$M N_1 \rightarrow_\beta M N_2$かつ$N_1 M \rightarrow_\beta N_2 M$
  \end{itemize}
 \end{frame}
 
@@ -156,38 +151,32 @@
 \end{frame}
 
 \begin{frame}{例 $\colon$ 自然数}
- \begin{itemize}
-  \item 
- \end{itemize}
+ \begin{align*}
+  n & := \lambda X \colon {\star}. \lambda x \colon X. \lambda f \colon X \rightarrow X. \underbrace{f (\cdots (f}_{n} x)) \\
+  &\vdash n \colon \Pi X \colon {\star}. \Pi x \colon X. \Pi f \colon X \rightarrow X. X
+ \end{align*}
 \end{frame}
 
-% \begin{frame}{Church Rosser}
-% \begin{thm}[Church Rosserの定理]
-%  $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
-% \end{thm}
-
-% \begin{minipage}
-%  % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAFkQBfU9TXfIRQBGclVqMWbAHLdeIDNjwEiZYePrNWiEAAU5fJYKKj11TVJ3sA5N3EwoAc3hFQAMwBOEALZIyIHAgkURAGOgAjGAZdfmUhUJg3HAMQTx8-akCkACZqMMjo2OMdDyxHAAtknncvX0QQrMQAZjysMG0QKDo4cocQPIiomKMVHQZE5PNJDoAdGZgADyw4HARq1NqczKDm1va2Lp6+gYLhgVGQUorJiS02OcXl1bsuIA
-% \begin{tikzcd}
-% M \arrow[r] \arrow[d]           & N \arrow[d, "\exists", dashed] \\
-% P \arrow[r, "\exists"', dashed] & M'                            
-% \end{tikzcd}
-% \end{minipage}
-% \end{frame}
-
-\begin{frame}{Church Rosser}
-\begin{thm}[Church Rosserの定理]
- $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ.
-\end{thm}
+\begin{frame}{例 $\colon$ 自然数}
  
+\end{frame}
+
+\begin{frame}[fragile]{Church Rosser}
+\begin{thm}[Church Rosserの定理]
+ \begin{tabular}{lr}
+ $\beta$簡約$\rightarrow_{\beta}$は合流性を持つ. &
+\begin{tikzcd}
+M \arrow[r, "*"] \arrow[d, "*"']           & N \arrow[d, "*", dashed] \\
+P \arrow[r, "*"', dashed] & M'                            
+\end{tikzcd}
+\end{tabular}
+\end{thm}
 \begin{proof}
  \begin{description}
   \item $v_1 = v_2$ならば$v_1 \rightarrow_{p} v_2$
-  \item $t \rightarrow_{p} s$ならば$\lambda v \colon T. t \rightarrow_{p} \lambda v \colon T. s$
-  \item $t \rightarrow_{p} s$ならば$\Pi v \colon T. t \rightarrow_{p} \Pi v \colon T. s$
-  \item $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$t_1 t_2 \rightarrow_{p} s_1 s_2$
   \item $t_1 \rightarrow_{p} s_1$かつ$t_2 \rightarrow_{p} s_2$ならば$(\lambda v \colon T. t_1) t_2 \rightarrow_{p} s_1[s_2/v]$
  \end{description}
+このような$\rightarrow_{p}$を考えると$\overset{*}{\rightarrow}_{\beta} = \overset{*}{\rightarrow}_{p}$
 \end{proof}
 \end{frame}
 
